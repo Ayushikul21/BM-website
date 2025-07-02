@@ -35,6 +35,7 @@ import LeaveForm from './components/LeaveForm';
 import Dashboard from './components/Dashboard';
 import AdminDashboard from './components/AdminDashboard';
 import MainEmployeeDashboard from './components/MainEmployeeDashboard';
+import MainAdminDashboard from './components/MainAdminDashboard';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('login');
@@ -76,6 +77,7 @@ function App() {
       )}
       {currentPage === 'admin' && <AdminDashboard />}
       <MainEmployeeDashboard/>
+      <MainAdminDashboard/>
     </>
   );
 }
