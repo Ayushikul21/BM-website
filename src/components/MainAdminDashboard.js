@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AdminDashboard from './AdminDashboard';
 import { 
   Users, 
   Calendar, 
@@ -23,15 +24,29 @@ import {
   MapPin,
   Award,
   Bell,
-  LogOut
+  LogOut,
+  Camera,
+  EyeOff 
 } from 'lucide-react';
+import AdminAttendance from './AdminAttedance';
 
 const MainAdminDashboard = () => {
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
+  const [notifications, setNotifications] = useState(1);
+  const [profileImage, setProfileImage] = useState(null);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
 
   // Sample data - in real app, this would come from API
   const [employees] = useState([
@@ -102,7 +117,7 @@ const MainAdminDashboard = () => {
   };
 
   const sidebarItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
+    // { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
     { id: 'profile', label: 'My Profile', icon: User },
     { id: 'employees', label: 'Employee Management', icon: Users },
     { id: 'attendance', label: 'Attendance', icon: Clock },
@@ -125,109 +140,29 @@ const MainAdminDashboard = () => {
     setModalType('');
   };
 
-  const renderDashboard = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-        <div className="flex items-center space-x-3">
-          <Bell className="w-6 h-6 text-gray-600 cursor-pointer hover:text-blue-600" />
-          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-            AD
-          </div>
-        </div>
-      </div>
+  const renderPayslip = () => {
+    // window.open('/salary website/generate_payslip.html', '_blank');
+    <iframe
+      src="/salary website/generate_payslip.html"
+      title="Generate payslip"
+      width="100%"
+      height="1200px"
+      style={{ border: 'none' }}
+    />
+  };
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Employees</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalEmployees}</p>
-            </div>
-            <Users className="w-12 h-12 text-blue-600" />
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Present Today</p>
-              <p className="text-3xl font-bold text-green-600">{stats.presentToday}</p>
-            </div>
-            <CheckCircle className="w-12 h-12 text-green-600" />
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Leaves</p>
-              <p className="text-3xl font-bold text-orange-600">{stats.pendingLeaves}</p>
-            </div>
-            <AlertCircle className="w-12 h-12 text-orange-600" />
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Avg Salary</p>
-              <p className="text-3xl font-bold text-purple-600">${stats.avgSalary.toLocaleString()}</p>
-            </div>
-            <DollarSign className="w-12 h-12 text-purple-600" />
-          </div>
-        </div>
-      </div>
+  const editPayslip = () => {
+    window.open('/salary website/save_payslip.html', '_blank');
+  };
 
-      {/* Recent Activities */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Leave Requests</h3>
-          <div className="space-y-3">
-            {leaveRequests.slice(0, 3).map(request => (
-              <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">{request.employeeName}</p>
-                  <p className="text-sm text-gray-600">{request.type} - {request.days} days</p>
-                </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  request.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                  request.status === 'Pending' ? 'bg-orange-100 text-orange-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {request.status}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Department Overview</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-700">Engineering</span>
-              <span className="font-semibold">1 employee</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-700">Design</span>
-              <span className="font-semibold">1 employee</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-700">Product</span>
-              <span className="font-semibold">1 employee</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  const viewPayslip = () => {
+    window.open('/salary website/back_payslip.html', '_blank');
+  };
 
   const renderEmployees = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Employee Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Employee Management</h1>
         <button 
           onClick={() => openModal('add-employee')}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
@@ -329,148 +264,21 @@ const MainAdminDashboard = () => {
     </div>
   );
 
-  const renderAttendance = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Attendance Management</h1>
-        <div className="flex items-center space-x-3">
-          <input type="date" className="border border-gray-300 rounded-lg px-3 py-2" />
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-            Mark Attendance
-          </button>
-        </div>
-      </div>
+  const renderAttendance = () => {
+    return <AdminAttendance/>
+  };
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Present Days</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Absent Days</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Late Days</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance %</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {employees.map(employee => {
-                const totalDays = employee.attendance.present + employee.attendance.absent;
-                const attendancePercent = Math.round((employee.attendance.present / totalDays) * 100);
-                
-                return (
-                  <tr key={employee.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                          {employee.avatar}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{employee.name}</div>
-                          <div className="text-sm text-gray-500">{employee.department}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
-                      {employee.attendance.present}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">
-                      {employee.attendance.absent}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600 font-semibold">
-                      {employee.attendance.late}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-2 mr-2">
-                          <div 
-                            className={`h-2 rounded-full ${attendancePercent >= 90 ? 'bg-green-600' : attendancePercent >= 80 ? 'bg-yellow-600' : 'bg-red-600'}`}
-                            style={{ width: `${attendancePercent}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm font-medium">{attendancePercent}%</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900">View Details</button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderLeaves = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Leave Management</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-          Add Leave Policy
-        </button>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leave Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {leaveRequests.map(request => (
-                <tr key={request.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {request.employeeName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.type}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.dates}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.days}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      request.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                      request.status === 'Pending' ? 'bg-orange-100 text-orange-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {request.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {request.status === 'Pending' && (
-                      <div className="flex items-center space-x-2">
-                        <button className="text-green-600 hover:text-green-900">
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                        <button className="text-red-600 hover:text-red-900">
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+  const renderLeaves = () => {
+    return <AdminDashboard/>
+  }
 
   const renderSalary = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Salary & Benefits</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        <h1 className="text-2xl font-bold text-gray-900">Salary & Benefits</h1>
+        <button 
+          onClick={renderPayslip}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
           Generate Payroll
         </button>
       </div>
@@ -521,8 +329,8 @@ const MainAdminDashboard = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900">Edit</button>
-                        <button className="text-green-600 hover:text-green-900">Payslip</button>
+                        <button onClick={editPayslip} className="text-blue-600 hover:text-blue-900">Edit</button>
+                        <button onClick={viewPayslip} className="text-green-600 hover:text-green-900">Payslip</button>
                       </div>
                     </td>
                   </tr>
@@ -535,17 +343,71 @@ const MainAdminDashboard = () => {
     </div>
   );
 
-  const renderProfile = () => (
+const renderProfile = () => {
+  
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfileImage(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePasswordChange = (field, value) => {
+    setPasswordData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handlePasswordSubmit = () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert('New password and confirm password do not match!');
+      return;
+    }
+    if (passwordData.newPassword.length < 8) {
+      alert('Password must be at least 8 characters long!');
+      return;
+    }
+    // Handle password update logic here
+    alert('Password updated successfully!');
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+  };
+
+  return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
+      <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
       
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      {/* Profile Information Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">        
         <div className="flex items-center space-x-6 mb-6">
-          <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-            AD
+          <div className="relative">
+            <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+              {profileImage ? (
+                <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                'AD'
+              )}
+            </div>
+            <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition-colors">
+              <Camera size={16} />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </label>
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Admin User</h2>
+            <h3 className="text-2xl font-bold text-gray-900">Admin User</h3>
             <p className="text-gray-600">System Administrator</p>
             <p className="text-gray-600">admin@company.com</p>
           </div>
@@ -554,35 +416,132 @@ const MainAdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-            <input type="text" defaultValue="Admin User" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+            <input type="text" defaultValue="Admin User" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-            <input type="email" defaultValue="admin@company.com" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+            <input type="email" defaultValue="admin@company.com" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-            <input type="tel" defaultValue="+1 234 567 8900" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+            <input type="tel" defaultValue="+1 234 567 8900" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-            <input type="text" defaultValue="Administration" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+            <input type="text" defaultValue="Administration" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
           </div>
         </div>
         
         <div className="mt-6">
-          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
             Update Profile
           </button>
         </div>
       </div>
+
+      {/* Change Password Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Change Password</h2>
+        
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+            <div className="relative">
+              <input
+                type={showCurrentPassword ? "text" : "password"}
+                value={passwordData.currentPassword}
+                onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter current password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+            <div className="relative">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                value={passwordData.newPassword}
+                onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter new password"
+                minLength="8"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mt-1">Password must be at least 8 characters long</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={passwordData.confirmPassword}
+                onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Confirm new password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+              <p className="text-sm text-red-500 mt-1">Passwords do not match</p>
+            )}
+          </div>
+
+          <div className="flex space-x-4">
+            <button
+              type="button"
+              onClick={handlePasswordSubmit}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Update Password
+            </button>
+            <button
+              type="button"
+              onClick={() => setPasswordData({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+              })}
+              className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
+ };
 
   const renderDocuments = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Document Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Document Management</h1>
         <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2">
           <Plus className="w-4 h-4" />
           <span>Upload Document</span>
@@ -651,7 +610,7 @@ const MainAdminDashboard = () => {
   const renderPerformance = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Performance Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Performance Management</h1>
         <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
           Create Review Cycle
         </button>
@@ -722,7 +681,7 @@ const MainAdminDashboard = () => {
 
   const renderSettings = () => (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">System Settings</h1>
+      <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -1052,7 +1011,7 @@ const MainAdminDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard': return renderDashboard();
+      // case 'dashboard': return renderDashboard();
       case 'profile': return renderProfile();
       case 'employees': return renderEmployees();
       case 'attendance': return renderAttendance();
@@ -1061,54 +1020,86 @@ const MainAdminDashboard = () => {
       case 'documents': return renderDocuments();
       case 'performance': return renderPerformance();
       case 'settings': return renderSettings();
-      default: return renderDashboard();
+      default: return renderProfile();
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg">
-        <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">Admin Portal</h1>
-          <p className="text-sm text-gray-600">Employee Management System</p>
+    <div className="flex flex-col h-screen bg-gray-50">
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between h-20">
+        {/* Left side - Logo/Title */}
+        <div className="flex items-center space-x-6">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Admin Portal</h1>
+            <p className="text-sm text-gray-500">Welcome back to your admin panel</p>
+          </div>
         </div>
         
-        <nav className="mt-6">
-          {sidebarItems.map(item => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center space-x-3 px-6 py-3 text-left hover:bg-blue-50 transition-colors ${
-                  activeTab === item.id ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600' : 'text-gray-700'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="absolute bottom-6 left-6 right-6">
-          <button className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-            <LogOut className="w-5 h-5" />
-            <span>Logout</span>
+        {/* Right side - Actions */}
+        <div className="flex items-center space-x-4">
+          {/* Notifications */}
+          <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+            <Bell className="w-5 h-5" />
+            {notifications > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                {notifications}
+              </span>
+            )}
           </button>
+          
+          {/* User Profile */}
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-medium">AD</span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Admin</p>
+              <p className="text-xs text-gray-600">Administrator</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </header>
+      
+      <div className="flex h-screen pt-20"> {/* Container for sidebar and content */}
+        {/* Fixed Sidebar */}
+        <div className="fixed left-0 top-20 bottom-0 w-64 bg-white border-r border-gray-200 flex flex-col z-40">          
+          <nav className="mt-6 flex-1 overflow-y-auto">
+            {sidebarItems.map(item => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center space-x-3 px-6 py-3 text-left hover:bg-blue-50 transition-colors ${
+                    activeTab === item.id ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600' : 'text-gray-700'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="p-8">
-          {renderContent()}
+          <div className="p-6 border-t">
+            <button className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+              <LogOut className="w-5 h-5" />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Modal */}
-      {renderModal()}
+        {/* Main Content Area - Scrollable content area */}
+        <div className="flex-1 ml-64 overflow-y-auto h-full">
+          <div className="p-8">
+            {renderContent()}
+          </div>
+        </div>
+
+        {/* Modal */}
+        {renderModal()}
+      </div>
     </div>
   );
 };

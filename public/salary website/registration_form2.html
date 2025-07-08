@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Information Form</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group label .required {
+            color: #dc3545;
+            margin-left: 3px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-group input:valid {
+            border-color: #28a745;
+        }
+
+        .form-group input:invalid:not(:placeholder-shown) {
+            border-color: #dc3545;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .back-button {
+            flex: 1;
+            padding: 15px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .back-button:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .next-button {
+            flex: 1;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .next-button:hover:not(:disabled) {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .next-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .save-button {
+            width: 100%;
+            padding: 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .save-button:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+            
+            .form-header h1 {
+                font-size: 2rem;
+            }
+
+            .button-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-header">
+            <h1 style="color:rgb(0, 140, 255);">Bandy & Moot</h1>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            Banking information saved successfully! 🎉
+        </div>
+
+        <form id="registrationForm">
+            <div class="form-group">
+                <label for="bankName">Bank Name <span class="required">*</span></label>
+                <input type="text" id="bankName" name="bankName" required 
+                       placeholder="Enter your bank name" minlength="2">
+                <div class="error-message" id="bankNameError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="ifscCode">IFSC Code <span class="required">*</span></label>
+                <input type="text" id="ifscCode" name="ifscCode" required 
+                       placeholder="Enter IFSC code (e.g., SBIN0001234)" 
+                       pattern="[A-Z]{4}0[A-Z0-9]{6}" maxlength="11" style="text-transform: uppercase;">
+                <div class="error-message" id="ifscCodeError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="accountNumber">Account Number <span class="required">*</span></label>
+                <input type="text" id="accountNumber" name="accountNumber" required 
+                       placeholder="Enter your account number" minlength="9" maxlength="18" pattern="[0-9]+">
+                <div class="error-message" id="accountNumberError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="branchName">Branch Name <span class="required">*</span></label>
+                <input type="text" id="branchName" name="branchName" required 
+                       placeholder="Enter your branch name" minlength="3">
+                <div class="error-message" id="branchNameError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="panNumber">PAN Number <span class="required">*</span></label>
+                <input type="text" id="panNumber" name="panNumber" required
+                       placeholder="Enter PAN number (e.g., ABCDE1234F)" 
+                       pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" maxlength="10" style="text-transform: uppercase;">
+                <div class="error-message" id="panNumberError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="aadharNumber">Aadhar Number <span class="required">*</span></label>
+                <input type="text" id="aadharNumber" name="aadharNumber" required 
+                       placeholder="Enter 12-digit Aadhar number" pattern="[0-9]{12}" maxlength="12">
+                <div class="error-message" id="aadharNumberError"></div>
+            </div>
+
+            <div class="button-row">
+                <button type="button" id="backButton" class="back-button">
+                    Back
+                </button>
+                <button type="button" id="nextButton" class="next-button" disabled>
+                    Next
+                </button>
+            </div>
+
+            <button type="button" id="saveButton" class="save-button">
+                Save
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('registrationForm');
+        const nextButton = document.getElementById('nextButton');
+        const backButton = document.getElementById('backButton');
+        const saveButton = document.getElementById('saveButton');
+        const successMessage = document.getElementById('successMessage');
+        
+        // Required fields
+        const requiredFields = ['bankName', 'ifscCode', 'accountNumber', 'branchName', 'panNumber', 'aadharNumber'];
+
+        function validateIFSC(ifsc) {
+            const re = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+            return re.test(ifsc);
+        }
+
+        function validatePAN(pan) {
+            const re = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+            return re.test(pan);
+        }
+
+        function validateAadhar(aadhar) {
+            const re = /^\d{12}$/;
+            return re.test(aadhar.replace(/\s/g, ''));
+        }
+
+        function validateAccountNumber(accountNum) {
+            const re = /^\d{9,18}$/;
+            return re.test(accountNum);
+        }
+
+        function showError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            document.getElementById(fieldId).style.borderColor = '#dc3545';
+        }
+
+        function clearError(fieldId) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            errorElement.style.display = 'none';
+            document.getElementById(fieldId).style.borderColor = '#28a745';
+        }
+
+        function validateField(fieldId, value) {
+            switch(fieldId) {
+                case 'bankName':
+                    return value && value.length >= 2;
+                case 'ifscCode':
+                    return value && validateIFSC(value);
+                case 'accountNumber':
+                    return value && validateAccountNumber(value);
+                case 'branchName':
+                    return value && value.length >= 3;
+                case 'panNumber':
+                    return value && validatePAN(value);
+                case 'aadharNumber':
+                    return value && validateAadhar(value);
+                default:
+                    return true;
+            }
+        }
+
+        function checkFormValidity() {
+            let allValid = true;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                const value = field.value.trim();
+                
+                if (!validateField(fieldId, value)) {
+                    allValid = false;
+                }
+            });
+            
+            nextButton.disabled = !allValid;
+            
+            if (allValid) {
+                nextButton.style.background = '#667eea';
+                nextButton.style.cursor = 'pointer';
+            } else {
+                nextButton.style.background = '#ccc';
+                nextButton.style.cursor = 'not-allowed';
+            }
+        }
+
+        // Auto-format IFSC code
+        document.getElementById('ifscCode').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+            checkFormValidity();
+        });
+
+        // Auto-format PAN number
+        document.getElementById('panNumber').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+            checkFormValidity();
+        });
+
+        // Only allow numbers for Aadhar and Account Number
+        document.getElementById('aadharNumber').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+            checkFormValidity();
+        });
+
+        document.getElementById('accountNumber').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+            checkFormValidity();
+        });
+
+        // Add event listeners to all required fields
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            field.addEventListener('input', checkFormValidity);
+            field.addEventListener('blur', checkFormValidity);
+        });
+
+        // Back button click handler
+        backButton.addEventListener('click', function() {
+            window.location.href = 'registration_form.html';
+        });
+
+        // Next button click handler
+        nextButton.addEventListener('click', function() {
+            if (!nextButton.disabled) {
+                // Validate all fields before proceeding
+                let isValid = true;
+                
+                requiredFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    const value = field.value.trim();
+                    
+                    if (!validateField(fieldId, value)) {
+                        let message = '';
+                        switch(fieldId) {
+                            case 'bankName':
+                                message = 'Bank name is required and must be at least 2 characters';
+                                break;
+                            case 'ifscCode':
+                                message = 'Please enter a valid IFSC code (e.g., SBIN0001234)';
+                                break;
+                            case 'accountNumber':
+                                message = 'Account number must be 9-18 digits';
+                                break;
+                            case 'branchName':
+                                message = 'Branch name is required and must be at least 3 characters';
+                                break;
+                            case 'panNumber':
+                                message = 'Please enter a valid PAN number (e.g., ABCDE1234F)';
+                                break;
+                            case 'aadharNumber':
+                                message = 'Please enter a valid 12-digit Aadhar number';
+                                break;
+                        }
+                        showError(fieldId, message);
+                        isValid = false;
+                    } else {
+                        clearError(fieldId);
+                    }
+                });
+                
+                if (isValid) {
+                    // Save form data (using in-memory storage since localStorage is not available)
+                    const formData = {};
+                    requiredFields.forEach(fieldId => {
+                        formData[fieldId] = document.getElementById(fieldId).value;
+                    });
+                    
+                    // Navigate to next page
+                    window.location.href = '/salary website/registration_form3.html';
+                }
+            }
+        });
+
+        // In-memory storage for saved data
+        let savedBankingData = null;
+
+        // Save button click handler
+        saveButton.addEventListener('click', function () {
+            let isValid = true;
+
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                const value = field.value.trim();
+
+                if (!validateField(fieldId, value)) {
+                    let message = '';
+                    switch (fieldId) {
+                        case 'bankName':
+                            message = 'Bank name is required and must be at least 2 characters';
+                            break;
+                        case 'ifscCode':
+                            message = 'Please enter a valid IFSC code (e.g., SBIN0001234)';
+                            break;
+                        case 'accountNumber':
+                            message = 'Account number must be 9-18 digits';
+                            break;
+                        case 'branchName':
+                            message = 'Branch name is required and must be at least 3 characters';
+                            break;
+                        case 'panNumber':
+                            message = 'Please enter a valid PAN number (e.g., ABCDE1234F)';
+                            break;
+                        case 'aadharNumber':
+                            message = 'Please enter a valid 12-digit Aadhar number';
+                            break;
+                    }
+                    showError(fieldId, message);
+                    isValid = false;
+                } else {
+                    clearError(fieldId);
+                }
+            });
+
+            if (isValid) {
+                // Save form data to in-memory storage
+                const formData = {
+                    bankName: document.getElementById('bankName').value,
+                    ifscCode: document.getElementById('ifscCode').value,
+                    accountNumber: document.getElementById('accountNumber').value,
+                    branchName: document.getElementById('branchName').value,
+                    panNumber: document.getElementById('panNumber').value,
+                    aadharNumber: document.getElementById('aadharNumber').value,
+                    savedAt: new Date().toLocaleString()
+                };
+
+                // Store the data
+                savedBankingData = formData;
+                
+                // Log the saved data to console for verification
+                console.log('Banking Information Saved:', savedBankingData);
+                
+                // Show success message with saved confirmation
+                successMessage.style.display = "block";
+                successMessage.innerHTML = `
+                    <strong>Banking Information Saved Successfully! ✅</strong><br>
+                    <small>Saved at: ${formData.savedAt}</small><br>
+                    <small>Bank: ${formData.bankName} | Account: ${formData.accountNumber}</small>
+                `;
+                
+                // Change save button text temporarily to indicate success
+                const originalText = saveButton.textContent;
+                saveButton.textContent = "Saved ✓";
+                saveButton.style.background = "#198754";
+                
+                setTimeout(() => {
+                    successMessage.style.display = "none";
+                    saveButton.textContent = originalText;
+                    saveButton.style.background = "#28a745";
+                }, 4000);
+
+                // Optionally, you can also try to save to localStorage as a fallback
+                // (This will work in a real browser environment)
+                try {
+                    if (typeof(Storage) !== "undefined" && localStorage) {
+                        localStorage.setItem('bankingFormData', JSON.stringify(formData));
+                        console.log('Data also saved to localStorage');
+                    }
+                } catch (e) {
+                    console.log('localStorage not available, data saved in memory only');
+                }
+            }
+        });
+
+        // Load saved data on page load (if available)
+        window.addEventListener('load', function() {
+            try {
+                // Try to load from localStorage first (for real browser environments)
+                if (typeof(Storage) !== "undefined" && localStorage) {
+                    const savedData = localStorage.getItem('bankingFormData');
+                    if (savedData) {
+                        const data = JSON.parse(savedData);
+                        
+                        // Fill the form with saved data
+                        Object.keys(data).forEach(key => {
+                            const field = document.getElementById(key);
+                            if (field && data[key]) {
+                                field.value = data[key];
+                            }
+                        });
+                        
+                        // Update validation state
+                        checkFormValidity();
+                        
+                        // Show a notice that data was loaded
+                        successMessage.style.display = "block";
+                        successMessage.innerHTML = `
+                            <strong>Previously saved data loaded</strong><br>
+                            <small>Last saved: ${data.savedAt || 'Unknown'}</small>
+                        `;
+                        setTimeout(() => {
+                            successMessage.style.display = "none";
+                        }, 3000);
+                    }
+                }
+            } catch (e) {
+                console.log('Could not load saved data:', e.message);
+            }
+        });
+
+        // Initial check
+        checkFormValidity();
+    </script>
+</body>
+</html>

@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Education Registration Form</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 700px;
+            animation: slideUp 0.6s ease-out;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-header h1 {
+            color: rgb(0, 140, 255);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .education-card {
+            padding: 30px;
+            border-radius: 20px;
+            background: white;
+            color: #333;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            border: 2px solid #f0f0f0;
+        }
+
+        .section-divider {
+            margin: 30px 0;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .form-group label .required {
+            color: #ff6b6b;
+            margin-left: 3px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+            color: #333;
+        }
+
+        .form-group input::placeholder {
+            color: #999;
+        }
+
+        .form-group select {
+            color: #333;
+        }
+
+        .form-group select option {
+            background: white;
+            color: #333;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .optional-note {
+            font-size: 0.8rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 5px;
+        }
+
+        .mandatory-note {
+            font-size: 0.8rem;
+            color: #ff6b6b;
+            font-style: italic;
+            margin-top: 5px;
+        }
+
+        .either-or-note {
+            font-size: 0.8rem;
+            color: #007bff;
+            font-style: italic;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        .step-indicator {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+            
+            .form-header h1 {
+                font-size: 2rem;
+            }
+
+            .row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="step-indicator">
+            <p>Step 4 of 4 - Education Information</p>
+        </div>
+
+        <div class="form-header">
+            <h1>Bandy & Moot</h1>
+            <p>Education Information</p>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            Education information saved successfully!
+        </div>
+
+        <form id="educationForm">
+            <div class="education-card">
+                <!-- 10th Class Section -->
+                <div class="section-title">10th Class Information</div>
+                <div class="mandatory-note">School name, board, and year are mandatory. Either grade OR percentage is required.</div>
+                
+                <div class="form-group">
+                    <label>10th School Name <span class="required">*</span></label>
+                    <input type="text" id="tenthSchool" name="tenthSchool" required
+                           placeholder="Enter your 10th school name" minlength="2">
+                    <div class="error-message" id="tenthSchoolError"></div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label>10th Board <span class="required">*</span></label>
+                        <select id="tenthBoard" name="tenthBoard" required>
+                            <option value="">Select Board</option>
+                            <option value="CBSE">CBSE (Central Board of Secondary Education)</option>
+                            <option value="ICSE">ICSE (Indian Certificate of Secondary Education)</option>
+                            <option value="State Board - Andhra Pradesh">State Board - Andhra Pradesh</option>
+                            <option value="State Board - Assam">State Board - Assam</option>
+                            <option value="State Board - Bihar">State Board - Bihar</option>
+                            <option value="State Board - Chhattisgarh">State Board - Chhattisgarh</option>
+                            <option value="State Board - Delhi">State Board - Delhi</option>
+                            <option value="State Board - Goa">State Board - Goa</option>
+                            <option value="State Board - Gujarat">State Board - Gujarat</option>
+                            <option value="State Board - Haryana">State Board - Haryana</option>
+                            <option value="State Board - Himachal Pradesh">State Board - Himachal Pradesh</option>
+                            <option value="State Board - Jharkhand">State Board - Jharkhand</option>
+                            <option value="State Board - Karnataka">State Board - Karnataka</option>
+                            <option value="State Board - Kerala">State Board - Kerala</option>
+                            <option value="State Board - Madhya Pradesh">State Board - Madhya Pradesh</option>
+                            <option value="State Board - Maharashtra">State Board - Maharashtra</option>
+                            <option value="State Board - Manipur">State Board - Manipur</option>
+                            <option value="State Board - Meghalaya">State Board - Meghalaya</option>
+                            <option value="State Board - Mizoram">State Board - Mizoram</option>
+                            <option value="State Board - Nagaland">State Board - Nagaland</option>
+                            <option value="State Board - Odisha">State Board - Odisha</option>
+                            <option value="State Board - Punjab">State Board - Punjab</option>
+                            <option value="State Board - Rajasthan">State Board - Rajasthan</option>
+                            <option value="State Board - Sikkim">State Board - Sikkim</option>
+                            <option value="State Board - Tamil Nadu">State Board - Tamil Nadu</option>
+                            <option value="State Board - Telangana">State Board - Telangana</option>
+                            <option value="State Board - Tripura">State Board - Tripura</option>
+                            <option value="State Board - Uttar Pradesh">State Board - Uttar Pradesh</option>
+                            <option value="State Board - Uttarakhand">State Board - Uttarakhand</option>
+                            <option value="State Board - West Bengal">State Board - West Bengal</option>
+                            <option value="NIOS">NIOS (National Institute of Open Schooling)</option>
+                            <option value="Cambridge International">Cambridge International</option>
+                            <option value="IB">IB (International Baccalaureate)</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <div class="error-message" id="tenthBoardError"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>10th Year of Passing <span class="required">*</span></label>
+                        <input type="number" id="tenthYear" name="tenthYear" required
+                               placeholder="Enter year" min="1990" max="2030">
+                        <div class="error-message" id="tenthYearError"></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label>10th Grade</label>
+                        <select id="tenthGrade" name="tenthGrade">
+                            <option value="">Select Grade</option>
+                            <option value="A+">A+</option>
+                            <option value="A">A</option>
+                            <option value="B+">B+</option>
+                            <option value="B">B</option>
+                            <option value="C+">C+</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                        </select>
+                        <div class="error-message" id="tenthGradeError"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>10th Percentage</label>
+                        <input type="number" id="tenthPercentage" name="tenthPercentage"
+                               placeholder="Enter percentage" min="0" max="100" step="0.01">
+                        <div class="error-message" id="tenthPercentageError"></div>
+                    </div>
+                </div>
+
+                <div class="either-or-note">
+                    * Either Grade OR Percentage must be provided for 10th class
+                </div>
+
+                <!-- Section Divider -->
+                <div class="section-divider"></div>
+
+                <!-- 12th Class Section -->
+                <div class="section-title">12th Class Information</div>
+                <div class="optional-note">All fields in this section are optional</div>
+                
+                <div class="form-group">
+                    <label>12th College/School Name</label>
+                    <input type="text" id="twelfthCollege" name="twelfthCollege"
+                           placeholder="Enter college/school name" minlength="2">
+                    <div class="error-message" id="twelfthCollegeError"></div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label>12th Board</label>
+                        <select id="twelfthBoard" name="twelfthBoard">
+                            <option value="">Select Board</option>
+                            <option value="CBSE">CBSE (Central Board of Secondary Education)</option>
+                            <option value="ICSE">ICSE (Indian Certificate of Secondary Education)</option>
+                            <option value="State Board - Andhra Pradesh">State Board - Andhra Pradesh</option>
+                            <option value="State Board - Assam">State Board - Assam</option>
+                            <option value="State Board - Bihar">State Board - Bihar</option>
+                            <option value="State Board - Chhattisgarh">State Board - Chhattisgarh</option>
+                            <option value="State Board - Delhi">State Board - Delhi</option>
+                            <option value="State Board - Goa">State Board - Goa</option>
+                            <option value="State Board - Gujarat">State Board - Gujarat</option>
+                            <option value="State Board - Haryana">State Board - Haryana</option>
+                            <option value="State Board - Himachal Pradesh">State Board - Himachal Pradesh</option>
+                            <option value="State Board - Jharkhand">State Board - Jharkhand</option>
+                            <option value="State Board - Karnataka">State Board - Karnataka</option>
+                            <option value="State Board - Kerala">State Board - Kerala</option>
+                            <option value="State Board - Madhya Pradesh">State Board - Madhya Pradesh</option>
+                            <option value="State Board - Maharashtra">State Board - Maharashtra</option>
+                            <option value="State Board - Manipur">State Board - Manipur</option>
+                            <option value="State Board - Meghalaya">State Board - Meghalaya</option>
+                            <option value="State Board - Mizoram">State Board - Mizoram</option>
+                            <option value="State Board - Nagaland">State Board - Nagaland</option>
+                            <option value="State Board - Odisha">State Board - Odisha</option>
+                            <option value="State Board - Punjab">State Board - Punjab</option>
+                            <option value="State Board - Rajasthan">State Board - Rajasthan</option>
+                            <option value="State Board - Sikkim">State Board - Sikkim</option>
+                            <option value="State Board - Tamil Nadu">State Board - Tamil Nadu</option>
+                            <option value="State Board - Telangana">State Board - Telangana</option>
+                            <option value="State Board - Tripura">State Board - Tripura</option>
+                            <option value="State Board - Uttar Pradesh">State Board - Uttar Pradesh</option>
+                            <option value="State Board - Uttarakhand">State Board - Uttarakhand</option>
+                            <option value="State Board - West Bengal">State Board - West Bengal</option>
+                            <option value="NIOS">NIOS (National Institute of Open Schooling)</option>
+                            <option value="Cambridge International">Cambridge International</option>
+                            <option value="IB">IB (International Baccalaureate)</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <div class="error-message" id="twelfthBoardError"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>12th Year of Passing</label>
+                        <input type="number" id="twelfthYear" name="twelfthYear"
+                               placeholder="Enter year" min="1990" max="2030">
+                        <div class="error-message" id="twelfthYearError"></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label>12th Grade</label>
+                        <select id="twelfthGrade" name="twelfthGrade">
+                            <option value="">Select Grade</option>
+                            <option value="A+">A+</option>
+                            <option value="A">A</option>
+                            <option value="B+">B+</option>
+                            <option value="B">B</option>
+                            <option value="C+">C+</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                        </select>
+                        <div class="error-message" id="twelfthGradeError"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>12th Percentage</label>
+                        <input type="number" id="twelfthPercentage" name="twelfthPercentage"
+                               placeholder="Enter percentage" min="0" max="100" step="0.01">
+                        <div class="error-message" id="twelfthPercentageError"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="button" id="backButton" class="btn">
+                    Back
+                </button>
+                <button type="button" id="saveButton" class="btn">
+                    Save
+                </button>
+                <button type="button" id="nextButton" class="btn" disabled>
+                    Next
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+    const form = document.getElementById('educationForm');
+    const nextButton = document.getElementById('nextButton');
+    const backButton = document.getElementById('backButton');
+    const saveButton = document.getElementById('saveButton');
+    const successMessage = document.getElementById('successMessage');
+
+    // Mandatory fields for form validation (10th class fields)
+    const requiredFields = [
+        'tenthSchool',
+        'tenthBoard',
+        'tenthYear'
+    ];
+
+    // In-memory storage for saved data
+    let savedEducationData = null;
+
+    function showError(fieldId, message) {
+        const errorElement = document.getElementById(fieldId + 'Error');
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            const field = document.getElementById(fieldId);
+            if (field) field.style.borderColor = '#ff6b6b';
+        }
+    }
+
+    function clearError(fieldId) {
+        const errorElement = document.getElementById(fieldId + 'Error');
+        if (errorElement) {
+            errorElement.style.display = 'none';
+            const field = document.getElementById(fieldId);
+            if (field) field.style.borderColor = '#28a745';
+        }
+    }
+
+    function validateField(fieldId, value) {
+        switch(fieldId) {
+            case 'tenthSchool':
+                return value && value.trim().length >= 2;
+            case 'tenthBoard':
+                return value && value.trim() !== '';
+            case 'tenthYear':
+                const year = parseInt(value);
+                return year >= 1990 && year <= 2030;
+            case 'tenthGrade':
+                return value && value.trim() !== '';
+            case 'tenthPercentage':
+                const percentage = parseFloat(value);
+                return !isNaN(percentage) && percentage >= 0 && percentage <= 100;
+            case 'twelfthYear':
+                const twelfthYear = parseInt(value);
+                if (isNaN(twelfthYear) || twelfthYear < 1990 || twelfthYear > 2030) {
+                    return false;
+                }
+                // Check if 12th year is greater than 10th year
+                const tenthYearField = document.getElementById('tenthYear');
+                if (tenthYearField && tenthYearField.value) {
+                    const tenthYear = parseInt(tenthYearField.value);
+                    if (!isNaN(tenthYear) && twelfthYear <= tenthYear) {
+                        return false;
+                    }
+                }
+                return true;
+            case 'twelfthGrade':
+                return value && value.trim() !== '';
+            case 'twelfthPercentage':
+                const twelfthPercentage = parseFloat(value);
+                return !isNaN(twelfthPercentage) && twelfthPercentage >= 0 && twelfthPercentage <= 100;
+            default:
+                return true;
+        }
+    }
+
+    function validateYearComparison() {
+        const tenthYearField = document.getElementById('tenthYear');
+        const twelfthYearField = document.getElementById('twelfthYear');
+        
+        if (tenthYearField && twelfthYearField && tenthYearField.value && twelfthYearField.value) {
+            const tenthYear = parseInt(tenthYearField.value);
+            const twelfthYear = parseInt(twelfthYearField.value);
+            
+            if (!isNaN(tenthYear) && !isNaN(twelfthYear)) {
+                if (twelfthYear <= tenthYear) {
+                    showError('twelfthYear', '12th year must be greater than 10th year (' + tenthYear + ')');
+                    return false;
+                } else {
+                    clearError('twelfthYear');
+                    return true;
+                }
+            }
+        }
+        return true;
+    }
+
+    function checkFormValidity() {
+        let allValid = true;
+        
+        // Check required fields
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            const value = field.value.trim();
+            if (!validateField(fieldId, value)) {
+                allValid = false;
+            }
+        });
+        
+        // Check that either grade OR percentage is provided for 10th class
+        const tenthGrade = document.getElementById('tenthGrade').value.trim();
+        const tenthPercentage = document.getElementById('tenthPercentage').value.trim();
+        
+        const hasGrade = validateField('tenthGrade', tenthGrade);
+        const hasPercentage = validateField('tenthPercentage', tenthPercentage);
+        
+        // Either grade OR percentage must be provided (but not necessarily both)
+        if (!hasGrade && !hasPercentage) {
+            allValid = false;
+        }
+
+        // Check 12th class fields if they are filled
+        const twelfthYearField = document.getElementById('twelfthYear');
+        if (twelfthYearField && twelfthYearField.value.trim()) {
+            // If 12th year is provided, validate it
+            if (!validateField('twelfthYear', twelfthYearField.value.trim())) {
+                allValid = false;
+            }
+            
+            // Also check year comparison
+            if (!validateYearComparison()) {
+                allValid = false;
+            }
+
+            // If 12th year is provided, check that either 12th grade OR percentage is provided
+            const twelfthGrade = document.getElementById('twelfthGrade');
+            const twelfthPercentage = document.getElementById('twelfthPercentage');
+            
+            if (twelfthGrade && twelfthPercentage) {
+                const has12thGrade = validateField('twelfthGrade', twelfthGrade.value.trim());
+                const has12thPercentage = validateField('twelfthPercentage', twelfthPercentage.value.trim());
+                
+                if (!has12thGrade && !has12thPercentage) {
+                    allValid = false;
+                }
+            }
+        }
+        
+        nextButton.disabled = !allValid;
+    }
+
+    function collectFormData() {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        return data;
+    }
+
+    // Add event listeners to required form fields
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', checkFormValidity);
+            field.addEventListener('change', checkFormValidity);
+            field.addEventListener('blur', checkFormValidity);
+        }
+    });
+
+    // Add event listeners to grade and percentage fields for either/or validation
+    ['tenthGrade', 'tenthPercentage'].forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', checkFormValidity);
+            field.addEventListener('change', checkFormValidity);
+            field.addEventListener('blur', checkFormValidity);
+        }
+    });
+
+    // Add event listeners to 12th class fields
+    ['twelfthYear', 'twelfthGrade', 'twelfthPercentage', 'twelfthSchool', 'twelfthBoard'].forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', checkFormValidity);
+            field.addEventListener('change', checkFormValidity);
+            field.addEventListener('blur', function() {
+                if (fieldId === 'twelfthYear') {
+                    validateYearComparison();
+                }
+                checkFormValidity();
+            });
+        }
+    });
+
+    // Special handling for 10th year changes to revalidate 12th year
+    const tenthYearField = document.getElementById('tenthYear');
+    if (tenthYearField) {
+        tenthYearField.addEventListener('input', function() {
+            // Clear any existing 12th year error when 10th year changes
+            clearError('twelfthYear');
+            // Revalidate 12th year if it has a value
+            const twelfthYearField = document.getElementById('twelfthYear');
+            if (twelfthYearField && twelfthYearField.value) {
+                validateYearComparison();
+            }
+            checkFormValidity();
+        });
+    }
+
+    // Button event listeners
+    backButton.addEventListener('click', function() {
+        window.location.href = 'registration_form3.html';
+    });
+
+    // Save button functionality - Updated to match personal details form pattern
+    saveButton.addEventListener('click', function() {
+        let isValid = true;
+
+        // Validate all required fields
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            const value = field.value.trim();
+            
+            if (!validateField(fieldId, value)) {
+                let message = '';
+                switch(fieldId) {
+                    case 'tenthSchool': 
+                        message = 'School name is required (minimum 2 characters)'; 
+                        break;
+                    case 'tenthBoard': 
+                        message = 'Please select your board'; 
+                        break;
+                    case 'tenthYear': 
+                        message = 'Please enter a valid year (1990-2030)'; 
+                        break;
+                }
+                showError(fieldId, message);
+                isValid = false;
+            } else {
+                clearError(fieldId);
+            }
+        });
+
+        // Validate either grade OR percentage requirement for 10th
+        const tenthGrade = document.getElementById('tenthGrade').value.trim();
+        const tenthPercentage = document.getElementById('tenthPercentage').value.trim();
+        
+        const hasGrade = validateField('tenthGrade', tenthGrade);
+        const hasPercentage = validateField('tenthPercentage', tenthPercentage);
+        
+        if (!hasGrade && !hasPercentage) {
+            showError('tenthGrade', 'Either grade or percentage is required');
+            showError('tenthPercentage', 'Either grade or percentage is required');
+            isValid = false;
+        } else {
+            clearError('tenthGrade');
+            clearError('tenthPercentage');
+        }
+
+        // Validate 12th class fields if 12th year is provided
+        const twelfthYearField = document.getElementById('twelfthYear');
+        if (twelfthYearField && twelfthYearField.value.trim()) {
+            // Validate 12th year
+            if (!validateField('twelfthYear', twelfthYearField.value.trim())) {
+                const tenthYear = document.getElementById('tenthYear').value;
+                showError('twelfthYear', '12th year must be greater than 10th year (' + tenthYear + ') and between 1990-2030');
+                isValid = false;
+            } else {
+                clearError('twelfthYear');
+            }
+
+            // Validate year comparison
+            if (!validateYearComparison()) {
+                isValid = false;
+            }
+
+            // Validate either 12th grade OR percentage requirement
+            const twelfthGrade = document.getElementById('twelfthGrade');
+            const twelfthPercentage = document.getElementById('twelfthPercentage');
+            
+            if (twelfthGrade && twelfthPercentage) {
+                const has12thGrade = validateField('twelfthGrade', twelfthGrade.value.trim());
+                const has12thPercentage = validateField('twelfthPercentage', twelfthPercentage.value.trim());
+                
+                if (!has12thGrade && !has12thPercentage) {
+                    showError('twelfthGrade', 'Either grade or percentage is required for 12th class');
+                    showError('twelfthPercentage', 'Either grade or percentage is required for 12th class');
+                    isValid = false;
+                } else {
+                    clearError('twelfthGrade');
+                    clearError('twelfthPercentage');
+                }
+            }
+        }
+
+        if (isValid) {
+            // Collect and save form data to in-memory storage
+            const formData = collectFormData();
+            formData.savedAt = new Date().toLocaleString();
+
+            // Store the data
+            savedEducationData = formData;
+            
+            // Log the saved data to console for verification
+            console.log('Education Data Saved:', savedEducationData);
+            
+            // Show success message with saved confirmation
+            successMessage.style.display = "block";
+            const twelfthInfo = formData.twelfthYear ? ` | 12th: ${formData.twelfthSchool || 'N/A'} (${formData.twelfthBoard || 'N/A'}, ${formData.twelfthYear})` : '';
+            successMessage.innerHTML = `
+                <strong>Education Information Saved Successfully! ✅</strong><br>
+                <small>Saved at: ${formData.savedAt}</small><br>
+                <small>10th: ${formData.tenthSchool} (${formData.tenthBoard}, ${formData.tenthYear})${twelfthInfo}</small>
+            `;
+            
+            // Change save button text temporarily to indicate success
+            const originalText = saveButton.textContent;
+            saveButton.textContent = "Saved ✓";
+            saveButton.style.background = "#198754";
+            
+            setTimeout(() => {
+                successMessage.style.display = "none";
+                saveButton.textContent = originalText;
+                saveButton.style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+            }, 4000);
+
+            // Optionally, try to save to localStorage as a fallback
+            try {
+                if (typeof(Storage) !== "undefined" && localStorage) {
+                    localStorage.setItem('educationFormData', JSON.stringify(formData));
+                    console.log('Data also saved to localStorage');
+                }
+            } catch (e) {
+                console.log('localStorage not available, data saved in memory only');
+            }
+        }
+    });
+
+    nextButton.addEventListener('click', function() {
+        if (!nextButton.disabled) {
+            let isValid = true;
+
+            // Validate all required fields
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field) return;
+                const value = field.value.trim();
+                
+                if (!validateField(fieldId, value)) {
+                    let message = '';
+                    switch(fieldId) {
+                        case 'tenthSchool': 
+                            message = 'School name is required (minimum 2 characters)'; 
+                            break;
+                        case 'tenthBoard': 
+                            message = 'Please select your board'; 
+                            break;
+                        case 'tenthYear': 
+                            message = 'Please enter a valid year (1990-2030)'; 
+                            break;
+                    }
+                    showError(fieldId, message);
+                    isValid = false;
+                } else {
+                    clearError(fieldId);
+                }
+            });
+
+            // Validate either grade OR percentage requirement for 10th
+            const tenthGrade = document.getElementById('tenthGrade').value.trim();
+            const tenthPercentage = document.getElementById('tenthPercentage').value.trim();
+            
+            const hasGrade = validateField('tenthGrade', tenthGrade);
+            const hasPercentage = validateField('tenthPercentage', tenthPercentage);
+            
+            if (!hasGrade && !hasPercentage) {
+                showError('tenthGrade', 'Either grade or percentage is required');
+                showError('tenthPercentage', 'Either grade or percentage is required');
+                isValid = false;
+            } else {
+                clearError('tenthGrade');
+                clearError('tenthPercentage');
+            }
+
+            // Validate 12th class fields if 12th year is provided
+            const twelfthYearField = document.getElementById('twelfthYear');
+            if (twelfthYearField && twelfthYearField.value.trim()) {
+                // Validate 12th year
+                if (!validateField('twelfthYear', twelfthYearField.value.trim())) {
+                    const tenthYear = document.getElementById('tenthYear').value;
+                    showError('twelfthYear', '12th year must be greater than 10th year (' + tenthYear + ') and between 1990-2030');
+                    isValid = false;
+                } else {
+                    clearError('twelfthYear');
+                }
+
+                // Validate year comparison
+                if (!validateYearComparison()) {
+                    isValid = false;
+                }
+
+                // Validate either 12th grade OR percentage requirement
+                const twelfthGrade = document.getElementById('twelfthGrade');
+                const twelfthPercentage = document.getElementById('twelfthPercentage');
+                
+                if (twelfthGrade && twelfthPercentage) {
+                    const has12thGrade = validateField('twelfthGrade', twelfthGrade.value.trim());
+                    const has12thPercentage = validateField('twelfthPercentage', twelfthPercentage.value.trim());
+                    
+                    if (!has12thGrade && !has12thPercentage) {
+                        showError('twelfthGrade', 'Either grade or percentage is required for 12th class');
+                        showError('twelfthPercentage', 'Either grade or percentage is required for 12th class');
+                        isValid = false;
+                    } else {
+                        clearError('twelfthGrade');
+                        clearError('twelfthPercentage');
+                    }
+                }
+            }
+
+            if (isValid) {
+                // Save form data before navigation
+                const formData = collectFormData();
+                savedEducationData = { ...formData, savedAt: new Date().toLocaleString() };
+                
+                // Show success message
+                successMessage.style.display = 'block';
+                successMessage.innerHTML = `
+                    <strong>Education Information Saved Successfully! ✅</strong><br>
+                    <small>Proceeding to next step...</small>
+                `;
+                
+                setTimeout(() => {
+                    window.location.href = '/salary website/registration_form4.5.html';
+                }, 1500);
+            }
+        }
+    });
+
+    // Load saved data on page load (if available)
+    window.addEventListener('load', function() {
+        try {
+            // Try to load from localStorage first (for real browser environments)
+            if (typeof(Storage) !== "undefined" && localStorage) {
+                const savedData = localStorage.getItem('educationFormData');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    
+                    // Fill the form with saved data
+                    Object.keys(data).forEach(key => {
+                        const field = document.getElementById(key);
+                        if (field && data[key] && key !== 'savedAt') {
+                            field.value = data[key];
+                        }
+                    });
+                    
+                    // Update validation state
+                    checkFormValidity();
+                    
+                    // Show a notice that data was loaded
+                    successMessage.style.display = "block";
+                    successMessage.innerHTML = `
+                        <strong>Previously saved data loaded</strong><br>
+                        <small>Last saved: ${data.savedAt || 'Unknown'}</small>
+                    `;
+                    setTimeout(() => {
+                        successMessage.style.display = "none";
+                    }, 3000);
+                }
+            }
+        } catch (e) {
+            console.log('Could not load saved data:', e.message);
+        }
+    });
+
+    // Initial form validation check
+    checkFormValidity();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employment Registration Form</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            animation: slideUp 0.6s ease-out;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-header h1 {
+            color: rgb(0, 140, 255);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .employment-card {
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: white;
+            color: #333;
+            border: 2px solid #e1e5e9;
+            margin-bottom: 30px;
+        }
+
+        .employment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e1e5e9;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .form-group label .required {
+            color: #ff4757;
+            margin-left: 3px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            color: #333;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-color: #667eea;
+            background: white;
+        }
+
+        .form-group input:valid {
+            border-color: #28a745;
+        }
+
+        .form-group input:invalid:not(:placeholder-shown) {
+            border-color: #dc3545;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-back:hover:not(:disabled) {
+            background: #5a6268;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-save:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-next:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .error-message {
+            color: #ff4757;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+            font-weight: 600;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+                max-width: 95%;
+            }
+            
+            .form-header h1 {
+                font-size: 2rem;
+            }
+
+            .row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .button-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                font-size: 1rem;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-header">
+            <h1>Bandy & Moot</h1>
+            <p>Previous Employment Information</p>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            Employment information saved successfully! 🎉
+        </div>
+
+        <form id="employmentForm">
+            <div class="employment-card">
+                <h2 class="card-title">Company & Position Details</h2>
+
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input type="text" id="companyName" name="companyName" placeholder="Enter company name" minlength="2">
+                    <div class="error-message" id="companyNameError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Position/Job Title</label>
+                    <input type="text" id="position" name="position" placeholder="Enter your position" minlength="2">
+                    <div class="error-message" id="positionError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Team Lead/Manager Name</label>
+                    <input type="text" id="teamLead" name="teamLead" placeholder="Enter team lead/manager name" minlength="2">
+                    <div class="error-message" id="teamLeadError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Annual Salary</label>
+                    <input type="number" id="salaryAnnum" name="salaryAnnum" placeholder="Enter annual salary" min="0" step="1000">
+                    <div class="error-message" id="salaryAnnumError"></div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label>Starting Date</label>
+                        <input type="date" id="startingDate" name="startingDate">
+                        <div class="error-message" id="startingDateError"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ending Date</label>
+                        <input type="date" id="endingDate" name="endingDate">
+                        <div class="error-message" id="endingDateError"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Work Experience (in months)</label>
+                    <input type="number" id="experienceMonths" name="experienceMonths" placeholder="Total experience in months" min="1" max="600">
+                    <div class="error-message" id="experienceMonthsError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Reason for Leaving</label>
+                    <select id="reasonLeaving" name="reasonLeaving">
+                        <option value="">Select Reason</option>
+                        <option value="Career Growth">Career Growth</option>
+                        <option value="Better Opportunity">Better Opportunity</option>
+                        <option value="Higher Salary">Higher Salary</option>
+                        <option value="Relocation">Relocation</option>
+                        <option value="Company Layoffs">Company Layoffs</option>
+                        <option value="Personal Reasons">Personal Reasons</option>
+                        <option value="Contract Ended">Contract Ended</option>
+                        <option value="Work-Life Balance">Work-Life Balance</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <div class="error-message" id="reasonLeavingError"></div>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button type="button" id="backButton" class="btn btn-back">
+                    Back
+                </button>
+                <button type="button" id="saveButton" class="btn btn-save">
+                    Save
+                </button>
+                <button type="button" id="nextButton" class="btn btn-next">
+                    skip 
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // In-memory storage for saved data
+        let savedEmploymentData = null;
+
+        // Form elements
+        const nextButton = document.getElementById('nextButton');
+        const backButton = document.getElementById('backButton');
+        const saveButton = document.getElementById('saveButton');
+        const successMessage = document.getElementById('successMessage');
+
+        // Back button functionality
+        backButton.addEventListener('click', function() {
+            window.location.href = 'registration_form4.5.html';
+        });
+
+        // Next button functionality
+        nextButton.addEventListener('click', function() {
+            // Save form data before navigation
+            const formData = collectFormData();
+            savedEmploymentData = { ...formData, savedAt: new Date().toLocaleString() };
+            
+            // Navigate to next form
+            window.location.href = '/salary website/registration_form5.5.html';
+        });
+
+        function showError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                const field = document.getElementById(fieldId);
+                if (field) field.style.borderColor = '#dc3545';
+            }
+        }
+
+        function clearError(fieldId) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            if (errorElement) {
+                errorElement.style.display = 'none';
+                const field = document.getElementById(fieldId);
+                if (field) field.style.borderColor = '#28a745';
+            }
+        }
+
+        function collectFormData() {
+            const formData = {};
+            const form = document.getElementById('employmentForm');
+            const formElements = form.querySelectorAll('input, select, textarea');
+            
+            formElements.forEach(element => {
+                if (element.name) {
+                    formData[element.name] = element.value;
+                }
+            });
+            
+            return formData;
+        }
+
+        function validateField(fieldId, value) {
+            switch(fieldId) {
+                case 'companyName':
+                case 'position':
+                case 'teamLead':
+                    return value && value.trim().length >= 2;
+                case 'salaryAnnum':
+                    return value && parseInt(value) >= 0;
+                case 'experienceMonths':
+                    return value && parseInt(value) >= 1 && parseInt(value) <= 600;
+                case 'startingDate':
+                case 'endingDate':
+                    return value && value.trim() !== '';
+                case 'reasonLeaving':
+                    return value && value.trim() !== '';
+                default:
+                    return true;
+            }
+        }
+
+        // Save button functionality - Updated to match personal details form
+        saveButton.addEventListener('click', function () {
+            let isValid = true;
+            const fieldsToValidate = ['companyName', 'position', 'teamLead', 'salaryAnnum', 'startingDate', 'endingDate', 'experienceMonths', 'reasonLeaving'];
+
+            // Validate all fields
+            fieldsToValidate.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field) return;
+                const value = field.value.trim();
+
+                if (!validateField(fieldId, value)) {
+                    let message = '';
+                    switch (fieldId) {
+                        case 'companyName':
+                            message = 'Company name is required (minimum 2 characters)';
+                            break;
+                        case 'position':
+                            message = 'Position/Job title is required (minimum 2 characters)';
+                            break;
+                        case 'teamLead':
+                            message = 'Team lead/Manager name is required (minimum 2 characters)';
+                            break;
+                        case 'salaryAnnum':
+                            message = 'Annual salary is required and must be 0 or greater';
+                            break;
+                        case 'startingDate':
+                            message = 'Starting date is required';
+                            break;
+                        case 'endingDate':
+                            message = 'Ending date is required';
+                            break;
+                        case 'experienceMonths':
+                            message = 'Work experience is required (1-600 months)';
+                            break;
+                        case 'reasonLeaving':
+                            message = 'Please select a reason for leaving';
+                            break;
+                    }
+                    showError(fieldId, message);
+                    isValid = false;
+                } else {
+                    clearError(fieldId);
+                }
+            });
+
+            if (isValid) {
+                // Collect and save form data to in-memory storage
+                const formData = collectFormData();
+                formData.savedAt = new Date().toLocaleString();
+
+                // Store the data
+                savedEmploymentData = formData;
+                
+                // Log the saved data to console for verification
+                console.log('Employment Details Saved:', savedEmploymentData);
+                
+                // Show success message with saved confirmation
+                successMessage.style.display = "block";
+                successMessage.innerHTML = `
+                    <strong>Employment Details Saved Successfully! ✅</strong><br>
+                    <small>Saved at: ${formData.savedAt}</small><br>
+                    <small>Company: ${formData.companyName} | Position: ${formData.position}</small>
+                `;
+                
+                // Change save button text temporarily to indicate success
+                const originalText = saveButton.textContent;
+                saveButton.textContent = "Saved ✓";
+                saveButton.style.background = "#198754";
+                
+                setTimeout(() => {
+                    successMessage.style.display = "none";
+                    saveButton.textContent = originalText;
+                    saveButton.style.background = "linear-gradient(135deg, #28a745 0%, #20c997 100%)";
+                }, 4000);
+
+                // Optionally, try to save to localStorage as a fallback
+                try {
+                    if (typeof(Storage) !== "undefined" && localStorage) {
+                        localStorage.setItem('employmentFormData', JSON.stringify(formData));
+                        console.log('Data also saved to localStorage');
+                    }
+                } catch (e) {
+                    console.log('localStorage not available, data saved in memory only');
+                }
+            }
+        });
+
+        // Load saved data on page load (if available)
+        window.addEventListener('load', function() {
+            try {
+                // Try to load from localStorage first (for real browser environments)
+                if (typeof(Storage) !== "undefined" && localStorage) {
+                    const savedData = localStorage.getItem('employmentFormData');
+                    if (savedData) {
+                        const data = JSON.parse(savedData);
+                        
+                        // Fill the form with saved data
+                        Object.keys(data).forEach(key => {
+                            const field = document.getElementById(key);
+                            if (field && data[key] && key !== 'savedAt') {
+                                field.value = data[key];
+                            }
+                        });
+                        
+                        // Show a notice that data was loaded
+                        successMessage.style.display = "block";
+                        successMessage.innerHTML = `
+                            <strong>Previously saved data loaded</strong><br>
+                            <small>Last saved: ${data.savedAt || 'Unknown'}</small>
+                        `;
+                        setTimeout(() => {
+                            successMessage.style.display = "none";
+                        }, 3000);
+                    }
+                }
+            } catch (e) {
+                console.log('Could not load saved data:', e.message);
+            }
+        });
+
+        // Add real-time validation for better user experience
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('blur', function() {
+                const errorElement = document.getElementById(this.name + 'Error');
+                if (errorElement && this.value.trim() && !validateField(this.name, this.value.trim())) {
+                    let message = 'Please enter a valid value';
+                    showError(this.name, message);
+                } else if (errorElement) {
+                    clearError(this.name);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

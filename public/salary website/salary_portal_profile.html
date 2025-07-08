@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Salary Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Header Styles */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logout-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .profile-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Profile Sidebar */
+        .profile-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            height: fit-content;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: sticky;
+            top: 120px;
+        }
+
+        .profile-avatar {
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-avatar img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid #667eea;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .profile-avatar img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .change-photo-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .change-photo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .profile-summary h3 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .profile-summary p {
+            color: #666;
+            margin-bottom: 0.3rem;
+        }
+
+        /* Profile Content */
+        .profile-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card h3::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        /* Form Styles */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-group input.error {
+            border-color: #e74c3c;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Employment Info */
+        .employment-info {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* Buttons */
+        .save-btn, .cancel-btn, .change-password-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .save-btn {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .cancel-btn {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .cancel-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(149, 165, 166, 0.3);
+        }
+
+        .change-password-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .change-password-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+        }
+
+        .notification.error {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+
+        .notification.warning {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .profile-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .profile-sidebar {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav {
+                gap: 1rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-actions {
+                flex-direction: column;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Password Strength Indicator */
+        .password-strength {
+            height: 4px;
+            background: #e1e5e9;
+            border-radius: 2px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .password-strength-bar.weak {
+            width: 33%;
+            background: #e74c3c;
+        }
+
+        .password-strength-bar.medium {
+            width: 66%;
+            background: #f39c12;
+        }
+
+        .password-strength-bar.strong {
+            width: 100%;
+            background: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <h1>Bandy & Moot</h1>
+        </div>
+        <nav class="nav">
+            <a href="salary_portal_dashboard.html" class="nav-link">Dashboard</a>
+            <a href="salary_portal_payslip.html" class="nav-link">Payslip</a>
+            <a href="salary_portal_profile.html" class="nav-link active">Profile</a>
+        </nav>
+        <div class="user-info">
+            <span id="userName">Welcome, User</span>
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="profile-container">
+            <div class="profile-sidebar">
+                <div class="profile-avatar">
+                    <img src="https://via.placeholder.com/150/4A90E2/FFFFFF?text=JD" alt="Profile Picture" id="profilePic">
+                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                    <button class="change-photo-btn" id="changePhotoBtn">Change Photo</button>
+                </div>
+                <div class="profile-summary">
+                    <h3 id="profileName">Sakshi Sharma</h3>
+                    <p id="profilePosition"></p>
+                    <p id="profileEmpId">Employee ID: 10119</p>
+                </div>
+            </div>
+
+            <div class="profile-content">
+                <div class="card">
+                    <h3>Personal Information</h3>
+                    <form id="personalInfoForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First Name</label>
+                                <input type="text" id="firstName" name="firstName" value="John" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" id="lastName" name="lastName" value="Doe" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" value="john.doe@company.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone</label>
+                                <input type="tel" id="phone" name="phone" value="+1 (555) 123-4567" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dateOfBirth">Date of Birth</label>
+                                <input type="date" id="dateOfBirth" name="dateOfBirth" value="1990-05-15">
+                            </div>
+                            <div class="form-group">
+                                <label for="gender">Gender</label>
+                                <select id="gender" name="gender">
+                                    <option value="male" selected>Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                    <option value="prefer-not-to-say">Prefer not to say</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <textarea id="address" name="address" rows="3">123 Main Street, Apt 4B, New York, NY 10001</textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>Employment Details</h3>
+                    <div class="employment-info">
+                        <div class="info-row">
+                            <span class="info-label">Employee ID:</span>
+                            <span class="info-value">EMP001</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Department:</span>
+                            <span class="info-value">Information Technology</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Position:</span>
+                            <span class="info-value">Software Developer</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Join Date:</span>
+                            <span class="info-value">January 15, 2020</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Employment Type:</span>
+                            <span class="info-value">Full-time</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Manager:</span>
+                            <span class="info-value">Sarah Johnson</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Emergency Contact</h3>
+                    <form id="emergencyContactForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="emergencyName">Contact Name</label>
+                                <input type="text" id="emergencyName" name="emergencyName" value="Jane Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="emergencyRelation">Relationship</label>
+                                <input type="text" id="emergencyRelation" name="emergencyRelation" value="Spouse" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="emergencyPhone">Phone Number</label>
+                                <input type="tel" id="emergencyPhone" name="emergencyPhone" value="+1 (555) 987-6543" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="emergencyEmail">Email</label>
+                                <input type="email" id="emergencyEmail" name="emergencyEmail" value="jane.doe@email.com">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>Change Password</h3>
+                    <form id="passwordChangeForm">
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" name="currentPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" name="newPassword" required>
+                            <div class="password-strength">
+                                <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="change-password-btn">Change Password</button>
+                    </form>
+                </div>
+
+                <div class="profile-actions">
+                    <button type="button" class="save-btn" id="saveBtn">Save Changes</button>
+                    <button type="button" class="cancel-btn" id="cancelBtn">Reset</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // User data simulation
+        let originalData = {
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@company.com',
+            phone: '+1 (555) 123-4567',
+            dateOfBirth: '1990-05-15',
+            gender: 'male',
+            address: '123 Main Street, Apt 4B, New York, NY 10001',
+            emergencyName: 'Jane Doe',
+            emergencyRelation: 'Spouse',
+            emergencyPhone: '+1 (555) 987-6543',
+            emergencyEmail: 'jane.doe@email.com'
+        };
+
+        // DOM Elements
+        const userName = document.getElementById('userName');
+        const profileName = document.getElementById('profileName');
+        const profilePic = document.getElementById('profilePic');
+        const changePhotoBtn = document.getElementById('changePhotoBtn');
+        const photoInput = document.getElementById('photoInput');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const passwordChangeForm = document.getElementById('passwordChangeForm');
+        const newPasswordInput = document.getElementById('newPassword');
+        const passwordStrengthBar = document.getElementById('passwordStrengthBar');
+
+        // Initialize page
+        function initializePage() {
+            // Set user name from login or localStorage
+            const loggedInUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (loggedInUser.name) {
+                userName.textContent = `Welcome, ${loggedInUser.name}`;
+                profileName.textContent = loggedInUser.name;
+                
+                // Update profile picture with initials
+                const initials = loggedInUser.name.split(' ').map(n => n[0]).join('');
+                profilePic.src = `https://via.placeholder.com/150/4A90E2/FFFFFF?text=${initials}`;
+            }
+
+            // Load saved profile data
+            loadProfileData();
+            
+            console.log('Profile page initialized');
+        }
+
+        // Load profile data from storage
+        function loadProfileData() {
+            const savedData = JSON.parse(localStorage.getItem('profileData') || '{}');
+            const data = { ...originalData, ...savedData };
+
+            // Populate form fields
+            Object.keys(data).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = data[key];
+                }
+            });
+        }
+
+        // Save profile data
+        function saveProfileData() {
+            const formData = {};
+            
+            // Collect all form data
+            const formElements = document.querySelectorAll('input, select, textarea');
+            formElements.forEach(element => {
+                if (element.id && element.id !== 'photoInput') {
+                    formData[element.id] = element.value;
+                }
+            });
+
+            // Validate required fields
+            const requiredFields = ['firstName', 'lastName', 'email', 'phone'];
+            const emptyFields = requiredFields.filter(field => !formData[field] || !formData[field].trim());
+            
+            if (emptyFields.length > 0) {
+                showNotification('Please fill in all required fields', 'error');
+                emptyFields.forEach(field => {
+                    const element = document.getElementById(field);
+                    if (element) {
+                        element.classList.add('error');
+                        setTimeout(() => element.classList.remove('error'), 500);
+                    }
+                });
+                return false;
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                showNotification('Please enter a valid email address', 'error');
+                document.getElementById('email').classList.add('error');
+                return false;
+            }
+
+            // Save to localStorage
+            localStorage.setItem('profileData', JSON.stringify(formData));
+            
+            // Update profile display
+            profileName.textContent = `${formData.firstName} ${formData.lastName}`;
+            userName.textContent = `Welcome, ${formData.firstName} ${formData.lastName}`;
+            
+            showNotification('Profile updated successfully!', 'success');
+            return true;
+        }
+
+        // Reset profile data
+        function resetProfileData() {
+            if (confirm('Are you sure you want to reset all changes?')) {
+                // Clear saved data
+                localStorage.removeItem('profileData');
+                
+                // Reload original data
+                loadProfileData();
+                
+                showNotification('Profile reset to original values', 'warning');
+            }
+        }
+
+        // Photo upload functionality
+        changePhotoBtn.addEventListener('click', () => {
+            photoInput.click();
+        });
+
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                    showNotification('File size too large. Please choose a file under 5MB.', 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePic.src = e.target.result;
+                    // Save to localStorage
+                    localStorage.setItem('profilePhoto', e.target.result);
+                    showNotification('Profile photo updated!', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Load saved photo on page load
+        window.addEventListener('load', () => {
+            const savedPhoto = localStorage.getItem('profilePhoto');
+            if (savedPhoto) {
+                profilePic.src = savedPhoto;
+            }
+        });
+
+        // Password strength checker
+        newPasswordInput.addEventListener('input', function() {
+            const password = this.value;
+            const strength = calculatePasswordStrength(password);
+            
+            passwordStrengthBar.className = 'password-strength-bar';
+            if (password.length > 0) {
+                passwordStrengthBar.classList.add(strength.level);
+            }
+        });
+
+        function calculatePasswordStrength(password) {
+            let score = 0;
+            if (password.length >= 8) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+
+            if (score < 3) return { level: 'weak', text: 'Weak' };
+            if (score < 5) return { level: 'medium', text: 'Medium' };
+            return { level: 'strong', text: 'Strong' };
+        }
+
+        // Password change form submission
+        passwordChangeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Validate current password (in real app, this would be verified server-side)
+            if (!currentPassword) {
+                showNotification('Please enter your current password', 'error');
+                return;
+            }
+
+            // Validate new password
+            if (newPassword.length < 8) {
+                showNotification('New password must be at least 8 characters long', 'error');
+                return;
+            }
+
+            // Validate password confirmation
+            if (newPassword !== confirmPassword) {
+                showNotification('New passwords do not match', 'error');
+                document.getElementById('confirmPassword').classList.add('error');
+                return;
+            }
+
+            // Simulate password change
+            const button = this.querySelector('button[type="submit"]');
+            button.classList.add('loading');
+            
+            setTimeout(() => {
+                button.classList.remove('loading');
+                showNotification('Password changed successfully!', 'success');
+                this.reset();
+                passwordStrengthBar.className = 'password-strength-bar';
+            }, 2000);
+        });
+
+        // Form validation on input
+        document.querySelectorAll('input[required]').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (!this.value.trim()) {
+                    this.classList.add('error');
+                } else {
+                    this.classList.remove('error');
+                }
+            });
+
+            input.addEventListener('input', function() {
+                if (this.classList.contains('error') && this.value.trim()) {
+                    this.classList.remove('error');
+                }
+            });
+        });
+
+        // Phone number formatting
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 10) {
+                value = value.replace(/(\d{1})(\d{3})(\d{3})(\d{4})/, '+$1 ($2) $3-$4');
+            }
+            e.target.value = value;
+        });
+
+        document.getElementById('emergencyPhone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 10) {
+                value = value.replace(/(\d{1})(\d{3})(\d{3})(\d{4})/, '+$1 ($2) $3-$4');
+            }
+            e.target.value = value;
+        });
+
+        // Button event listeners
+        saveBtn.addEventListener('click', () => {
+            saveBtn.classList.add('loading');
+            setTimeout(() => {
+                saveBtn.classList.remove('loading');
+                saveProfileData();
+            }, 1000);
+        });
+
+        cancelBtn.addEventListener('click', resetProfileData);
+
+        // Logout functionality
+        logoutBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear user session
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('isLoggedIn');
+                
+                // Show logout message
+                showNotification('Logged out successfully', 'success');
+                
+                // Redirect to login page after a delay
+                setTimeout(() => {
+                    // In a real application, redirect to login page
+                    alert('Redirecting to login page...');
+                    // window.location.href = 'login.html';
+                }, 1500);
+            }
+        });
+
+        // Notification system
+        function showNotification(message, type = 'success') {
+            // Remove existing notifications
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // Hide notification after 4 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // Auto-save functionality (optional)
+        let autoSaveTimeout;
+        function setupAutoSave() {
+            const formInputs = document.querySelectorAll('input, select, textarea');
+            formInputs.forEach(input => {
+                if (input.id !== 'currentPassword' && input.id !== 'newPassword' && input.id !== 'confirmPassword') {
+                    input.addEventListener('input', () => {
+                        clearTimeout(autoSaveTimeout);
+                        autoSaveTimeout = setTimeout(() => {
+                            const formData = {};
+                            formInputs.forEach(el => {
+                                if (el.id && el.id !== 'photoInput' && !el.id.includes('Password')) {
+                                    formData[el.id] = el.value;
+                                }
+                            });
+                            localStorage.setItem('profileDataDraft', JSON.stringify(formData));
+                        }, 2000); // Auto-save after 2 seconds of inactivity
+                    });
+                }
+            });
+        }
+
+        // Load draft data if available
+        function loadDraftData() {
+            const draftData = localStorage.getItem('profileDataDraft');
+            if (draftData) {
+                const data = JSON.parse(draftData);
+                Object.keys(data).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element && data[key] !== originalData[key]) {
+                        element.value = data[key];
+                        element.style.borderColor = '#f39c12'; // Highlight changed fields
+                    }
+                });
+            }
+        }
+
+        // Clear draft data when saved
+        function clearDraftData() {
+            localStorage.removeItem('profileDataDraft');
+            // Remove highlight from all fields
+            document.querySelectorAll('input, select, textarea').forEach(el => {
+                el.style.borderColor = '';
+            });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+S to save
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveBtn.click();
+            }
+            
+            // Ctrl+R to reset
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                cancelBtn.click();
+            }
+
+            // Escape to close notifications
+            if (e.key === 'Escape') {
+                const notification = document.querySelector('.notification.show');
+                if (notification) {
+                    notification.classList.remove('show');
+                }
+            }
+        });
+
+        // Form change detection
+        let hasChanges = false;
+        function detectChanges() {
+            const formInputs = document.querySelectorAll('input, select, textarea');
+            formInputs.forEach(input => {
+                if (input.id && input.id !== 'photoInput' && !input.id.includes('Password')) {
+                    input.addEventListener('input', () => {
+                        hasChanges = true;
+                        saveBtn.style.background = 'linear-gradient(45deg, #e67e22, #f39c12)';
+                        saveBtn.textContent = 'Save Changes*';
+                    });
+                }
+            });
+        }
+
+        // Warn before leaving with unsaved changes
+        window.addEventListener('beforeunload', function(e) {
+            if (hasChanges) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                return e.returnValue;
+            }
+        });
+
+        // Reset change detection after save
+        function resetChangeDetection() {
+            hasChanges = false;
+            saveBtn.style.background = '';
+            saveBtn.textContent = 'Save Changes';
+        }
+
+        // Enhanced save function
+        function enhancedSave() {
+            if (saveProfileData()) {
+                clearDraftData();
+                resetChangeDetection();
+                return true;
+            }
+            return false;
+        }
+
+        // Update save button click handler
+        saveBtn.removeEventListener('click', saveBtn.onclick);
+        saveBtn.addEventListener('click', () => {
+            saveBtn.classList.add('loading');
+            setTimeout(() => {
+                saveBtn.classList.remove('loading');
+                enhancedSave();
+            }, 1000);
+        });
+
+        // Profile picture click to view full size
+        profilePic.addEventListener('click', function() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                cursor: pointer;
+            `;
+            
+            const img = document.createElement('img');
+            img.src = this.src;
+            img.style.cssText = `
+                max-width: 90%;
+                max-height: 90%;
+                border-radius: 10px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            `;
+            
+            modal.appendChild(img);
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', () => {
+                modal.remove();
+            });
+        });
+
+        // Initialize all functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+            setupAutoSave();
+            loadDraftData();
+            detectChanges();
+            
+            // Add tooltips to form fields
+            const tooltips = {
+                firstName: 'Enter your first name as it appears on official documents',
+                lastName: 'Enter your last name as it appears on official documents',
+                email: 'This email will be used for all official communications',
+                phone: 'Enter your primary contact number',
+                dateOfBirth: 'This information is used for age verification and benefits',
+                emergencyName: 'Person to contact in case of emergency',
+                emergencyPhone: 'Emergency contact phone number'
+            };
+            
+            Object.keys(tooltips).forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.title = tooltips[id];
+                }
+            });
+        });
+
+        // Performance optimization - debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Console log for debugging
+        console.log('💰 SalaryPro Profile System Initialized');
+        console.log('Features: Auto-save, Change detection, Form validation, Photo upload');
+        console.log('Shortcuts: Ctrl+S (Save), Ctrl+R (Reset), Esc (Close notifications)');
+    </script>
+</body>
+</html>

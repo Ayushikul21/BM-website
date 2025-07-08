@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import Dashboard from './Dashboard';
+import UserAttendance from './UserAttendance';
 import { 
   User, 
   Calendar, 
-  DollarSign, 
+  IndianRupee, 
   Clock, 
   FileText, 
   Award, 
@@ -18,12 +20,26 @@ import {
   Search
 } from 'lucide-react';
 
+
 const MainEmployeeDashboard = () => {
   const [activeSection, setActiveSection] = useState('overview');
   const [notifications, setNotifications] = useState(3);
 
+  // State for editable fields
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+
+  // State for selected month and year
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
   // Sample employee data
-  const employeeData = {
+  const [employeeData, setEmployeeData] = useState({
     name: "Sarah Johnson",
     id: "EMP001",
     department: "Software Development",
@@ -33,281 +49,644 @@ const MainEmployeeDashboard = () => {
     joinDate: "January 15, 2022",
     manager: "Michael Chen",
     avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-  };
+  });
 
   const menuItems = [
     { id: 'profile', label: 'My Profile', icon: User },
     { id: 'attendance', label: 'Attendance', icon: Clock },
     { id: 'leaves', label: 'Leave Management', icon: Calendar },
-    { id: 'salary', label: 'Salary & Benefits', icon: DollarSign },
+    { id: 'salary', label: 'Salary & Benefits', icon: IndianRupee },
     { id: 'documents', label: 'Documents', icon: FileText },
     { id: 'performance', label: 'Performance', icon: Award },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
 
-  const renderProfile = () => (
+  const renderProfile = () => {
+
+  // Emergency contact data (replace with your actual data)
+  const emergencyContact = {
+    name: "Jane Doe",
+    relationship: "Spouse",
+    phone: "+1 (555) 987-6543",
+    email: "jane.doe@email.com"
+  };
+
+  // Handle password field changes
+  const handlePasswordChange = (field, value) => {
+    setPasswordData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle password submit
+  const handlePasswordSubmit = async () => {
+    // Validation
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert("New passwords don't match!");
+      return;
+    }
+    if (passwordData.newPassword.length < 8) {
+      alert("Password must be at least 8 characters long!");
+      return;
+    }
+    
+    try {
+      // TODO: Replace with your actual API call
+      // const response = await fetch('/api/change-password', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': `Bearer ${yourAuthToken}`
+      //   },
+      //   body: JSON.stringify({
+      //     currentPassword: passwordData.currentPassword,
+      //     newPassword: passwordData.newPassword
+      //   })
+      // });
+      
+      // For now, just show success message
+      alert("Password updated successfully!");
+      
+      // Reset form
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+      setIsEditingPassword(false);
+      
+    } catch (error) {
+      console.error('Password change error:', error);
+      alert("Failed to update password. Please try again.");
+    }
+  };
+
+  // Handle avatar change
+  const handleAvatarChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setIsUploadingAvatar(true);
+      
+      try {
+        // For now, just show the image locally
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setEmployeeData(prev => ({
+            ...prev,
+            avatar: e.target.result
+          }));
+          setIsUploadingAvatar(false);
+        };
+        reader.readAsDataURL(file);
+        
+        // TODO: Replace with your actual API call when ready
+        // const formData = new FormData();
+        // formData.append('avatar', file);
+        // formData.append('employeeId', employeeData.id);
+        
+        // const response = await fetch('/api/upload-avatar', {
+        //   method: 'POST',
+        //   body: formData,
+        //   headers: {
+        //     'Authorization': `Bearer ${yourAuthToken}`
+        //   }
+        // });
+        
+        // if (response.ok) {
+        //   const result = await response.json();
+        //   setEmployeeData(prev => ({
+        //     ...prev,
+        //     avatar: result.avatarUrl
+        //   }));
+        //   alert('Profile photo updated successfully!');
+        // }
+        
+      } catch (error) {
+        console.error('Avatar upload error:', error);
+        alert('Failed to update profile photo. Please try again.');
+        setIsUploadingAvatar(false);
+      }
+    }
+  };
+
+  return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
-        <div className="flex items-center space-x-6 mb-8">
-          <img 
-            src={employeeData.avatar} 
-            alt="Profile" 
-            className="w-24 h-24 rounded-full object-cover border-4 border-blue-100"
-          />
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">{employeeData.name}</h2>
-            <p className="text-gray-600">{employeeData.position}</p>
-            <p className="text-sm text-gray-500">{employeeData.department}</p>
+      {/* Main Profile Section */}
+      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+          <h2 className="text-xl font-bold">My Profile</h2>
+        </section>
+        
+        {/* Profile Header with Avatar */}
+        <div className="flex items-center space-x-6 mb-8 mt-6">
+          <div className="relative">
+            <img 
+              src={employeeData.avatar} 
+              alt="Profile" 
+              className={`w-24 h-24 rounded-full object-cover border-4 border-blue-100 ${isUploadingAvatar ? 'opacity-50' : ''}`}
+            />
+            {isUploadingAvatar && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                <div className="text-white text-xs">Uploading...</div>
+              </div>
+            )}
+            <div className="absolute bottom-0 right-0">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                id="avatar-upload"
+                disabled={isUploadingAvatar}
+              />
+              <label 
+                htmlFor="avatar-upload"
+                className={`bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors cursor-pointer flex items-center justify-center w-8 h-8 ${isUploadingAvatar ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <i className="fas fa-camera text-sm"></i>
+              </label>
+            </div>
           </div>
-          <button className="ml-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-            <Edit className="w-4 h-4" />
-            <span>Edit Profile</span>
-          </button>
+          <div>
+            <h3 className="text-2xl font-semibold text-gray-800">{employeeData.name}</h3>
+            <p className="text-gray-600">{employeeData.position}</p>
+          </div>
         </div>
+
+        {/* Employee Information Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.id}</p>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.email}</p>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.phone}</p>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.department}</p>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Manager</label>
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.manager}</p>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Join Date</label>
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.joinDate}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Emergency Contact Section */}
+      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mb-6">
+          <h2 className="text-xl font-bold">Emergency Contact</h2>
+        </section>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
-              <p className="text-gray-900">{employeeData.id}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <p className="text-gray-900">{employeeData.email}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-              <p className="text-gray-900">{employeeData.phone}</p>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{emergencyContact.name}</p>
           </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-              <p className="text-gray-900">{employeeData.department}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reporting Manager</label>
-              <p className="text-gray-900">{employeeData.manager}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Join Date</label>
-              <p className="text-gray-900">{employeeData.joinDate}</p>
-            </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{emergencyContact.relationship}</p>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{emergencyContact.phone}</p>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{emergencyContact.email}</p>
           </div>
         </div>
       </div>
-    </div>
-  );
 
-  const renderAttendance = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Attendance Overview</h3>
-          <div className="flex items-center space-x-2">
-            <Filter className="w-4 h-4 text-gray-500" />
-            <select className="border border-gray-300 rounded-lg px-3 py-1 text-sm">
-              <option>This Month</option>
-              <option>Last Month</option>
-              <option>This Quarter</option>
-            </select>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-green-700">Present Days</p>
-                <p className="text-2xl font-bold text-green-800">22</p>
-              </div>
-              <div className="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center">
-                <Clock className="w-6 h-6 text-green-700" />
-              </div>
+      {/* Change Password Section */}
+      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold">Change Password</h2>
+          {!isEditingPassword ? (
+            <button
+              onClick={() => setIsEditingPassword(true)}
+              className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium"
+            >
+              <i className="fas fa-edit mr-2"></i>
+              Change Password
+            </button>
+          ) : (
+            <div className="flex space-x-2">
+              <button
+                onClick={handlePasswordSubmit}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
+              >
+                <i className="fas fa-save mr-2"></i>
+                Save Changes
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditingPassword(false);
+                  setPasswordData({
+                    currentPassword: "",
+                    newPassword: "",
+                    confirmPassword: ""
+                  });
+                }}
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+              >
+                <i className="fas fa-times mr-2"></i>
+                Cancel
+              </button>
             </div>
-          </div>
-          
-          <div className="bg-red-50 rounded-lg p-4 border border-red-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-red-700">Absent Days</p>
-                <p className="text-2xl font-bold text-red-800">2</p>
-              </div>
-              <div className="w-12 h-12 bg-red-200 rounded-full flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-red-700" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-yellow-700">Late Arrivals</p>
-                <p className="text-2xl font-bold text-yellow-800">3</p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-200 rounded-full flex items-center justify-center">
-                <Clock className="w-6 h-6 text-yellow-700" />
-              </div>
-            </div>
-          </div>
-        </div>
+          )}
+        </section>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Date</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Check In</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Check Out</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Hours</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { date: '2024-06-26', checkIn: '9:00 AM', checkOut: '6:00 PM', hours: '9h 0m', status: 'Present' },
-                { date: '2024-06-25', checkIn: '9:15 AM', checkOut: '6:00 PM', hours: '8h 45m', status: 'Late' },
-                { date: '2024-06-24', checkIn: '9:00 AM', checkOut: '6:00 PM', hours: '9h 0m', status: 'Present' },
-                { date: '2024-06-23', checkIn: '-', checkOut: '-', hours: '0h 0m', status: 'Absent' },
-                { date: '2024-06-22', checkIn: '9:00 AM', checkOut: '6:00 PM', hours: '9h 0m', status: 'Present' },
-              ].map((record, index) => (
-                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-3 px-4 text-gray-900">{record.date}</td>
-                  <td className="py-3 px-4 text-gray-700">{record.checkIn}</td>
-                  <td className="py-3 px-4 text-gray-700">{record.checkOut}</td>
-                  <td className="py-3 px-4 text-gray-700">{record.hours}</td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      record.status === 'Present' ? 'bg-green-100 text-green-800' :
-                      record.status === 'Late' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {record.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {isEditingPassword ? (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+              <input
+                type="password"
+                value={passwordData.currentPassword}
+                onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter your current password"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+              <input
+                type="password"
+                value={passwordData.newPassword}
+                onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter new password (min. 8 characters)"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+              <input
+                type="password"
+                value={passwordData.confirmPassword}
+                onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Re-enter new password"
+              />
+            </div>
+            
+            {passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-red-600 text-sm font-medium">
+                  <i className="fas fa-exclamation-triangle mr-2"></i>
+                  Passwords don't match. Please try again.
+                </p>
+              </div>
+            )}
+            
+            {passwordData.newPassword && passwordData.newPassword.length < 8 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-yellow-600 text-sm font-medium">
+                  <i className="fas fa-info-circle mr-2"></i>
+                  Password must be at least 8 characters long.
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="bg-gray-50 rounded-lg p-6">
+              <i className="fas fa-lock text-gray-400 text-3xl mb-4"></i>
+              <p className="text-gray-600 font-medium">Password Security</p>
+              <p className="text-gray-500 text-sm mt-2">
+                Click "Change Password" to update your account password
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
+ };
 
-  const renderLeaves = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Leave Management</h3>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-            <Plus className="w-4 h-4" />
-            <span>Apply Leave</span>
-          </button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <div className="text-center">
-              <p className="text-sm text-blue-700">Annual Leave</p>
-              <p className="text-2xl font-bold text-blue-800">12</p>
-              <p className="text-xs text-blue-600">of 20 days</p>
-            </div>
-          </div>
-          
-          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <div className="text-center">
-              <p className="text-sm text-green-700">Sick Leave</p>
-              <p className="text-2xl font-bold text-green-800">5</p>
-              <p className="text-xs text-green-600">of 10 days</p>
-            </div>
-          </div>
-          
-          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-            <div className="text-center">
-              <p className="text-sm text-purple-700">Personal</p>
-              <p className="text-2xl font-bold text-purple-800">3</p>
-              <p className="text-xs text-purple-600">of 5 days</p>
-            </div>
-          </div>
-          
-          <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-            <div className="text-center">
-              <p className="text-sm text-orange-700">Maternity</p>
-              <p className="text-2xl font-bold text-orange-800">90</p>
-              <p className="text-xs text-orange-600">days available</p>
-            </div>
-          </div>
-        </div>
+  const renderAttendance = () => {
+    return <UserAttendance/>
+  };
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Type</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">From</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">To</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Days</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Reason</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { type: 'Annual', from: '2024-12-25', to: '2024-12-27', days: 3, reason: 'Christmas vacation', status: 'Approved' },
-                { type: 'Sick', from: '2024-12-15', to: '2024-12-15', days: 1, reason: 'Medical appointment', status: 'Approved' },
-                { type: 'Personal', from: '2024-12-30', to: '2024-12-31', days: 2, reason: 'Family event', status: 'Pending' },
-              ].map((leave, index) => (
-                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-3 px-4 text-gray-900">{leave.type}</td>
-                  <td className="py-3 px-4 text-gray-700">{leave.from}</td>
-                  <td className="py-3 px-4 text-gray-700">{leave.to}</td>
-                  <td className="py-3 px-4 text-gray-700">{leave.days}</td>
-                  <td className="py-3 px-4 text-gray-700">{leave.reason}</td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      leave.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                      leave.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {leave.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <button className="text-blue-600 hover:text-blue-800 text-sm">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+  const renderLeaves = () => {
+    return <Dashboard/>
+  }
+
+  const renderSalary = () => {  
+  // Get current date information
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  
+  // Month names array
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  
+  // Get selected month name
+  const selectedMonthName = monthNames[selectedMonth];
+  
+  // Generate years array (current year and previous 2 years)
+  const availableYears = [currentYear, currentYear - 1, currentYear - 2];
+  
+  // Calculate data based on selected month
+  const monthlySalary = 850000;
+  const monthlyBonus = 250000;
+  
+  // Calculate YTD based on selected month and year
+  const calculateYTD = () => {
+    if (selectedYear === currentYear) {
+      // For current year, calculate up to selected month or current month (whichever is smaller)
+      const monthsToCalculate = Math.min(selectedMonth + 1, currentMonth + 1);
+      return monthlySalary * monthsToCalculate;
+    } else {
+      // For previous years, calculate up to selected month
+      return monthlySalary * (selectedMonth + 1);
+    }
+  };
+  
+  const ytdEarnings = calculateYTD();
+  
+  // Format YTD period
+  const getYTDPeriod = () => {
+    if (selectedMonth === 0) {
+      return 'April';
+    }
+    return `April - ${selectedMonthName}`;
+  };
+  
+  // Handle payslip download - Alternative approach without jsPDF
+  const handleDownloadPayslip = () => {
+    // Create HTML content for the payslip
+    const payslipHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Payslip - ${selectedMonthName} ${selectedYear}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #2563eb;
+        }
+        .header p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .section {
+            margin: 20px 0;
+        }
+        .employee-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .earnings-deductions {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .earnings, .deductions {
+            flex: 1;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .earnings {
+            background-color: #f0f9ff;
+        }
+        .deductions {
+            background-color: #fef2f2;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .item:last-child {
+            border-bottom: none;
+        }
+        .total {
+            font-weight: bold;
+            border-top: 2px solid #333;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .net-salary {
+            text-align: center;
+            background-color: #10b981;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #666;
+        }
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PAYSLIP</h1>
+        <p>${selectedMonthName} ${selectedYear}</p>
     </div>
-  );
-
-  const renderSalary = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Salary & Benefits</h3>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-            <Download className="w-4 h-4" />
-            <span>Download Payslip</span>
-          </button>
+    
+    <div class="employee-info">
+        <h3>Employee Details</h3>
+        <p><strong>Employee Name:</strong> Employee Name</p>
+        <p><strong>Employee ID:</strong> EMP001</p>
+        <p><strong>Department:</strong> IT Department</p>
+        <p><strong>Pay Period:</strong> ${selectedMonthName} ${selectedYear}</p>
+    </div>
+    
+    <div class="earnings-deductions">
+        <div class="earnings">
+            <h3>EARNINGS</h3>
+            <div class="item">
+                <span>Base Salary</span>
+                <span>₹7,00,000</span>
+            </div>
+            <div class="item">
+                <span>Housing Allowance</span>
+                <span>₹1,00,000</span>
+            </div>
+            <div class="item">
+                <span>Transport Allowance</span>
+                <span>₹30,000</span>
+            </div>
+            <div class="item">
+                <span>Medical Allowance</span>
+                <span>₹20,000</span>
+            </div>
+            <div class="item total">
+                <span>Gross Salary</span>
+                <span>₹${monthlySalary.toLocaleString('en-IN')}</span>
+            </div>
         </div>
         
+        <div class="deductions">
+            <h3>DEDUCTIONS</h3>
+            <div class="item">
+                <span>Income Tax</span>
+                <span>₹1,20,000</span>
+            </div>
+            <div class="item">
+                <span>Social Security (ESI)</span>
+                <span>₹34,000</span>
+            </div>
+            <div class="item">
+                <span>Health Insurance</span>
+                <span>₹15,000</span>
+            </div>
+            <div class="item">
+                <span>Provident Fund (PF)</span>
+                <span>₹42,500</span>
+            </div>
+            <div class="item total">
+                <span>Total Deductions</span>
+                <span>₹2,11,500</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="net-salary">
+        NET SALARY: ₹6,38,500
+    </div>
+    
+    <div class="footer">
+        <p>This is a computer-generated payslip and does not require a signature.</p>
+        <p>Generated on: ${new Date().toLocaleDateString('en-IN')}</p>
+    </div>
+    
+    <script>
+        // Auto-print when opened
+        window.onload = function() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
+    `;
+    
+    // Create blob and download
+    const blob = new Blob([payslipHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Payslip_${selectedMonthName}_${selectedYear}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        {/* Header with filters */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 space-y-4 lg:space-y-0">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Salary & Benefits</h3>
+            <p className="text-sm text-gray-500">Displaying data for {selectedMonthName} {selectedYear}</p>
+          </div>
+          
+          {/* Month and Year filters */}
+          <div className="flex flex-wrap items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700">Month:</label>
+              <select 
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {monthNames.map((month, index) => (
+                  <option key={index} value={index}>{month}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700">Year:</label>
+              <select 
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {availableYears.map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+            
+            <button 
+              onClick={handleDownloadPayslip}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download Payslip</span>
+            </button>
+          </div>
+        </div>
+        
+        {/* Salary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100">Monthly Salary</p>
-                <p className="text-3xl font-bold">$8,500</p>
-                <p className="text-sm text-blue-200">Base + Allowances</p>
+                <p className="text-3xl font-bold">₹{monthlySalary.toLocaleString('en-IN')}</p>
+                <p className="text-sm text-blue-200">{selectedMonthName} {selectedYear}</p>
               </div>
-              <DollarSign className="w-12 h-12 text-blue-200" />
+              <IndianRupee className="w-12 h-12 text-blue-200" />
             </div>
           </div>
           
@@ -315,8 +694,8 @@ const MainEmployeeDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100">YTD Earnings</p>
-                <p className="text-3xl font-bold">$93,500</p>
-                <p className="text-sm text-green-200">January - November</p>
+                <p className="text-3xl font-bold">₹{ytdEarnings.toLocaleString('en-IN')}</p>
+                <p className="text-sm text-green-200">{getYTDPeriod()}</p>
               </div>
               <Award className="w-12 h-12 text-green-200" />
             </div>
@@ -326,7 +705,7 @@ const MainEmployeeDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100">Bonus</p>
-                <p className="text-3xl font-bold">$2,500</p>
+                <p className="text-3xl font-bold">₹{monthlyBonus.toLocaleString('en-IN')}</p>
                 <p className="text-sm text-purple-200">Performance Bonus</p>
               </div>
               <Award className="w-12 h-12 text-purple-200" />
@@ -334,55 +713,60 @@ const MainEmployeeDashboard = () => {
           </div>
         </div>
 
+        {/* Salary Breakdown and Deductions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-gray-50 rounded-lg p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Salary Breakdown</h4>
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+              Salary Breakdown - {selectedMonthName} {selectedYear}
+            </h4>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Base Salary</span>
-                <span className="font-medium text-gray-900">$7,000</span>
+                <span className="font-medium text-gray-900">₹7,00,000</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Housing Allowance</span>
-                <span className="font-medium text-gray-900">$1,000</span>
+                <span className="font-medium text-gray-900">₹1,00,000</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Transport Allowance</span>
-                <span className="font-medium text-gray-900">$300</span>
+                <span className="font-medium text-gray-900">₹30,000</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Medical Allowance</span>
-                <span className="font-medium text-gray-900">$200</span>
+                <span className="font-medium text-gray-900">₹20,000</span>
               </div>
               <div className="border-t pt-2 flex justify-between font-semibold">
                 <span className="text-gray-900">Gross Salary</span>
-                <span className="text-gray-900">$8,500</span>
+                <span className="text-gray-900">₹{monthlySalary.toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
 
           <div className="bg-gray-50 rounded-lg p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Deductions</h4>
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+              Deductions - {selectedMonthName} {selectedYear}
+            </h4>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Income Tax</span>
-                <span className="font-medium text-red-600">-$1,200</span>
+                <span className="font-medium text-red-600">-₹1,20,000</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Social Security</span>
-                <span className="font-medium text-red-600">-$340</span>
+                <span className="text-gray-600">Social Security (ESI)</span>
+                <span className="font-medium text-red-600">-₹34,000</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Health Insurance</span>
-                <span className="font-medium text-red-600">-$150</span>
+                <span className="font-medium text-red-600">-₹15,000</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Retirement Fund</span>
-                <span className="font-medium text-red-600">-$425</span>
+                <span className="text-gray-600">Provident Fund (PF)</span>
+                <span className="font-medium text-red-600">-₹42,500</span>
               </div>
               <div className="border-t pt-2 flex justify-between font-semibold">
                 <span className="text-gray-900">Net Salary</span>
-                <span className="text-green-600">$6,385</span>
+                <span className="text-green-600">₹6,38,500</span>
               </div>
             </div>
           </div>
@@ -390,6 +774,7 @@ const MainEmployeeDashboard = () => {
       </div>
     </div>
   );
+};
 
   const renderDocuments = () => (
     <div className="space-y-6">
@@ -653,76 +1038,72 @@ const MainEmployeeDashboard = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0">
-                <h1 className="text-xl font-bold text-gray-900">Employee Portal</h1>
-              </div>
-            </div>
+    <div className="flex flex-col h-screen bg-gray-50">
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between h-20">
+        <div className="flex items-center space-x-4">
+          <div className="flex-shrink-0">
+            <h1 className="text-xl font-bold text-gray-900">Employee Portal</h1>
+          </div>
+        </div>
             
-            <div className="flex items-center space-x-4">
-              <button className="relative p-2 text-gray-400 hover:text-gray-500">
-                <Bell className="w-6 h-6" />
-                {notifications > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {notifications}
-                  </span>
-                )}
-              </button>
+        <div className="flex items-center space-x-4">
+          <button className="relative p-2 text-gray-400 hover:text-gray-500">
+            <Bell className="w-6 h-6" />
+            {notifications > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                {notifications}
+              </span>
+            )}
+          </button>
               
-              <div className="flex items-center space-x-3">
-                <img 
-                  src={employeeData.avatar} 
-                  alt="Profile" 
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-                <div className="hidden md:block">
-                  <p className="text-sm font-medium text-gray-900">{employeeData.name}</p>
-                  <p className="text-xs text-gray-500">{employeeData.position}</p>
-                </div>
-              </div>
-              
-              <button className="p-2 text-gray-400 hover:text-gray-500">
-                <LogOut className="w-5 h-5" />
-              </button>
+          <div className="flex items-center space-x-3">
+            <img 
+              src={employeeData.avatar} 
+              alt="Profile" 
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            <div className="hidden md:block">
+              <p className="text-sm font-medium text-gray-900">{employeeData.name}</p>
+              <p className="text-xs text-gray-500">{employeeData.position}</p>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
-          <div className="w-full lg:w-64 flex-shrink-0">
-            <nav className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-              <div className="space-y-1">
-                {menuItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveSection(item.id)}
-                      className={`w-full flex items-center space-x-3 px-3 py-2 text-left rounded-lg transition-colors ${
-                        activeSection === item.id
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{item.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </nav>
-          </div>
+      <div className="flex h-screen pt-20"> {/* Container for sidebar and content */}
+        {/* Fixed Sidebar */}
+        <div className="fixed left-0 top-20 bottom-0 w-64 bg-white border-r border-gray-200 flex flex-col z-40">
+          <nav className="mt-6 flex-1 overflow-y-auto">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveSection(item.id)}
+                    className={`w-full flex items-center space-x-3 px-6 py-3 text-left hover:bg-blue-50 transition-colors ${
+                      activeSection === item.id
+                        ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600' : 'text-gray-700'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </button>
+                );
+              })}
+          </nav>
 
-          {/* Main Content */}
-          <div className="flex-1">
+          <div className="p-6 border-t">
+              <button className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+              <LogOut className="w-5 h-5" />
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Main Content Area - Scrollable content area */}
+        <div className="flex-1 ml-64 overflow-y-auto h-full">
+          <div className="p-8">
             {renderContent()}
           </div>
         </div>

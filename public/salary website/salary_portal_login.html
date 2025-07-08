@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Login - Bandy & Moot Pvt. Ltd.</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 15px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: block;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+            animation: logoGlow 2s ease-in-out infinite alternate;
+            text-align: center;
+            line-height: 1.2;
+            font-weight: 700;
+        }
+
+        @keyframes logoGlow {
+            from {
+                filter: drop-shadow(0 0 5px rgba(102, 126, 234, 0.3));
+            }
+            to {
+                filter: drop-shadow(0 0 15px rgba(118, 75, 162, 0.5));
+            }
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 20px;
+            padding-right: 50px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-group input.error {
+            border-color: #e74c3c;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .login-btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.2);
+            display: none;
+        }
+
+        .success-message {
+            color: #27ae60;
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(39, 174, 96, 0.1);
+            border: 1px solid rgba(39, 174, 96, 0.2);
+            display: none;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .links a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle:hover {
+            color: #333;
+        }
+
+        .password-toggle svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 480px) {
+            .login-box {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="logo">
+                <img src="/salary website/logob&m.jpg" alt="Bandy & Moot Logo" />
+                <h1>Bandy & Moot Pvt. Ltd.</h1>
+            </div>
+            <h2>Employee Login</h2>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <input
+                        type="text"
+                        id="employeeId"
+                        name="employeeId"
+                        placeholder="Employee ID"
+                    />
+                </div>
+                <div class="form-group">
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Password"
+                    />
+                    <span class="password-toggle" id="passwordToggle">
+                        <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg id="eyeOffIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </span>
+                </div>
+                <button type="submit" class="login-btn" id="loginBtn">
+                    Login
+                </button>
+            </form>
+
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <div class="links">
+                <a id="forgotPassword">Forgot Password?</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class LoginForm {
+            constructor() {
+                this.employeeIdInput = document.getElementById('employeeId');
+                this.passwordInput = document.getElementById('password');
+                this.passwordToggle = document.getElementById('passwordToggle');
+                this.eyeIcon = document.getElementById('eyeIcon');
+                this.eyeOffIcon = document.getElementById('eyeOffIcon');
+                this.loginBtn = document.getElementById('loginBtn');
+                this.errorMessage = document.getElementById('errorMessage');
+                this.successMessage = document.getElementById('successMessage');
+                this.forgotPassword = document.getElementById('forgotPassword');
+                this.loginForm = document.getElementById('loginForm');
+                
+                this.showPassword = false;
+                this.isLoading = false;
+                this.isLoggedIn = false;
+                
+                this.init();
+            }
+
+            init() {
+                // Focus on employee ID input when page loads
+                this.employeeIdInput.focus();
+                
+                // Event listeners
+                this.loginForm.addEventListener('submit', (e) => this.handleSubmit(e));
+                this.passwordToggle.addEventListener('click', () => this.togglePasswordVisibility());
+                this.forgotPassword.addEventListener('click', (e) => this.handleForgotPassword(e));
+                
+                // Enter key listeners
+                this.employeeIdInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.handleSubmit(e);
+                });
+                this.passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.handleSubmit(e);
+                });
+            }
+
+            validateEmployeeId(id) {
+                return id.trim().length >= 3;
+            }
+
+            validatePassword(password) {
+                return password.length >= 6;
+            }
+
+            showError(message) {
+                this.errorMessage.textContent = message;
+                this.errorMessage.style.display = 'block';
+                this.successMessage.style.display = 'none';
+            }
+
+            showSuccess(message) {
+                this.successMessage.textContent = message;
+                this.successMessage.style.display = 'block';
+                this.errorMessage.style.display = 'none';
+            }
+
+            hideMessages() {
+                this.errorMessage.style.display = 'none';
+                this.successMessage.style.display = 'none';
+            }
+
+            togglePasswordVisibility() {
+                this.showPassword = !this.showPassword;
+                this.passwordInput.type = this.showPassword ? 'text' : 'password';
+                
+                if (this.showPassword) {
+                    this.eyeIcon.classList.add('hidden');
+                    this.eyeOffIcon.classList.remove('hidden');
+                } else {
+                    this.eyeIcon.classList.remove('hidden');
+                    this.eyeOffIcon.classList.add('hidden');
+                }
+            }
+
+            inputErrorClass(field) {
+                if (field === 'employeeId') {
+                    return !this.validateEmployeeId(this.employeeIdInput.value) && this.errorMessage.style.display === 'block' ? 'error' : '';
+                }
+                if (field === 'password') {
+                    return !this.validatePassword(this.passwordInput.value) && this.errorMessage.style.display === 'block' ? 'error' : '';
+                }
+                return '';
+            }
+
+            handleSubmit(e) {
+                e.preventDefault();
+                
+                const empId = this.employeeIdInput.value.trim().toUpperCase();
+                const pwd = this.passwordInput.value;
+
+                this.hideMessages();
+                
+                // Remove error classes
+                this.employeeIdInput.classList.remove('error');
+                this.passwordInput.classList.remove('error');
+
+                if (!this.validateEmployeeId(empId)) {
+                    this.showError('Employee ID must be at least 3 characters long');
+                    this.employeeIdInput.classList.add('error');
+                    this.employeeIdInput.focus();
+                    return;
+                }
+
+                if (!this.validatePassword(pwd)) {
+                    this.showError('Password must be at least 6 characters long');
+                    this.passwordInput.classList.add('error');
+                    this.passwordInput.focus();
+                    return;
+                }
+
+                this.isLoading = true;
+                this.loginBtn.classList.add('loading');
+                this.loginBtn.textContent = '';
+
+                // Call onLogin callback if it exists
+                if (typeof onLogin === 'function') {
+                    onLogin(this.employeeIdInput.value.trim().toLowerCase());
+                }
+
+                // Simulate login process
+                setTimeout(() => {
+                    this.showSuccess(`Login successful for ${empId}!`);
+                    setTimeout(() => {
+                        this.isLoggedIn = true;
+                        console.log('Login successful for:', { id: empId, name: 'User', role: 'Employee' });
+                        
+                        // Hide the login form
+                        document.querySelector('.login-container').style.display = 'none';
+                    }, 1000);
+                }, 1500);
+
+                // API call (commented out since axios is not included)
+                
+                fetch('http://localhost:4000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: this.employeeIdInput.value,
+                        password: this.passwordInput.value
+                    })
+                })
+                .then(response => response.json())
+                .then(data => console.log(data))
+                .catch(error => console.error(error));
+                
+            }
+
+            handleForgotPassword(e) {
+                e.preventDefault();
+                const empId = this.employeeIdInput.value.trim().toUpperCase();
+
+                if (!empId) {
+                    this.showError('Please enter your Employee ID first');
+                    this.employeeIdInput.focus();
+                    return;
+                }
+
+                this.showSuccess(`Password reset link sent to email associated with ${empId}`);
+            }
+
+            logout() {
+                this.isLoggedIn = false;
+                this.employeeIdInput.value = '';
+                this.passwordInput.value = '';
+                this.showPassword = false;
+                this.passwordInput.type = 'password';
+                this.eyeIcon.classList.remove('hidden');
+                this.eyeOffIcon.classList.add('hidden');
+                this.hideMessages();
+                this.isLoading = false;
+                this.loginBtn.classList.remove('loading');
+                this.loginBtn.textContent = 'Login';
+                
+                // Show the login form
+                document.querySelector('.login-container').style.display = 'block';
+                
+                // Focus on employee ID input after logout
+                setTimeout(() => {
+                    this.employeeIdInput.focus();
+                }, 100);
+            }
+        }
+
+        // Initialize the login form when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = new LoginForm();
+            
+            // Expose logout function globally for external use
+            window.logout = () => loginForm.logout();
+        });
+    </script>
+</body>
+</html>

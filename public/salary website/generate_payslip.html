@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payslip Form Generator - Stefanini India</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #6c5ce7;
+        }
+
+        .logo h1 {
+            color: #6c5ce7;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            animation: slideInUp 0.8s ease;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #6c5ce7;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-select {
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #6c5ce7;
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+        }
+
+        .earnings-deductions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .earnings-section, .deductions-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .generate-btn {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.3);
+        }
+
+        .payslip-preview {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .payslip {
+            padding: 2rem;
+            border: 2px solid #000;
+        }
+
+        .company-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #000;
+        }
+
+        .company-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .company-logo img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #6c5ce7;
+        }
+
+        .company-info h3 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .company-details {
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .employee-basic-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 1px solid #000;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .info-value {
+            color: #666;
+        }
+
+        .section-header {
+            background: #f8f9fa;
+            padding: 0.5rem;
+            font-weight: bold;
+            border-bottom: 1px solid #000;
+            text-align: center;
+        }
+
+        .salary-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            margin-bottom: 1rem;
+            border: 1px solid #000;
+        }
+
+        .earnings-preview,
+        .deductions-preview {
+            border-right: 1px solid #000;
+        }
+
+        .deductions-preview {
+            border-right: none;
+        }
+
+        .salary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .salary-table th {
+            background: #f8f9fa;
+            padding: 0.75rem 0.5rem;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 1px solid #000;
+            font-size: 0.9rem;
+        }
+
+        .salary-table td {
+            padding: 0.5rem;
+            border-bottom: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+
+        .amount-column {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .ytd-column {
+            text-align: right;
+            color: #666;
+        }
+
+        .total-row {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .net-pay-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border: 2px solid #000;
+            margin-bottom: 1rem;
+        }
+
+        .net-pay-amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #10ac84;
+        }
+
+        .net-pay-words {
+            font-style: italic;
+            color: #666;
+        }
+
+        .footer-notes {
+            font-size: 0.8rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .header,
+            .form-container,
+            .generate-btn {
+                display: none;
+            }
+            
+            .main-content {
+                padding: 0;
+                max-width: none;
+            }
+            
+            .payslip-preview {
+                box-shadow: none;
+                border-radius: 0;
+                display: block !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .earnings-deductions {
+                grid-template-columns: 1fr;
+            }
+
+            .employee-basic-info {
+                grid-template-columns: 1fr;
+            }
+
+            .salary-section {
+                grid-template-columns: 1fr;
+            }
+
+            .payslip {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <img src="/salary website/logob&m.jpg" alt="Bandy & Moot Logo">
+            <h1>Salary Slip</h1>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="form-container" id="formContainer">
+            <form id="payslipForm">
+                <!-- Employee Information Section -->
+                <div class="form-section">
+                    <h2 class="section-title">Employee Information</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Employee Code</label>
+                            <input type="text" class="form-input" name="empCode" placeholder="Enter employee code">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Employee Name</label>
+                            <input type="text" class="form-input" name="empName" placeholder="Enter full name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-input" name="department" placeholder="Enter department">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cost Centre</label>
+                            <input type="text" class="form-input" name="costCentre" placeholder="Enter cost centre">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Location</label>
+                            <input type="text" class="form-input" name="location" placeholder="Enter location">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Designation</label>
+                            <input type="text" class="form-input" name="designation" placeholder="Enter designation">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" class="form-input" name="dob">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date of Joining</label>
+                            <input type="date" class="form-input" name="doj">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Residential Status</label>
+                            <select class="form-select" name="resStatus">
+                                <option value="">Select status</option>
+                                <option value="Resident">Resident</option>
+                                <option value="Non-Resident">Non-Resident</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">PF Number</label>
+                            <input type="text" class="form-input" name="pfNo" placeholder="Enter PF number">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ESI Number</label>
+                            <input type="text" class="form-input" name="esiNo" placeholder="Enter ESI number">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">EPS Number</label>
+                            <input type="text" class="form-input" name="epsNo" placeholder="Enter EPS number">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payroll Month Section -->
+                <div class="form-section">
+                    <h2 class="section-title">Payroll Period</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Payroll Month</label>
+                            <input type="month" class="form-input" name="payrollMonth" value="2025-02">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Earnings and Deductions Section -->
+                <div class="form-section">
+                    <h2 class="section-title">Salary Components</h2>
+                    <div class="earnings-deductions">
+                        <div class="earnings-section">
+                            <h3 class="section-subtitle">💰 Earnings</h3>
+                            <div class="form-group">
+                                <label class="form-label">Basic Salary</label>
+                                <input type="number" class="form-input earnings-input" name="basic" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">House Rent Allowance</label>
+                                <input type="number" class="form-input earnings-input" name="hra" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Special Allowance</label>
+                                <input type="number" class="form-input earnings-input" name="specialAllowance" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Arrear Special Allowance</label>
+                                <input type="number" class="form-input earnings-input" name="arrearSpecial" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><strong>Total Earnings</strong></label>
+                                <input type="number" class="form-input" name="totalEarnings" placeholder="0.00" readonly style="font-weight: bold;">
+                            </div>
+                        </div>
+
+                        <div class="deductions-section">
+                            <h3 class="section-subtitle">📉 Deductions</h3>
+                            <div class="form-group">
+                                <label class="form-label">Provident Fund</label>
+                                <input type="number" class="form-input deductions-input" name="pf" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Income Tax</label>
+                                <input type="number" class="form-input deductions-input" name="incomeTax" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><strong>Total Deductions</strong></label>
+                                <input type="number" class="form-input" name="totalDeductions" placeholder="0.00" readonly style="font-weight: bold;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 1.2rem; font-weight: bold; color: #10ac84;">Net Pay</label>
+                        <input type="number" class="form-input" name="netPay" placeholder="0.00" readonly style="font-size: 1.2rem; font-weight: bold; color: #10ac84;">
+                    </div>
+                </div>
+
+                <button type="button" class="generate-btn" onclick="generatePayslip()">📄 Generate Payslip</button>
+            </form>
+        </div>
+
+        <!-- Hidden Payslip Preview for PDF Generation -->
+        <div class="payslip-preview" id="payslipPreview" style="position: absolute; left: -9999px; top: -9999px;">
+            <div class="payslip" id="payslipContent">
+                <div class="company-header">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjMiLz4KPCEtLSBQZXJzb24gaWNvbiAtLT4KPHN2ZyB4PSI3MCIgeT0iNDAiIHdpZHRoPSI2MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICA8cGF0aCBkPSJtOSA5IDUtNS0yLTJzLS41LTEtMS0xaC0xbC0yIDIgNSA1eiIvPgogIDxwYXRoIGQ9Im0xNSA1LTUgNSAyIDJzLjUgMSAxIDFoMWwyLTItNS01eiIvPgogIDxwYXRoIGQ9Ik0xOCA5djRhMiAyIDAgMCAxLTIgMkgxM2wtMi0yaDEuNWEuNS41IDAgMCAwIC41LS41di0yYTEgMSAwIDAgMC0xLTFIMTAiLz4KICA8cGF0aCBkPSJNNiAxNHYtNGEyIDIgMCAwIDEgMi0yaDNsMS0xaC0xLjVhLjUuNSAwIDAgMC0uNS41djJhMSAxIDAgMCAwIDEgMUgxNCIvPgo8L3N2Zz4KPCEtLSBBcnJvdyAtLT4KPHN2ZyB4PSIxMjAiIHk9IjQwIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CiAgPHBhdGggZD0ibTcgMTEgNi02IDYgNk0xMyA1djEyIi8+Cjwvc3ZnPgo8IS0tIFN0YWlycyAtLT4KPHN2ZyB4PSI0MCIgeT0iMTEwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjYwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogIDxwYXRoIGQ9Im0yMSAzLTMgOUg5bDEzIDloLTEzTDMgMTJoNloiLz4KPC9zdmc+Cjx0ZXh0IHg9IjEwMCIgeT0iMTg1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDA5Y2RjIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIGZvbnQtd2VpZ2h0PSJib2xkIj5CQU5EWSAmYW1wOyBNT09UPC90ZXh0Pgo8L3N2Zz4=" alt="Bandy & Moot Logo" class="company-logo">
+                    <div class="company-info">
+                        <h3>BANDY & MOOT</h3>
+                        <div class="company-details">
+                            Address: Corporate Office<br>
+                            Phone: +91-XXX-XXX-XXXX<br>
+                            Email: info@bandymoot.com
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <h2 style="color: #333; margin-bottom: 0.5rem;">SALARY SLIP</h2>
+                    <p id="payrollPeriod" style="color: #666; font-weight: 600;">For the month of February 2025</p>
+                </div>
+
+                <div class="employee-basic-info" id="employeeInfo">
+                    <!-- Employee information will be populated here -->
+                </div>
+
+                <div class="salary-section">
+                    <div class="earnings-preview">
+                        <div class="section-header">EARNINGS</div>
+                        <table class="salary-table">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th class="amount-column">Current Month</th>
+                                    <th class="ytd-column">YTD</th>
+                                </tr>
+                            </thead>
+                            <tbody id="earningsTable">
+                                <!-- Earnings will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="deductions-preview">
+                        <div class="section-header">DEDUCTIONS</div>
+                        <table class="salary-table">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th class="amount-column">Current Month</th>
+                                    <th class="ytd-column">YTD</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deductionsTable">
+                                <!-- Deductions will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="net-pay-section">
+                    <div>
+                        <strong>NET PAY:</strong>
+                        <div class="net-pay-amount" id="netPayDisplay">₹0.00</div>
+                    </div>
+                    <div class="net-pay-words" id="netPayWords">
+                        <!-- Amount in words will be populated here -->
+                    </div>
+                </div>
+
+                <div class="footer-notes">
+                    <p><strong>Note:</strong> This is a computer-generated payslip and does not require a signature.</p>
+                    <p>For any queries regarding this payslip, please contact HR department.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Auto-calculate totals when inputs change
+        document.addEventListener('DOMContentLoaded', function() {
+            const earningsInputs = document.querySelectorAll('.earnings-input');
+            const deductionsInputs = document.querySelectorAll('.deductions-input');
+            
+            function calculateTotals() {
+                // Calculate total earnings
+                let totalEarnings = 0;
+                earningsInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    totalEarnings += value;
+                });
+                document.querySelector('input[name="totalEarnings"]').value = totalEarnings.toFixed(2);
+                
+                // Calculate total deductions
+                let totalDeductions = 0;
+                deductionsInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    totalDeductions += value;
+                });
+                document.querySelector('input[name="totalDeductions"]').value = totalDeductions.toFixed(2);
+                
+                // Calculate net pay
+                const netPay = totalEarnings - totalDeductions;
+                document.querySelector('input[name="netPay"]').value = netPay.toFixed(2);
+            }
+            
+            // Add event listeners to all earnings and deductions inputs
+            [...earningsInputs, ...deductionsInputs].forEach(input => {
+                input.addEventListener('input', calculateTotals);
+            });
+        });
+
+        function generatePayslip() {
+            // Calculate totals first
+            const earningsInputs = document.querySelectorAll('.earnings-input');
+            const deductionsInputs = document.querySelectorAll('.deductions-input');
+            
+            let totalEarnings = 0;
+            earningsInputs.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                totalEarnings += value;
+            });
+            
+            let totalDeductions = 0;
+            deductionsInputs.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                totalDeductions += value;
+            });
+            
+            const netPay = totalEarnings - totalDeductions;
+            
+            // Update form fields
+            document.querySelector('input[name="totalEarnings"]').value = totalEarnings.toFixed(2);
+            document.querySelector('input[name="totalDeductions"]').value = totalDeductions.toFixed(2);
+            document.querySelector('input[name="netPay"]').value = netPay.toFixed(2);
+            
+            // Populate payslip preview
+            populatePayslipPreview();
+            
+            // Generate PDF
+            generatePDF();
+        }
+
+        function populatePayslipPreview() {
+            const form = document.getElementById('payslipForm');
+            const formData = new FormData(form);
+            
+            // Update payroll period
+            const payrollMonth = formData.get('payrollMonth');
+            if (payrollMonth) {
+                const date = new Date(payrollMonth);
+                const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                document.getElementById('payrollPeriod').textContent = `For the month of ${monthName}`;
+            }
+            
+            // Populate employee information
+            const employeeInfoDiv = document.getElementById('employeeInfo');
+            const employeeFields = [
+                { label: 'Employee Code', name: 'empCode' },
+                { label: 'Employee Name', name: 'empName' },
+                { label: 'Department', name: 'department' },
+                { label: 'Cost Centre', name: 'costCentre' },
+                { label: 'Location', name: 'location' },
+                { label: 'Designation', name: 'designation' },
+                { label: 'Date of Birth', name: 'dob' },
+                { label: 'Date of Joining', name: 'doj' },
+                { label: 'Residential Status', name: 'resStatus' },
+                { label: 'PF Number', name: 'pfNo' },
+                { label: 'ESI Number', name: 'esiNo' },
+                { label: 'EPS Number', name: 'epsNo' }
+            ];
+            
+            employeeInfoDiv.innerHTML = '';
+            employeeFields.forEach(field => {
+                const value = formData.get(field.name) || '';
+                if (value) {
+                    const infoItem = document.createElement('div');
+                    infoItem.className = 'info-item';
+                    infoItem.innerHTML = `
+                        <span class="info-label">${field.label}:</span>
+                        <span class="info-value">${value}</span>
+                    `;
+                    employeeInfoDiv.appendChild(infoItem);
+                }
+            });
+            
+            // Populate earnings table
+            const earningsTable = document.getElementById('earningsTable');
+            const earningsData = [
+                { label: 'Basic Salary', name: 'basic' },
+                { label: 'House Rent Allowance', name: 'hra' },
+                { label: 'Special Allowance', name: 'specialAllowance' },
+                { label: 'Arrear Special Allowance', name: 'arrearSpecial' }
+            ];
+            
+            earningsTable.innerHTML = '';
+            let totalEarnings = 0;
+            
+            earningsData.forEach(item => {
+                const value = parseFloat(formData.get(item.name)) || 0;
+                if (value > 0) {
+                    totalEarnings += value;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.label}</td>
+                        <td class="amount-column">₹${value.toFixed(2)}</td>
+                        <td class="ytd-column">₹${(value * 12).toFixed(2)}</td>
+                    `;
+                    earningsTable.appendChild(row);
+                }
+            });
+            
+            // Add total earnings row
+            const totalEarningsRow = document.createElement('tr');
+            totalEarningsRow.className = 'total-row';
+            totalEarningsRow.innerHTML = `
+                <td><strong>Total Earnings</strong></td>
+                <td class="amount-column"><strong>₹${totalEarnings.toFixed(2)}</strong></td>
+                <td class="ytd-column"><strong>₹${(totalEarnings * 12).toFixed(2)}</strong></td>
+            `;
+            earningsTable.appendChild(totalEarningsRow);
+            
+            // Populate deductions table
+            const deductionsTable = document.getElementById('deductionsTable');
+            const deductionsData = [
+                { label: 'Provident Fund', name: 'pf' },
+                { label: 'Income Tax', name: 'incomeTax' }
+            ];
+            
+            deductionsTable.innerHTML = '';
+            let totalDeductions = 0;
+            
+            deductionsData.forEach(item => {
+                const value = parseFloat(formData.get(item.name)) || 0;
+                if (value > 0) {
+                    totalDeductions += value;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.label}</td>
+                        <td class="amount-column">₹${value.toFixed(2)}</td>
+                        <td class="ytd-column">₹${(value * 12).toFixed(2)}</td>
+                    `;
+                    deductionsTable.appendChild(row);
+                }
+            });
+            
+            // Add total deductions row
+            const totalDeductionsRow = document.createElement('tr');
+            totalDeductionsRow.className = 'total-row';
+            totalDeductionsRow.innerHTML = `
+                <td><strong>Total Deductions</strong></td>
+                <td class="amount-column"><strong>₹${totalDeductions.toFixed(2)}</strong></td>
+                <td class="ytd-column"><strong>₹${(totalDeductions * 12).toFixed(2)}</strong></td>
+            `;
+            deductionsTable.appendChild(totalDeductionsRow);
+            
+            // Update net pay
+            const netPay = totalEarnings - totalDeductions;
+            document.getElementById('netPayDisplay').textContent = `₹${netPay.toFixed(2)}`;
+            document.getElementById('netPayWords').textContent = `Rupees ${numberToWords(netPay)} Only`;
+        }
+        
+        function numberToWords(num) {
+            const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+            const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+            
+            if (num === 0) return 'Zero';
+            
+            let words = '';
+            let crores = Math.floor(num / 10000000);
+            let lakhs = Math.floor((num % 10000000) / 100000);
+            let thousands = Math.floor((num % 100000) / 1000);
+            let hundreds = Math.floor((num % 1000) / 100);
+            let remainder = num % 100;
+            
+            if (crores > 0) {
+                words += convertTwoDigits(crores) + ' Crore ';
+            }
+            
+            if (lakhs > 0) {
+                words += convertTwoDigits(lakhs) + ' Lakh ';
+            }
+            
+            if (thousands > 0) {
+                words += convertTwoDigits(thousands) + ' Thousand ';
+            }
+            
+            if (hundreds > 0) {
+                words += ones[hundreds] + ' Hundred ';
+            }
+            
+            if (remainder > 0) {
+                words += convertTwoDigits(remainder);
+            }
+            
+            function convertTwoDigits(num) {
+                if (num < 10) return ones[num];
+                if (num >= 10 && num < 20) return teens[num - 10];
+                return tens[Math.floor(num / 10)] + (num % 10 > 0 ? ' ' + ones[num % 10] : '');
+            }
+            
+            return words.trim();
+        }
+        
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const payslipContent = document.getElementById('payslipContent');
+            
+            // Temporarily show the payslip for rendering
+            const preview = document.getElementById('payslipPreview');
+            preview.style.position = 'static';
+            preview.style.left = 'auto';
+            preview.style.top = 'auto';
+            preview.style.display = 'block';
+            
+            html2canvas(payslipContent, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff'
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = canvas.width;
+                const imgHeight = canvas.height;
+                const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+                const imgX = (pdfWidth - imgWidth * ratio) / 2;
+                const imgY = 0;
+                
+                pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+                
+                // Generate filename with employee name and month
+                const empName = document.querySelector('input[name="empName"]').value || 'Employee';
+                const payrollMonth = document.querySelector('input[name="payrollMonth"]').value || '2025-02';
+                const filename = `${empName.replace(/\s+/g, '_')}_Payslip_${payrollMonth}.pdf`;
+                
+                pdf.save(filename);
+                
+                // Hide the payslip preview again
+                preview.style.position = 'absolute';
+                preview.style.left = '-9999px';
+                preview.style.top = '-9999px';
+                preview.style.display = 'none';
+            }).catch(error => {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF. Please try again.');
+                
+                // Hide the payslip preview
+                preview.style.position = 'absolute';
+                preview.style.left = '-9999px';
+                preview.style.top = '-9999px';
+                preview.style.display = 'none';
+            });
+        }
+    </script>
+</body>
+</html>

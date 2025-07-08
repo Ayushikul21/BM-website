@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payslip Form Generator - Stefanini India</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #6c5ce7;
+        }
+
+        .logo h1 {
+            color: #6c5ce7;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            animation: slideInUp 0.8s ease;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #6c5ce7;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-select {
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #6c5ce7;
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+        }
+
+        .earnings-deductions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .earnings-section, .deductions-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .save-btn {
+            border: none;
+            padding: 1rem 3rem;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #10ac84, #06b79e);
+            color: white;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 172, 132, 0.3);
+        }
+
+        .status-message {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-weight: 600;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-message.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .earnings-deductions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <img src="logob&m.jpg" alt="Bandy & Moot Logo">
+            <h1>Salary Slip</h1>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="form-container" id="formContainer">
+            <form id="payslipForm">
+                <!-- Employee Information Section -->
+                <div class="form-section">
+                    <h2 class="section-title">Employee Information</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Employee Code</label>
+                            <input type="text" class="form-input" name="empCode" placeholder="Enter employee code">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Employee Name</label>
+                            <input type="text" class="form-input" name="empName" placeholder="Enter full name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-input" name="department" placeholder="Enter department">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cost Centre</label>
+                            <input type="text" class="form-input" name="costCentre" placeholder="Enter cost centre">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Location</label>
+                            <input type="text" class="form-input" name="location" placeholder="Enter location">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Designation</label>
+                            <input type="text" class="form-input" name="designation" placeholder="Enter designation">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" class="form-input" name="dob">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date of Joining</label>
+                            <input type="date" class="form-input" name="doj">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Residential Status</label>
+                            <select class="form-select" name="resStatus">
+                                <option value="">Select status</option>
+                                <option value="Resident">Resident</option>
+                                <option value="Non-Resident">Non-Resident</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">PF Number</label>
+                            <input type="text" class="form-input" name="pfNo" placeholder="Enter PF number">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ESI Number</label>
+                            <input type="text" class="form-input" name="esiNo" placeholder="Enter ESI number">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">EPS Number</label>
+                            <input type="text" class="form-input" name="epsNo" placeholder="Enter EPS number">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payroll Month Section -->
+                <div class="form-section">
+                    <h2 class="section-title">Payroll Period</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Payroll Month</label>
+                            <input type="month" class="form-input" name="payrollMonth" value="2025-02">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Earnings and Deductions Section -->
+                <div class="form-section">
+                    <h2 class="section-title">Salary Components</h2>
+                    <div class="earnings-deductions">
+                        <div class="earnings-section">
+                            <h3 class="section-subtitle">💰 Earnings</h3>
+                            <div class="form-group">
+                                <label class="form-label">Basic Salary</label>
+                                <input type="number" class="form-input earnings-input" name="basic" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">House Rent Allowance</label>
+                                <input type="number" class="form-input earnings-input" name="hra" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Special Allowance</label>
+                                <input type="number" class="form-input earnings-input" name="specialAllowance" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Arrear Special Allowance</label>
+                                <input type="number" class="form-input earnings-input" name="arrearSpecial" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><strong>Total Earnings</strong></label>
+                                <input type="number" class="form-input" name="totalEarnings" placeholder="0.00" readonly style="font-weight: bold;">
+                            </div>
+                        </div>
+
+                        <div class="deductions-section">
+                            <h3 class="section-subtitle">📉 Deductions</h3>
+                            <div class="form-group">
+                                <label class="form-label">Provident Fund</label>
+                                <input type="number" class="form-input deductions-input" name="pf" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Income Tax</label>
+                                <input type="number" class="form-input deductions-input" name="incomeTax" placeholder="0.00" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><strong>Total Deductions</strong></label>
+                                <input type="number" class="form-input" name="totalDeductions" placeholder="0.00" readonly style="font-weight: bold;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 1.2rem; font-weight: bold; color: #10ac84;">Net Pay</label>
+                        <input type="number" class="form-input" name="netPay" placeholder="0.00" readonly style="font-size: 1.2rem; font-weight: bold; color: #10ac84;">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="save-btn" onclick="saveFormData()">💾 Save Data</button>
+                </div>
+
+                <div id="statusMessage" class="status-message"></div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // Auto-calculate totals when inputs change
+        document.addEventListener('DOMContentLoaded', function() {
+            const earningsInputs = document.querySelectorAll('.earnings-input');
+            const deductionsInputs = document.querySelectorAll('.deductions-input');
+            
+            function calculateTotals() {
+                // Calculate total earnings
+                let totalEarnings = 0;
+                earningsInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    totalEarnings += value;
+                });
+                document.querySelector('input[name="totalEarnings"]').value = totalEarnings.toFixed(2);
+                
+                // Calculate total deductions
+                let totalDeductions = 0;
+                deductionsInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    totalDeductions += value;
+                });
+                document.querySelector('input[name="totalDeductions"]').value = totalDeductions.toFixed(2);
+                
+                // Calculate net pay
+                const netPay = totalEarnings - totalDeductions;
+                document.querySelector('input[name="netPay"]').value = netPay.toFixed(2);
+            }
+            
+            // Add event listeners to all earnings and deductions inputs
+            [...earningsInputs, ...deductionsInputs].forEach(input => {
+                input.addEventListener('input', calculateTotals);
+            });
+        });
+
+        function saveFormData() {
+            const formData = {};
+            const form = document.getElementById('payslipForm');
+            const formElements = form.querySelectorAll('input, select');
+            
+            // Collect all form data into a regular object
+            formElements.forEach(element => {
+                if (element.name) {
+                    formData[element.name] = element.value;
+                }
+            });
+        }
+
+        function showStatusMessage(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type} show`;
+            
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                statusDiv.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

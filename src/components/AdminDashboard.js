@@ -1,102 +1,3 @@
-// import React, { useState } from 'react';
-
-// const AdminDashboard = () => {
-//   const [leaveRequests, setLeaveRequests] = useState([
-//     {
-//       name: 'Ayushi Kulshrestha',
-//       leaveType: 'Casual Leave',
-//       fromDate: '24/06/2025',
-//       toDate: '25/06/2025',
-//       reason: 'Personal Work',
-//       status: 'Pending'
-//     },
-//     {
-//       name: 'Rahul Verma',
-//       leaveType: 'Sick Leave',
-//       fromDate: '26/06/2025',
-//       toDate: '27/06/2025',
-//       reason: 'Fever',
-//       status: 'Approved'
-//     }
-//   ]);
-
-//   const handleAction = (index, action) => {
-//     setLeaveRequests(prev => {
-//       const updated = [...prev];
-//       updated[index].status = action;
-//       return updated;
-//     });
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-gray-100 px-6 py-10">
-//       <div className="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow space-y-6">
-//         <h1 className="text-3xl font-bold text-gray-800">Welcome, Admin</h1>
-
-//         <h2 className="text-xl font-semibold">Leave Applications</h2>
-
-//         <div className="overflow-x-auto">
-//           <table className="min-w-full text-left border">
-//             <thead className="bg-gray-200 text-sm uppercase text-gray-700">
-//               <tr>
-//                 <th className="py-2 px-4">Name</th>
-//                 <th className="py-2 px-4">Type</th>
-//                 <th className="py-2 px-4">From</th>
-//                 <th className="py-2 px-4">To</th>
-//                 <th className="py-2 px-4">Reason</th>
-//                 <th className="py-2 px-4">Status</th>
-//                 <th className="py-2 px-4">Action</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {leaveRequests.map((leave, index) => (
-//                 <tr key={index} className="border-t text-sm">
-//                   <td className="py-2 px-4">{leave.name}</td>
-//                   <td className="py-2 px-4">{leave.leaveType}</td>
-//                   <td className="py-2 px-4">{leave.fromDate}</td>
-//                   <td className="py-2 px-4">{leave.toDate}</td>
-//                   <td className="py-2 px-4">{leave.reason}</td>
-//                   <td className="py-2 px-4">
-//                     <span className={`px-3 py-1 rounded-full text-white text-xs font-semibold ${
-//                       leave.status === 'Approved'
-//                         ? 'bg-green-500'
-//                         : leave.status === 'Rejected'
-//                         ? 'bg-red-500'
-//                         : 'bg-yellow-500'
-//                     }`}>
-//                       {leave.status}
-//                     </span>
-//                   </td>
-//                   <td className="py-2 px-4 space-x-2">
-//                     {leave.status === 'Pending' && (
-//                       <>
-//                         <button
-//                           className="px-3 py-1 text-white bg-green-600 rounded hover:bg-green-700 text-xs"
-//                           onClick={() => handleAction(index, 'Approved')}
-//                         >
-//                           Approve
-//                         </button>
-//                         <button
-//                           className="px-3 py-1 text-white bg-red-600 rounded hover:bg-red-700 text-xs"
-//                           onClick={() => handleAction(index, 'Rejected')}
-//                         >
-//                           Reject
-//                         </button>
-//                       </>
-//                     )}
-//                   </td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default AdminDashboard;
-
 import React, { useState, useEffect } from 'react';
 import { Search, Users, Calendar, Clock, CheckCircle, XCircle, Eye, Filter, Download, Bell, BarChart3, TrendingUp, AlertCircle } from 'lucide-react';
 
@@ -333,51 +234,11 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Inject custom styles */}
       <style>{customStyles}</style>
-      
-      {/* Header */}
-      <div className="glass-effect shadow-lg border-0 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg">
-                  <Calendar className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                    Leave Management
-                  </h1>
-                  <p className="text-sm text-gray-500">Admin Dashboard</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-6">
-              <div className="relative">
-                <Bell className="h-6 w-6 text-gray-600 hover:text-blue-600 transition-colors cursor-pointer" />
-                {totalPendingRequests > 0 && (
-                  <span className="notification-badge absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold shadow-lg">
-                    {totalPendingRequests}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center space-x-3 bg-white rounded-full py-2 px-4 shadow-md border border-gray-100">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-md">
-                  <span className="text-white text-sm font-bold">A</span>
-                </div>
-                <div>
-                  <span className="text-sm font-semibold text-gray-800">Admin</span>
-                  <p className="text-xs text-gray-500">Administrator</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-2 py-2">
         {/* Dashboard Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="stats-card card-hover bg-white rounded-2xl shadow-lg p-6 border-0 overflow-hidden relative">
