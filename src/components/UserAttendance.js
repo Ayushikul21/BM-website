@@ -56,7 +56,7 @@ const UserAttendance = () => {
         const data = await response.json();
         console.log(data)
 
-        let userdata = data.InOutPunchData[0]
+        let userdata = data.InOutPunchData
         console.log(data.InOutPunchData)
         setuserdata(userdata)
         console.log("bzdbagbadi",userdata)
@@ -373,19 +373,21 @@ const UserAttendance = () => {
                     </tr>
                   </thead>
                   <tbody>
-                      <tr className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4 text-sm text-gray-900">{userdata.DateString}</td>
-                        <td className="py-3 px-4 text-sm text-gray-900">{userdata.INTime}</td>
-
-                        <td className="py-3 px-4 text-sm text-gray-900">{userdata.OUTTime}</td>
-                        <td className="py-3 px-4 text-sm text-gray-900">{userdata.WorkTime}h</td>
+                      {userdata.map((item, index) => (
+                      <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 text-sm text-gray-900">{item.DateString}</td>
+                        <td className="py-3 px-4 text-sm text-gray-900">{item.INTime}</td>
+                        <td className="py-3 px-4 text-sm text-gray-900">{item.OUTTime}</td>
+                        <td className="py-3 px-4 text-sm text-gray-900">{item.WorkTime}h</td>
                         <td className="py-3 px-4">
-                          {/* <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(userdata.status)}`}>
-                            {getStatusIcon(userdata.status)}
-                            <span className="ml-1">{userdata.status}</span>
+                          {/* Example of displaying the status or custom icon */}
+                          {/* <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(item.Status)}`}>
+                            {getStatusIcon(item.Status)}
+                            <span className="ml-1">{item.Status}</span>
                           </span> */}
                         </td>
                       </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
