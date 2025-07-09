@@ -37,13 +37,13 @@ const AdminAttendance = () => {
   ];
 
   // // Update time every second
-  // useEffect(() => {
-  //   const timer = setInterval(() => {
-  //     setCurrentTime(new Date());
-  //   }, 1000);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
 
-  //   return () => clearInterval(timer);
-  // }, []);
+    return () => clearInterval(timer);
+  }, []);
 
   // Filter data based on search and filters
   const getFilteredData = () => {
@@ -184,7 +184,7 @@ const AdminAttendance = () => {
                 onChange={(e) => setDepartmentFilter(e.target.value)}
               >
                 <option value="">All Departments</option>
-                <option value="IT">IT</option>
+                <option value="Data Analyst">Data Analyst</option>
                 <option value="Admin">Admin</option>
               </select>
             </div>
@@ -196,8 +196,9 @@ const AdminAttendance = () => {
                   <th style={styles.tableHeader}>Employee ID</th>
                   <th style={styles.tableHeader}>Department</th>
                   <th style={styles.tableHeader}>Check In</th>
-                  <th style={styles.tableHeader}>Status</th>
+                  <th style={styles.tableHeader}>Check Out</th>
                   <th style={styles.tableHeader}>Hours</th>
+                  <th style={styles.tableHeader}>Status</th>
                 </tr>
               </thead>
               <tbody>

@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, TrendingUp, Users, AlertCircle, CheckCircle, XCircle, Coffee, MapPin, RefreshCw } from 'lucide-react';
 
 const UserAttendance = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate] = useState(new Date());
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [userdata, setuserdata] = useState([]);
+  const [userdata, setUserdata] = useState([]);
   const [loading, setLoading] = useState(false);
   const [attendanceStats, setAttendanceStats] = useState({
     totalPresent: 0,
@@ -18,17 +18,30 @@ const UserAttendance = () => {
   });
 
   // Update current time every second
-  // useEffect(() => {
-  //   const timer = setInterval(() => {
-  //     setCurrentTime(new Date());
-  //   }, 1000);
-  //   return () => clearInterval(timer);
-  // }, []);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Fetch data when month/year changes
   useEffect(() => {
     fetchAttendanceData();
-  }, []);
+  }, [selectedMonth, selectedYear]);
+
+  // Helper function to parse date strings
+  const parseDateString = (dateStr) => {
+    if (!dateStr) return null;
+    const parts = dateStr.split('/');
+    if (parts.length !== 3) return null;
+    
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    
+    return new Date(year, month, day);
+  };
 
   // Helper function to get date range for the selected month
   const getDateRange = () => {
@@ -86,15 +99,17 @@ const UserAttendance = () => {
     // Create a map of attendance records by date for easy lookup
     const attendanceMap = new Map();
     data.forEach(record => {
-      const recordDate = new Date(record.DateString);
-      const dateKey = `${recordDate.getFullYear()}-${recordDate.getMonth()}-${recordDate.getDate()}`;
-      attendanceMap.set(dateKey, record);
+      const recordDate = parseDateString(record.DateString);
+      if (recordDate) {
+        const dateKey = recordDate.toISOString().split('T')[0];
+        attendanceMap.set(dateKey, record);
+      }
     });
 
     // Process each day of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const currentDate = new Date(selectedYear, selectedMonth, day);
-      const dateKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}-${currentDate.getDate()}`;
+      const dateKey = currentDate.toISOString().split('T')[0];
       
       if (isWeekend(currentDate)) {
         totalWeekends++;
@@ -107,7 +122,7 @@ const UserAttendance = () => {
           const attendanceRecord = attendanceMap.get(dateKey);
           
           if (attendanceRecord) {
-            if (attendanceRecord.INTime && attendanceRecord.INTime !== '-') {
+            if (attendanceRecord.INTime && attendanceRecord.INTime !== '--:--') {
               if (isLateArrival(attendanceRecord.INTime)) {
                 totalLate++;
               } else {
@@ -141,11 +156,20 @@ const UserAttendance = () => {
     };
   };
 
+  // Helper function to map status codes to display text
+  const getDisplayStatus = (statusCode) => {
+    if (statusCode === 'A') return 'Absent';
+    if (statusCode === 'P') return 'Present';
+    if (statusCode === 'L') return 'Leave';
+    if (statusCode === 'WO') return 'Weekend';
+    return statusCode; // Return as-is for other cases
+  };
+
   const fetchAttendanceData = async () => {
     setLoading(true);
     const { fromDate, toDate } = getDateRange();
     
-    const url = `https://api.etimeoffice.com/api/DownloadInOutPunchData?Empcode=10118&FromDate=${fromDate}&ToDate=${toDate}`;
+    const url = `https://api.etimeoffice.com/api/DownloadInOutPunchData?Empcode=10119&FromDate=${fromDate}&ToDate=${toDate}`;
     
     console.log('API URL:', url);
     console.log('Date Range:', { fromDate, toDate });
@@ -171,17 +195,19 @@ const UserAttendance = () => {
       
       // Filter data to only include records within the selected month
       const filteredData = attendanceData.filter(record => {
-        const recordDate = new Date(record.DateString);
-        return recordDate.getMonth() === selectedMonth && recordDate.getFullYear() === selectedYear;
+        const recordDate = parseDateString(record.DateString);
+        return recordDate && 
+               recordDate.getMonth() === selectedMonth && 
+               recordDate.getFullYear() === selectedYear;
       });
       
-      setuserdata(filteredData);
+      setUserdata(filteredData);
       setAttendanceStats(calculateStats(filteredData));
       
     } catch (error) {
       console.error("Error fetching attendance data:", error);
       // Set empty data on error
-      setuserdata([]);
+      setUserdata([]);
       setAttendanceStats({
         totalPresent: 0,
         totalAbsent: 0,
@@ -193,6 +219,55 @@ const UserAttendance = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Generate complete attendance history including missing dates
+  const generateAttendanceHistory = () => {
+    const { lastDay } = getDateRange();
+    const daysInMonth = lastDay.getDate();
+    const today = new Date();
+    
+    // Create a map of existing records
+    const recordMap = new Map();
+    userdata.forEach(record => {
+      const recordDate = parseDateString(record.DateString);
+      if (recordDate) {
+        const dateKey = recordDate.toISOString().split('T')[0];
+        recordMap.set(dateKey, record);
+      }
+    });
+
+    // Generate complete history for the month
+    const history = [];
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(selectedYear, selectedMonth, day);
+      const dateKey = date.toISOString().split('T')[0];
+      
+      // Skip future dates
+      if (date > today) continue;
+      
+      let record = recordMap.get(dateKey);
+      
+      if (!record) {
+        // Create empty record for missing dates
+        record = {
+          DateString: `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`,
+          INTime: '--:--',
+          OUTTime: '--:--',
+          WorkTime: '0',
+          Status: isWeekend(date) ? 'Weekend' : 'Absent',
+          Remarks: ''
+        };
+      }
+      
+      history.push({
+        ...record,
+        dateObj: date
+      });
+    }
+    
+    return history;
   };
 
   // Generate calendar data with attendance status
@@ -213,15 +288,17 @@ const UserAttendance = () => {
     // Create a map of attendance records by date for easy lookup
     const attendanceMap = new Map();
     userdata.forEach(record => {
-      const recordDate = new Date(record.DateString);
-      const dateKey = `${recordDate.getFullYear()}-${recordDate.getMonth()}-${recordDate.getDate()}`;
-      attendanceMap.set(dateKey, record);
+      const recordDate = parseDateString(record.DateString);
+      if (recordDate) {
+        const dateKey = recordDate.toISOString().split('T')[0];
+        attendanceMap.set(dateKey, record);
+      }
     });
 
     // Add days of the month with attendance status
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(selectedYear, selectedMonth, day);
-      const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      const dateKey = date.toISOString().split('T')[0];
       const dateStr = date.toISOString().split('T')[0];
       
       let status = 'Future'; // Default for future dates
@@ -234,12 +311,14 @@ const UserAttendance = () => {
         const attendanceRecord = attendanceMap.get(dateKey);
         
         if (attendanceRecord) {
-          if (attendanceRecord.INTime && attendanceRecord.INTime !== '-') {
+          
+          if (attendanceRecord.INTime && attendanceRecord.INTime !== '--:--') {
             status = isLateArrival(attendanceRecord.INTime) ? 'Late' : 'Present';
           } else {
             status = (attendanceRecord.Status === 'Leave' || 
                      (attendanceRecord.Remarks && attendanceRecord.Remarks.includes('Leave'))) 
                      ? 'Leave' : 'Absent';
+            
           }
         } else {
           // No record found for this working day
@@ -590,16 +669,22 @@ const UserAttendance = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {userdata.length > 0 ? (
-                        userdata
-                          // .sort((a, b) => new Date(b.DateString) - new Date(a.DateString)) // Sort by date descending
+                      {generateAttendanceHistory().length > 0 ? (
+                        generateAttendanceHistory()
+                          .sort((a, b) => new Date(b.dateObj) - new Date(a.dateObj)) // Sort by date descending
                           .map((item, index) => {
-                            const recordDate = new Date(item.DateString);
+                            const recordDate = parseDateString(item.DateString) || item.dateObj;
                             const isLate = isLateArrival(item.INTime);
-                            const status = item.INTime && item.INTime !== '-' 
-                              ? (isLate ? 'Late' : 'Present')
-                              : (item.Status === 'Leave' || (item.Remarks && item.Remarks.includes('Leave'))) 
-                                ? 'Leave' : 'Absent';
+                            
+                            // Modified status determination logic
+                            let status;
+                            if (item.INTime && item.INTime !== '--:--') {
+                              status = isLate ? 'Late' : 'Present';
+                            } else if (item.Status === 'Leave' || (item.Remarks && item.Remarks.includes('Leave'))) {
+                              status = 'Leave';
+                            } else {
+                              status = getDisplayStatus(item.Status);
+                            }
                             
                             return (
                               <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
@@ -610,8 +695,8 @@ const UserAttendance = () => {
                                     day: 'numeric' 
                                   })}
                                 </td>
-                                <td className="py-3 px-4 text-sm text-gray-900">{item.INTime || '-'}</td>
-                                <td className="py-3 px-4 text-sm text-gray-900">{item.OUTTime || '-'}</td>
+                                <td className="py-3 px-4 text-sm text-gray-900">{item.INTime || '--:--'}</td>
+                                <td className="py-3 px-4 text-sm text-gray-900">{item.OUTTime || '--:--'}</td>
                                 <td className="py-3 px-4 text-sm text-gray-900">{item.WorkTime || '0'}h</td>
                                 <td className="py-3 px-4">
                                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
