@@ -5,8 +5,18 @@ import LoginForm from './components/LoginForm';
 import LeaveForm from './components/LeaveForm';
 import MainEmployeeDashboard from './components/MainEmployeeDashboard';
 import MainAdminDashboard from './components/MainAdminDashboard';
-import Registration from './components/Registration';
 import AdminWorkplan from './components/AdminWorkplan';
+import RegistrationForm from './components/RegistrationForm';
+import BankingInformationForm from './components/BankingInformationForm';
+import PersonalDetailsForm from './components/PersonalDetailsForm';
+import EducationForm from './components/EducationForm';
+import EducationForm45 from './components/EducationForm45';
+import EmploymentForm from './components/EmploymentForm';
+import SkillsProjectsForm from './components/SkillsProjectsForm';
+import ProfessionalReferencesForm from './components/ProfessionalReferencesForm';
+import DocumentUploadForm from './components/DocumentUploadForm';
+
+
 
 function AppWrapper() {
   const [userName, setUserName] = useState('');
@@ -55,7 +65,15 @@ function AppWrapper() {
 
   return (
     <Routes>
-      <Route path="/" element={<Registration />} />
+      <Route path="/" element={<RegistrationForm />} />
+      <Route path="/banking" element={<BankingInformationForm />} />
+      <Route path="/personal" element={<PersonalDetailsForm/>}/>
+      <Route path="/education" element={<EducationForm/>}/>
+      <Route path="/education2" element={<EducationForm45/>}/>
+      <Route path="/employment" element={<EmploymentForm/>}/>
+      <Route path="/skills" element={<SkillsProjectsForm/>}/>
+      <Route path="/document" element={<DocumentUploadForm/>}/>
+      <Route path="/professional" element={<ProfessionalReferencesForm/>}/>
       <Route path="/login" element={<LoginForm onLogin={handleLogin} />} />
       <Route path="/leave" element={<LeaveForm userName={userName} onSubmit={handleLeaveSubmit} />} />
       <Route
@@ -89,13 +107,14 @@ function AppWrapper() {
         }
       />
     </Routes>
+
   );
 }
 
 function App() {
   return (
     <Router>
-      <AppWrapper />
+      <AppWrapper/>
     </Router>
   );
 }

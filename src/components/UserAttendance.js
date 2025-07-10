@@ -169,7 +169,7 @@ const UserAttendance = () => {
     setLoading(true);
     const { fromDate, toDate } = getDateRange();
     
-    const url = `https://api.etimeoffice.com/api/DownloadInOutPunchData?Empcode=10119&FromDate=${fromDate}&ToDate=${toDate}`;
+    const url = `https://api.etimeoffice.com/api/DownloadInOutPunchData?Empcode=10118&FromDate=${fromDate}&ToDate=${toDate}`;
     
     console.log('API URL:', url);
     console.log('Date Range:', { fromDate, toDate });
