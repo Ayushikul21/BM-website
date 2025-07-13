@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const LoginForm = ({onLogin}) => {
-
   const [employeeId, setEmployeeId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -9,6 +9,7 @@ const LoginForm = ({onLogin}) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
   // Focus on employee ID input when component mounts
   useEffect(() => {
@@ -87,18 +88,8 @@ const LoginForm = ({onLogin}) => {
     // console.log("response data",codedata)
   };
 
-  const handleForgotPassword = (e) => {
-    e.preventDefault();
-    const empId = employeeId.trim().toUpperCase();
-
-    if (!empId) {
-      showError('Please enter your Employee ID first');
-      document.getElementById('employeeId').focus();
-      return;
-    }
-
-    // Replace with your actual forgot password logic
-    showSuccess(`Password reset link sent to email associated with ${empId}`);
+  const handleForgotPassword = () => {
+    navigate('/forgotPassword');
   };
 
   const logout = () => {
@@ -125,273 +116,45 @@ const LoginForm = ({onLogin}) => {
 
   const inputErrorClass = (field) => {
     if (field === 'employeeId') {
-      return !validateEmployeeId(employeeId) && errorMessage ? 'error' : '';
+      return !validateEmployeeId(employeeId) && errorMessage ? 'border-red-500 animate-pulse' : '';
     }
     if (field === 'password') {
-      return !validatePassword(password) && errorMessage ? 'error' : '';
+      return !validatePassword(password) && errorMessage ? 'border-red-500 animate-pulse' : '';
     }
     return '';
   };
 
   if (isLoggedIn) {
     return (
-      <div style={{ display: 'none' }}>
+      <div className="hidden">
         {/* Login container hidden - dashboard will be handled by external app.js */}
       </div>
     );
   }
 
   return (
-    <div>
-      <style>{`
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
-        body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-        }
-
-        .login-container {
-          width: 100%;
-          max-width: 400px;
-        }
-
-        .login-box {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(10px);
-          border-radius: 20px;
-          padding: 40px 30px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .logo {
-          text-align: center;
-          margin-bottom: 30px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .logo img {
-          width: 80px;
-          height: 80px;
-          object-fit: contain;
-          margin-bottom: 15px;
-          border-radius: 50%;
-          border: 2px solid #667eea;
-          background-color: white;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-          display: block;
-        }
-
-        .logo h1 {
-          font-size: 1.8rem;
-          background: linear-gradient(45deg, #667eea, #764ba2);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          margin-bottom: 5px;
-          animation: logoGlow 2s ease-in-out infinite alternate;
-          text-align: center;
-          line-height: 1.2;
-          font-weight: 700;
-        }
-
-        @keyframes logoGlow {
-          from {
-            filter: drop-shadow(0 0 5px rgba(102, 126, 234, 0.3));
-          }
-          to {
-            filter: drop-shadow(0 0 15px rgba(118, 75, 162, 0.5));
-          }
-        }
-
-        h2 {
-          text-align: center;
-          color: #333;
-          margin-bottom: 30px;
-          font-weight: 600;
-          font-size: 1.5rem;
-        }
-
-        .form-group {
-          margin-bottom: 20px;
-          position: relative;
-        }
-
-        .form-group input {
-          width: 100%;
-          padding: 15px 20px;
-          padding-right: 50px;
-          border: 2px solid #e1e5e9;
-          border-radius: 12px;
-          font-size: 16px;
-          transition: all 0.3s ease;
-          background: rgba(255, 255, 255, 0.9);
-        }
-
-        .form-group input:focus {
-          outline: none;
-          border-color: #667eea;
-          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-          transform: translateY(-2px);
-        }
-
-        .form-group input.error {
-          border-color: #e74c3c;
-          animation: shake 0.5s ease-in-out;
-        }
-
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
-        }
-
-        .login-btn {
-          width: 100%;
-          padding: 15px;
-          background: linear-gradient(45deg, #667eea, #764ba2);
-          color: white;
-          border: none;
-          border-radius: 12px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .login-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .login-btn:active {
-          transform: translateY(0);
-        }
-
-        .login-btn.loading {
-          pointer-events: none;
-          opacity: 0.7;
-        }
-
-        .login-btn.loading::after {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 20px;
-          height: 20px;
-          margin: -10px 0 0 -10px;
-          border: 2px solid transparent;
-          border-top: 2px solid #fff;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .error-message {
-          color: #e74c3c;
-          text-align: center;
-          margin: 15px 0;
-          padding: 10px;
-          border-radius: 8px;
-          background: rgba(231, 76, 60, 0.1);
-          border: 1px solid rgba(231, 76, 60, 0.2);
-          display: block;
-        }
-
-        .success-message {
-          color: #27ae60;
-          text-align: center;
-          margin: 15px 0;
-          padding: 10px;
-          border-radius: 8px;
-          background: rgba(39, 174, 96, 0.1);
-          border: 1px solid rgba(39, 174, 96, 0.2);
-          display: block;
-        }
-
-        .links {
-          text-align: center;
-          margin-top: 20px;
-        }
-
-        .links a {
-          color: #667eea;
-          text-decoration: none;
-          font-weight: 500;
-          transition: all 0.3s ease;
-          cursor: pointer;
-        }
-
-        .links a:hover {
-          color: #764ba2;
-          text-decoration: underline;
-        }
-
-        .password-toggle {
-          position: absolute;
-          right: 15px;
-          top: 50%;
-          transform: translateY(-50%);
-          cursor: pointer;
-          color: #666;
-          transition: color 0.3s ease;
-          width: 20px;
-          height: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .password-toggle:hover {
-          color: #333;
-        }
-
-        .password-toggle svg {
-          width: 20px;
-          height: 20px;
-        }
-
-        @media (max-width: 480px) {
-          .login-box {
-            padding: 30px 20px;
-            margin: 10px;
-          }
-
-          .logo h1 {
-            font-size: 1.5rem;
-          }
-        }
-      `}</style>
-
-      <div className="login-container">
-        <div className="login-box">
-          <div className="logo">
-            <img src="/salary website/logob&m.jpg" alt="Bandy & Moot Logo" />
-            <h1>Bandy & Moot Pvt. Ltd.</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-purple-700 flex items-center justify-center p-5">
+      <div className="w-full max-w-md">
+        <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/20">
+          {/* Logo Section */}
+          <div className="text-center mb-8 flex flex-col items-center">
+            <img 
+              src="/salary website/logob&m.jpg" 
+              alt="Bandy & Moot Logo" 
+              className="w-20 h-20 object-contain mb-4 rounded-full border-2 border-blue-500 bg-white shadow-lg"
+            />
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent leading-tight animate-pulse">
+              Bandy & Moot Pvt. Ltd.
+            </h1>
           </div>
-          <h2>Employee Login</h2>
+
+          <h2 className="text-center text-gray-800 mb-8 font-semibold text-xl">
+            Employee Login
+          </h2>
 
           <div>
-            <div className="form-group">
+            {/* Employee ID Input */}
+            <div className="mb-5 relative">
               <input
                 type="text"
                 id="employeeId"
@@ -399,11 +162,13 @@ const LoginForm = ({onLogin}) => {
                 placeholder="Employee ID"
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
-                className={inputErrorClass('employeeId')}
+                className={`w-full px-5 py-4 pr-12 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 bg-white/90 focus:outline-none focus:border-blue-500 focus:shadow-lg focus:shadow-blue-500/10 focus:-translate-y-0.5 ${inputErrorClass('employeeId')}`}
                 onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
               />
             </div>
-            <div className="form-group">
+
+            {/* Password Input */}
+            <div className="mb-5 relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
@@ -411,46 +176,65 @@ const LoginForm = ({onLogin}) => {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={inputErrorClass('password')}
+                className={`w-full px-5 py-4 pr-12 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 bg-white/90 focus:outline-none focus:border-blue-500 focus:shadow-lg focus:shadow-blue-500/10 focus:-translate-y-0.5 ${inputErrorClass('password')}`}
                 onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
               />
-              <span className="password-toggle" onClick={togglePasswordVisibility}>
+              <span 
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800 transition-colors duration-300 w-5 h-5 flex items-center justify-center"
+                onClick={togglePasswordVisibility}
+              >
                 {showPassword ? (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                     <circle cx="12" cy="12" r="3"></circle>
                   </svg>
                 ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                     <line x1="1" y1="1" x2="23" y2="23"></line>
                   </svg>
                 )}
               </span>
             </div>
+
+            {/* Login Button */}
             <button 
               onClick={handleSubmit}
-              className={`login-btn ${isLoading ? 'loading' : ''}`}
+              className={`w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none rounded-xl text-base font-semibold cursor-pointer transition-all duration-300 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30 active:translate-y-0 ${isLoading ? 'opacity-70 pointer-events-none' : ''}`}
               disabled={isLoading}
             >
-              {isLoading ? '' : 'Login'}
+              {isLoading ? (
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                'Login'
+              )}
             </button>
           </div>
 
+          {/* Error Message */}
           {errorMessage && (
-            <div className="error-message">
+            <div className="text-red-500 text-center my-4 p-3 rounded-lg bg-red-50 border border-red-200">
               {errorMessage}
             </div>
           )}
 
+          {/* Success Message */}
           {successMessage && (
-            <div className="success-message">
+            <div className="text-green-600 text-center my-4 p-3 rounded-lg bg-green-50 border border-green-200">
               {successMessage}
             </div>
           )}
 
-          <div className="links">
-            <a onClick={handleForgotPassword}>Forgot Password?</a>
+          {/* Forgot Password Link */}
+          <div className="text-center mt-5">
+            <a 
+              onClick={handleForgotPassword}
+              className="text-blue-500 no-underline font-medium transition-all duration-300 cursor-pointer hover:text-purple-600 hover:underline"
+            >
+              Forgot Password?
+            </a>
           </div>
         </div>
       </div>
@@ -459,5 +243,3 @@ const LoginForm = ({onLogin}) => {
 };
 
 export default LoginForm;
-
-

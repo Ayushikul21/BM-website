@@ -26,292 +26,23 @@ function DocumentUploadForm() {
   const [successMessage, setSuccessMessage] = useState("");
   const [canProceed, setCanProceed] = useState(false);
   const [saveBtnText, setSaveBtnText] = useState("Save");
-  const [saveBtnColor, setSaveBtnColor] = useState("linear-gradient(135deg, #28a745 0%, #198754 100%)");
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
   const sigInputRef = useRef();
   const resumeInputRef = useRef();
   const addDocsInputRef = useRef();
   const navigate = useNavigate();
 
-const styles = `
-/* all CSS from your HTML file, unchanged */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-.container {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 600px;
-    animation: slideUp 0.6s ease-out;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-/* ... rest of the CSS unchanged ... */
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-.form-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-.form-header h1 {
-    color: rgb(0, 140, 255);
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 10px;
-}
-.form-header p {
-    color: #666;
-    font-size: 1.1rem;
-}
-.form-card {
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    background: white;
-    color: #333;
-    border: 2px solid #e1e5e9;
-    margin-bottom: 30px;
-}
-.form-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-}
-.card-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 25px;
-    text-align: center;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #e1e5e9;
-    color: #333;
-}
-.form-group {
-    margin-bottom: 20px;
-    position: relative;
-}
-.form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-    color: #333;
-}
-.form-group label .required {
-    color: #ff4757;
-    margin-left: 3px;
-}
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e1e5e9;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    background: #f8f9fa;
-    color: #333;
-    font-family: inherit;
-}
-.form-group input[type="file"] {
-    padding: 10px;
-    background: #f8f9fa;
-    border: 2px dashed #e1e5e9;
-}
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    outline: none;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    border-color: #667eea;
-    background: white;
-}
-.button-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 15px;
-    margin-top: 30px;
-}
-.btn {
-    padding: 18px;
-    border: none;
-    border-radius: 15px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-.btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-.back-button {
-    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-    color: white;
-}
-.back-button:hover {
-    box-shadow: 0 10px 25px rgba(108, 117, 125, 0.4);
-}
-.next-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-.next-button:hover:not(:disabled) {
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-}
-.next-button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-    opacity: 0.6;
-}
-.save-button {
-    background: linear-gradient(135deg, #28a745 0%, #198754 100%);
-    color: white;
-}
-.save-button:hover {
-    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
-}
-.error-message {
-    color: #ff4757;
-    font-size: 0.8rem;
-    margin-top: 5px;
-    display: none;
-}
-.success-message {
-    background: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: none;
-    text-align: center;
-    font-weight: 600;
-}
-.file-upload-area {
-    border: 2px dashed #e1e5e9;
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    background: #f8f9fa;
-}
-.file-upload-area:hover {
-    border-color: #667eea;
-    background: rgba(102, 126, 234, 0.1);
-}
-.file-upload-icon {
-    font-size: 2rem;
-    margin-bottom: 10px;
-    opacity: 0.7;
-}
-.current-time {
-    background: rgba(0, 0, 0, 0.1);
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: 600;
-    margin-bottom: 15px;
-}
-.location-info {
-    background: rgba(0, 140, 255, 0.1);
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: 600;
-    margin-bottom: 15px;
-    border: 2px solid rgba(0, 140, 255, 0.2);
-}
-.location-status {
-    font-size: 0.9rem;
-    margin-top: 8px;
-    opacity: 0.8;
-}
-.location-refresh {
-    background: rgba(0, 140, 255, 0.8);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    margin-top: 10px;
-    transition: all 0.3s ease;
-}
-.location-refresh:hover {
-    background: rgba(0, 140, 255, 1);
-    transform: translateY(-2px);
-}
-@media (max-width: 768px) {
-    .container {
-        padding: 25px;
-        margin: 10px;
-    }
-    .form-header h1 {
-        font-size: 2rem;
-    }
-    .button-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    .btn {
-        font-size: 1rem;
-        padding: 15px;
-    }
-}
-`;
-
-function formatDateTime(dt) {
-  return dt.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit"
-  });
-}
-
-  // Inject styles
-  useEffect(() => {
-    let styleTag = document.getElementById("document-upload-form-styles");
-    if (!styleTag) {
-      styleTag = document.createElement("style");
-      styleTag.id = "document-upload-form-styles";
-      styleTag.innerHTML = styles;
-      document.head.appendChild(styleTag);
-    }
-  }, []);
+  function formatDateTime(dt) {
+    return dt.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+  }
 
   // Date/time updater
   useEffect(() => {
@@ -322,16 +53,20 @@ function formatDateTime(dt) {
     return () => clearInterval(timer);
   }, []);
 
-  // Geolocation
+  // Geolocation with improved error handling
   function fetchLocation() {
     if (!navigator.geolocation) {
       setLocationDisplay("📍 Geolocation not supported");
       setLocationStatus("Your browser does not support geolocation");
       setLocation(null);
+      setIsLocationLoading(false);
       return;
     }
+    
+    setIsLocationLoading(true);
     setLocationDisplay("📍 Detecting location...");
     setLocationStatus("Getting your current location...");
+    
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
@@ -339,6 +74,11 @@ function formatDateTime(dt) {
           const response = await fetch(
             `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
           );
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
           const data = await response.json();
           const locObj = {
             latitude,
@@ -347,7 +87,7 @@ function formatDateTime(dt) {
             locality: data.locality || "",
             countryName: data.countryName || "Unknown Country",
             principalSubdivision: data.principalSubdivision || "",
-            fullAddress: data.display_name || `${data.city}, ${data.countryName}`,
+            fullAddress: data.display_name || `${data.city || "Unknown"}, ${data.countryName || "Unknown"}`,
             timestamp: new Date().toISOString()
           };
           setLocation(locObj);
@@ -355,22 +95,27 @@ function formatDateTime(dt) {
             `📍 ${locObj.city}${locObj.principalSubdivision ? ", " + locObj.principalSubdivision : ""}, ${locObj.countryName}`
           );
           setLocationStatus(`Located at ${new Date().toLocaleTimeString()}`);
-        } catch (e) {
-          setLocation({
+        } catch (error) {
+          console.warn("Geocoding failed:", error);
+          const fallbackLocation = {
             latitude,
             longitude,
             city: "Unknown",
             countryName: "Unknown",
             fullAddress: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
             timestamp: new Date().toISOString()
-          });
+          };
+          setLocation(fallbackLocation);
           setLocationDisplay(`📍 ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
           setLocationStatus("Location detected (coordinates only)");
+        } finally {
+          setIsLocationLoading(false);
         }
       },
       (error) => {
         let errorMessage = "Unable to detect location";
         let statusMessage = "Location access denied or unavailable";
+        
         switch (error.code) {
           case error.PERMISSION_DENIED:
             errorMessage = "Location access denied";
@@ -384,14 +129,18 @@ function formatDateTime(dt) {
             errorMessage = "Location request timeout";
             statusMessage = "Location request timed out. Try again";
             break;
+          default:
+            statusMessage = "An unknown error occurred";
         }
+        
         setLocationDisplay(`📍 ${errorMessage}`);
         setLocationStatus(statusMessage);
         setLocation(null);
+        setIsLocationLoading(false);
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 15000,
         maximumAge: 300000
       }
     );
@@ -399,7 +148,6 @@ function formatDateTime(dt) {
 
   useEffect(() => {
     fetchLocation();
-    // eslint-disable-next-line
   }, []);
 
   // File validation helpers
@@ -407,6 +155,7 @@ function formatDateTime(dt) {
     if (!file) return false;
     return allowedTypes.includes(file.type) && file.size <= maxSizeMB * 1024 * 1024;
   }
+  
   function validateAll() {
     const isSignatureValid = validateFile(
       signature,
@@ -448,7 +197,6 @@ function formatDateTime(dt) {
       setAddDocsFileNames("");
     }
     validateAll();
-    // eslint-disable-next-line
   }, [signature, resume, additionalDocs]);
 
   // Error display helpers
@@ -515,37 +263,31 @@ function formatDateTime(dt) {
         formType: "documentUpload",
         version: "1.0"
       };
-      try {
-        if (typeof Storage !== "undefined" && localStorage)
-          localStorage.setItem("documentUploadFormData", JSON.stringify(formData));
-      } catch (e) {}
+      
       setSuccessMessage(
-        `<strong>Document Details Saved Successfully! ✅</strong><br>
-         <small>Saved at: ${formData.savedAt}</small><br>
-         <small>Signature: ${formData.signature ? formData.signature.name : "N/A"} | Resume: ${formData.resume ? formData.resume.name : "N/A"}</small><br>
-         <small>Location: ${
-           location
-             ? `${location.city}, ${location.countryName}`
-             : "Not detected"
-         }</small>`
+        `Document Details Saved Successfully! ✅\nSaved at: ${formData.savedAt}\nSignature: ${formData.signature ? formData.signature.name : "N/A"} | Resume: ${formData.resume ? formData.resume.name : "N/A"}\nLocation: ${
+          location
+            ? `${location.city}, ${location.countryName}`
+            : "Not detected"
+        }`
       );
       setSaveBtnText("Saved ✓");
-      setSaveBtnColor("#198754");
       setTimeout(() => {
         setSuccessMessage("");
         setSaveBtnText("Save");
-        setSaveBtnColor("linear-gradient(135deg, #28a745 0%, #198754 100%)");
       }, 4000);
     } else {
-      setSuccessMessage(`<strong>Please correct the errors before saving.</strong>`);
+      setSuccessMessage("Please correct the errors before saving.");
       setTimeout(() => setSuccessMessage(""), 3000);
     }
   }
 
   // Navigation
   function handleBack() {
+    console.log('Navigate to skills page');
     navigate('/skills');
   }
+  
   function handleNext() {
     if (validateAll()) {
       const finalFormData = {
@@ -565,10 +307,8 @@ function formatDateTime(dt) {
         location: location,
         submissionDateTime: new Date().toISOString()
       };
-      try {
-        if (typeof Storage !== "undefined" && localStorage)
-          localStorage.setItem("documentUploadFormData", JSON.stringify(finalFormData));
-      } catch (e) {}
+      
+      console.log('Navigate to professional page', finalFormData);
       navigate('/professional');
     } else {
       setSuccessMessage("Please ensure all required fields are valid before proceeding.");
@@ -584,245 +324,183 @@ function formatDateTime(dt) {
     if (field === "additionalDocs") setAdditionalDocs(files ? files : []);
   }
 
-  // Restore previously saved files (name only, not file objects; only for display)
-  useEffect(() => {
-    try {
-      if (typeof Storage !== "undefined" && localStorage) {
-        const data = localStorage.getItem("documentUploadFormData");
-        if (data) {
-          const d = JSON.parse(data);
-          if (d.signature) setSigFileName(`Selected: ${d.signature.name}`);
-          if (d.resume) setResumeFileName(`Selected: ${d.resume.name}`);
-          if (d.additionalDocs && d.additionalDocs.length)
-            setAddDocsFileNames(
-              `Selected: ${d.additionalDocs.map(f => f.name).join(", ")}`
-            );
-        }
-      }
-    } catch (e) {}
-    // eslint-disable-next-line
-  }, []);
-
   return (
-    <div className="container">
-      <div className="form-header">
-        <h1>Bandy & Moot</h1>
-        <p>Document Upload</p>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
+      <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-5xl animate-fadeInUp max-h-[90vh] overflow-y-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-blue-500 text-4xl font-bold mb-2">Bandy & Moot</h1>
+          <p className="text-gray-600 text-lg">Document Upload</p>
+        </div>
+
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl mb-6 text-center font-semibold whitespace-pre-line">
+            {successMessage}
+          </div>
+        )}
+
+        <div autoComplete="off" onSubmit={e => e.preventDefault()}>
+          {/* Location & Date/Time Section */}
+          <div className="bg-white rounded-3xl p-8 shadow-lg border-2 border-gray-200 mb-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <h2 className="text-xl font-bold text-center mb-6 pb-4 border-b-2 border-gray-200 text-gray-800">
+              Current Information
+            </h2>
+            
+            <div className="mb-5">
+              <label className="block font-semibold mb-2 text-gray-800">Current Date & Time</label>
+              <div className="bg-black/10 p-3 rounded-lg text-center font-semibold">
+                {currentDateTime}
+              </div>
+            </div>
+            
+            <div className="mb-5">
+              <label className="block font-semibold mb-2 text-gray-800">Current Place</label>
+              <div className="bg-blue-50 p-4 rounded-lg text-center font-semibold border-2 border-blue-200">
+                <div className="text-blue-800">{locationDisplay}</div>
+                <div className="text-sm mt-2 opacity-80 text-blue-700">
+                  {locationStatus}
+                </div>
+                <button
+                  type="button"
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm mt-3 transition-all duration-300 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={fetchLocation}
+                  disabled={isLocationLoading}
+                >
+                  {isLocationLoading ? '🔄 Locating...' : '🔄 Refresh Location'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Documents Section */}
+          <div className="bg-white rounded-3xl p-8 shadow-lg border-2 border-gray-200 mb-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <h2 className="text-xl font-bold text-center mb-6 pb-4 border-b-2 border-gray-200 text-gray-800">
+              Documents & Signature
+            </h2>
+            
+            {/* Signature Upload */}
+            <div className="mb-5">
+              <label className="block font-semibold mb-2 text-gray-800">
+                Digital Signature Upload <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50"
+                onClick={() => sigInputRef.current && sigInputRef.current.click()}
+              >
+                <div className="text-2xl mb-2">✍️</div>
+                <div className="text-gray-700">Click to upload your signature</div>
+                <div className="text-sm opacity-70 mt-1 text-gray-600">
+                  Accepted formats: PNG, JPG, JPEG (Max 5MB)
+                </div>
+              </div>
+              <input
+                type="file"
+                ref={sigInputRef}
+                accept=".png,.jpg,.jpeg"
+                className="hidden"
+                onChange={e => handleFileChange(e, "signature")}
+                required
+              />
+              {errors.signature && (
+                <div className="text-red-500 text-sm mt-2">{errors.signature}</div>
+              )}
+              {sigFileName && (
+                <div className="mt-2 text-sm opacity-80 text-gray-600">{sigFileName}</div>
+              )}
+            </div>
+
+            {/* Resume Upload */}
+            <div className="mb-5">
+              <label className="block font-semibold mb-2 text-gray-800">
+                Resume Upload <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50"
+                onClick={() => resumeInputRef.current && resumeInputRef.current.click()}
+              >
+                <div className="text-2xl mb-2">📄</div>
+                <div className="text-gray-700">Click to upload your resume</div>
+                <div className="text-sm opacity-70 mt-1 text-gray-600">
+                  Accepted formats: PDF, DOC, DOCX (Max 10MB)
+                </div>
+              </div>
+              <input
+                type="file"
+                ref={resumeInputRef}
+                accept=".pdf,.doc,.docx"
+                className="hidden"
+                onChange={e => handleFileChange(e, "resume")}
+                required
+              />
+              {errors.resume && (
+                <div className="text-red-500 text-sm mt-2">{errors.resume}</div>
+              )}
+              {resumeFileName && (
+                <div className="mt-2 text-sm opacity-80 text-gray-600">{resumeFileName}</div>
+              )}
+            </div>
+
+            {/* Additional Documents */}
+            <div className="mb-5">
+              <label className="block font-semibold mb-2 text-gray-800">
+                Additional Documents (Optional)
+              </label>
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50"
+                onClick={() => addDocsInputRef.current && addDocsInputRef.current.click()}
+              >
+                <div className="text-2xl mb-2">📎</div>
+                <div className="text-gray-700">Click to upload additional documents</div>
+                <div className="text-sm opacity-70 mt-1 text-gray-600">
+                  Certificates, Portfolio, etc. (Max 15MB each)
+                </div>
+              </div>
+              <input
+                type="file"
+                ref={addDocsInputRef}
+                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                multiple
+                className="hidden"
+                onChange={e => handleFileChange(e, "additionalDocs")}
+              />
+              {addDocsFileNames && (
+                <div className="mt-2 text-sm opacity-80 text-gray-600">{addDocsFileNames}</div>
+              )}
+            </div>
+          </div>
+
+          {/* Button Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+            <button
+              type="button"
+              className="bg-gradient-to-r from-gray-500 to-gray-600 text-white py-4 px-6 rounded-2xl font-bold uppercase tracking-wider transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+              onClick={handleBack}
+            >
+              Back
+            </button>
+            
+            <button
+              type="button"
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-2xl font-bold uppercase tracking-wider transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+              onClick={handleSave}
+            >
+              {saveBtnText}
+            </button>
+            
+            <button
+              type="button"
+              className={`py-4 px-6 rounded-2xl font-bold uppercase tracking-wider transition-all duration-300 ${
+                canProceed
+                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:-translate-y-1 hover:shadow-lg'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+              disabled={!canProceed}
+              onClick={handleNext}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
-      {successMessage && (
-        <div
-          className="success-message"
-          id="successMessage"
-          style={{ display: "block" }}
-          dangerouslySetInnerHTML={{ __html: successMessage }}
-        />
-      )}
-      <form
-        id="documentForm"
-        autoComplete="off"
-        onSubmit={e => e.preventDefault()}
-      >
-        {/* Location & Date/Time Section */}
-        <div className="form-card">
-          <h2 className="card-title">Current Information</h2>
-          <div className="form-group">
-            <label>Current Date & Time</label>
-            <div className="current-time" id="currentDateTime">
-              {currentDateTime}
-            </div>
-          </div>
-          <div className="form-group">
-            <label>Current Place</label>
-            <div className="location-info" id="currentLocation">
-              <div id="locationDisplay">{locationDisplay}</div>
-              <div className="location-status" id="locationStatus">
-                {locationStatus}
-              </div>
-              <button
-                type="button"
-                className="location-refresh"
-                id="refreshLocation"
-                onClick={fetchLocation}
-              >
-                🔄 Refresh Location
-              </button>
-            </div>
-          </div>
-        </div>
-        {/* Documents Section */}
-        <div className="form-card">
-          <h2 className="card-title">Documents & Signature</h2>
-          <div className="form-group">
-            <label>
-              Digital Signature Upload <span className="required">*</span>
-            </label>
-            <div
-              className="file-upload-area"
-              onClick={() => sigInputRef.current && sigInputRef.current.click()}
-            >
-              <div className="file-upload-icon">✍️</div>
-              <div>Click to upload your signature</div>
-              <div
-                style={{
-                  fontSize: "0.8rem",
-                  opacity: 0.7,
-                  marginTop: 5
-                }}
-              >
-                Accepted formats: PNG, JPG, JPEG (Max 5MB)
-              </div>
-            </div>
-            <input
-              type="file"
-              id="signature"
-              name="signature"
-              accept=".png,.jpg,.jpeg"
-              style={{ display: "none" }}
-              ref={sigInputRef}
-              onChange={e => handleFileChange(e, "signature")}
-              required
-            />
-            <div
-              className="error-message"
-              id="signatureError"
-              style={{
-                display: errors.signature ? "block" : "none"
-              }}
-            >
-              {errors.signature}
-            </div>
-            <div
-              id="signatureFileName"
-              style={{
-                marginTop: 10,
-                fontSize: "0.9rem",
-                opacity: 0.8
-              }}
-            >
-              {sigFileName}
-            </div>
-          </div>
-          <div className="form-group">
-            <label>
-              Resume Upload <span className="required">*</span>
-            </label>
-            <div
-              className="file-upload-area"
-              onClick={() => resumeInputRef.current && resumeInputRef.current.click()}
-            >
-              <div className="file-upload-icon">📄</div>
-              <div>Click to upload your resume</div>
-              <div
-                style={{
-                  fontSize: "0.8rem",
-                  opacity: 0.7,
-                  marginTop: 5
-                }}
-              >
-                Accepted formats: PDF, DOC, DOCX (Max 10MB)
-              </div>
-            </div>
-            <input
-              type="file"
-              id="resume"
-              name="resume"
-              accept=".pdf,.doc,.docx"
-              style={{ display: "none" }}
-              ref={resumeInputRef}
-              onChange={e => handleFileChange(e, "resume")}
-              required
-            />
-            <div
-              className="error-message"
-              id="resumeError"
-              style={{
-                display: errors.resume ? "block" : "none"
-              }}
-            >
-              {errors.resume}
-            </div>
-            <div
-              id="resumeFileName"
-              style={{
-                marginTop: 10,
-                fontSize: "0.9rem",
-                opacity: 0.8
-              }}
-            >
-              {resumeFileName}
-            </div>
-          </div>
-          <div className="form-group">
-            <label>Additional Documents (Optional)</label>
-            <div
-              className="file-upload-area"
-              onClick={() =>
-                addDocsInputRef.current && addDocsInputRef.current.click()
-              }
-            >
-              <div className="file-upload-icon">📎</div>
-              <div>Click to upload additional documents</div>
-              <div
-                style={{
-                  fontSize: "0.8rem",
-                  opacity: 0.7,
-                  marginTop: 5
-                }}
-              >
-                Certificates, Portfolio, etc. (Max 15MB each)
-              </div>
-            </div>
-            <input
-              type="file"
-              id="additionalDocs"
-              name="additionalDocs"
-              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-              multiple
-              style={{ display: "none" }}
-              ref={addDocsInputRef}
-              onChange={e => handleFileChange(e, "additionalDocs")}
-            />
-            <div
-              id="additionalDocsFileNames"
-              style={{
-                marginTop: 10,
-                fontSize: "0.9rem",
-                opacity: 0.8
-              }}
-            >
-              {addDocsFileNames}
-            </div>
-          </div>
-        </div>
-        <div className="button-row">
-          <button
-            type="button"
-            id="backButton"
-            className="btn back-button"
-            onClick={handleBack}
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            id="saveButton"
-            className="btn save-button"
-            style={{ background: saveBtnColor }}
-            onClick={handleSave}
-          >
-            {saveBtnText}
-          </button>
-          <button
-            type="button"
-            id="nextButton"
-            className="btn next-button"
-            disabled={!canProceed}
-            onClick={handleNext}
-          >
-            Next
-          </button>
-        </div>
-      </form>
     </div>
   );
 }

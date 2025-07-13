@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-
 const initialState = {
   companyName: "",
   position: "",
@@ -12,274 +11,75 @@ const initialState = {
   experienceMonths: "",
   reasonLeaving: ""
 };
+
 const initialErrors = Object.fromEntries(
   Object.keys(initialState).map((k) => [k, ""])
 );
-
 
 const EmploymentForm = () => {
   const [formTouched, setFormTouched] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [saveButtonText, setSaveButtonText] = useState("Save");
-  const [saveButtonColor, setSaveButtonColor] = useState(
-    "linear-gradient(135deg, #28a745 0%, #20c997 100%)"
-  );
+  const [saveButtonColor, setSaveButtonColor] = useState("bg-green-600");
   const timeoutRef = useRef();
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState(initialErrors);
 
-const styles = `
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
-}
-.container {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 600px;
-    animation: slideUp 0.6s ease-out;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px);}
-    to { opacity: 1; transform: translateY(0);}
-}
-.form-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-.form-header h1 {
-    color: rgb(0, 140, 255);
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 10px;
-}
-.form-header p { color: #666; font-size: 1.1rem; }
-.employment-card {
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    background: white;
-    color: #333;
-    border: 2px solid #e1e5e9;
-    margin-bottom: 30px;
-}
-.employment-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-}
-.card-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 25px;
-    text-align: center;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #e1e5e9;
-    color: #333;
-}
-.form-group {
-    margin-bottom: 20px;
-    position: relative;
-}
-.form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-    color: #333;
-}
-.form-group label .required { color: #ff4757; margin-left: 3px; }
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e1e5e9;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    background: #f8f9fa;
-    color: #333;
-    font-family: inherit;
-}
-.form-group textarea {
-    resize: vertical;
-    min-height: 100px;
-}
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    outline: none;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    border-color: #667eea;
-    background: white;
-}
-.form-group input:valid {
-    border-color: #28a745;
-}
-.form-group input:invalid:not(:placeholder-shown) {
-    border-color: #dc3545;
-}
-.row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-.button-container {
-    display: flex;
-    gap: 15px;
-    margin-top: 30px;
-}
-.btn {
-    flex: 1;
-    padding: 18px;
-    border: none;
-    border-radius: 15px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-.btn-back {
-    background: #6c757d;
-    color: white;
-}
-.btn-back:hover:not(:disabled) {
-    background: #5a6268;
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(108, 117, 125, 0.4);
-}
-.btn-save {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-}
-.btn-save:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
-}
-.btn-next {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-.btn-next:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-}
-.btn:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-    opacity: 0.6;
-}
-.error-message {
-    color: #ff4757;
-    font-size: 0.8rem;
-    margin-top: 5px;
-    display: none;
-}
-.success-message {
-    background: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: none;
-    text-align: center;
-    font-weight: 600;
-    animation: slideDown 0.5s ease-out;
-}
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-20px);}
-    to { opacity: 1; transform: translateY(0);}
-}
-@media (max-width: 768px) {
-    .container { padding: 25px; margin: 10px; max-width: 95%; }
-    .form-header h1 { font-size: 2rem; }
-    .row { grid-template-columns: 1fr; gap: 10px; }
-    .button-container { flex-direction: column; gap: 10px; }
-    .btn { font-size: 1rem; padding: 15px; }
-}
-`;
-
-function validateField(fieldId, value) {
-  switch (fieldId) {
-    case "companyName":
-    case "position":
-    case "teamLead":
-      return value && value.trim().length >= 2;
-    case "salaryAnnum":
-      return value && parseInt(value) >= 0;
-    case "experienceMonths":
-      return value && parseInt(value) >= 1 && parseInt(value) <= 600;
-    case "startingDate":
-    case "endingDate":
-      return value && value.trim() !== "";
-    case "reasonLeaving":
-      return value && value.trim() !== "";
-    default:
-      return true;
-  }
-}
-
-function getErrorMessage(fieldId) {
-  switch (fieldId) {
-    case "companyName":
-      return "Company name is required (minimum 2 characters)";
-    case "position":
-      return "Position/Job title is required (minimum 2 characters)";
-    case "teamLead":
-      return "Team lead/Manager name is required (minimum 2 characters)";
-    case "salaryAnnum":
-      return "Annual salary is required and must be 0 or greater";
-    case "startingDate":
-      return "Starting date is required";
-    case "endingDate":
-      return "Ending date is required";
-    case "experienceMonths":
-      return "Work experience is required (1-600 months)";
-    case "reasonLeaving":
-      return "Please select a reason for leaving";
-    default:
-      return "Please enter a valid value";
-  }
-}
-
-const reasonLeavingOptions = [
-  "Career Growth",
-  "Better Opportunity",
-  "Higher Salary",
-  "Relocation",
-  "Company Layoffs",
-  "Personal Reasons",
-  "Contract Ended",
-  "Work-Life Balance",
-  "Other"
-];
-
-  // Inject styles
-  useEffect(() => {
-    let styleTag = document.getElementById("employment-form-styles");
-    if (!styleTag) {
-      styleTag = document.createElement("style");
-      styleTag.id = "employment-form-styles";
-      styleTag.innerHTML = styles;
-      document.head.appendChild(styleTag);
+  function validateField(fieldId, value) {
+    switch (fieldId) {
+      case "companyName":
+      case "position":
+      case "teamLead":
+        return value && value.trim().length >= 2;
+      case "salaryAnnum":
+        return value && parseInt(value) >= 0;
+      case "experienceMonths":
+        return value && parseInt(value) >= 1 && parseInt(value) <= 600;
+      case "startingDate":
+      case "endingDate":
+        return value && value.trim() !== "";
+      case "reasonLeaving":
+        return value && value.trim() !== "";
+      default:
+        return true;
     }
-  }, []);
+  }
+
+  function getErrorMessage(fieldId) {
+    switch (fieldId) {
+      case "companyName":
+        return "Company name is required (minimum 2 characters)";
+      case "position":
+        return "Position/Job title is required (minimum 2 characters)";
+      case "teamLead":
+        return "Team lead/Manager name is required (minimum 2 characters)";
+      case "salaryAnnum":
+        return "Annual salary is required and must be 0 or greater";
+      case "startingDate":
+        return "Starting date is required";
+      case "endingDate":
+        return "Ending date is required";
+      case "experienceMonths":
+        return "Work experience is required (1-600 months)";
+      case "reasonLeaving":
+        return "Please select a reason for leaving";
+      default:
+        return "Please enter a valid value";
+    }
+  }
+
+  const reasonLeavingOptions = [
+    "Career Growth",
+    "Better Opportunity",
+    "Higher Salary",
+    "Relocation",
+    "Company Layoffs",
+    "Personal Reasons",
+    "Contract Ended",
+    "Work-Life Balance",
+    "Other"
+  ];
 
   // Load from localStorage if available
   useEffect(() => {
@@ -297,8 +97,7 @@ const reasonLeavingOptions = [
             )
           }));
           setSuccessMessage(
-            `<strong>Previously saved data loaded</strong><br>
-            <small>Last saved: ${data.savedAt || "Unknown"}</small>`
+            `Previously saved data loaded - Last saved: ${data.savedAt || "Unknown"}`
           );
           setTimeout(() => setSuccessMessage(""), 3000);
         }
@@ -339,10 +138,6 @@ const reasonLeavingOptions = [
     }
   }
 
-  function collectFormData() {
-    return { ...formData };
-  }
-
   function validateAllFields() {
     let isValid = true;
     let newErrors = {};
@@ -381,19 +176,15 @@ const reasonLeavingOptions = [
         }
       } catch (e) {}
       setSuccessMessage(
-        `<strong>Employment Details Saved Successfully! ✅</strong><br>
-        <small>Saved at: ${saveData.savedAt}</small><br>
-        <small>Company: ${saveData.companyName} | Position: ${saveData.position}</small>`
+        `Employment Details Saved Successfully! ✅ - Saved at: ${saveData.savedAt} - Company: ${saveData.companyName} | Position: ${saveData.position}`
       );
       setSaveButtonText("Saved ✓");
-      setSaveButtonColor("#198754");
+      setSaveButtonColor("bg-green-600");
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
         setSuccessMessage("");
         setSaveButtonText("Save");
-        setSaveButtonColor(
-          "linear-gradient(135deg, #28a745 0%, #20c997 100%)"
-        );
+        setSaveButtonColor("bg-gradient-to-r from-green-500 to-green-400");
       }, 4000);
     }
   }
@@ -409,327 +200,236 @@ const reasonLeavingOptions = [
         localStorage.setItem("employmentFormData", JSON.stringify(saveData));
       }
     } catch (e) {}
+    // Navigate to skills page - would be handled by parent component
+    console.log('Navigate to skills page');
     navigate('/skills');
   }
 
   function handleBack() {
+    // Navigate to education page - would be handled by parent component
+    console.log('Navigate to education page');
     navigate('/education45');
   }
 
+  const getInputBorderColor = (fieldName) => {
+    if (errors[fieldName] && formTouched[fieldName]) {
+      return "border-red-500 focus:border-red-500";
+    }
+    if (formData[fieldName]) {
+      return "border-green-500 focus:border-indigo-500";
+    }
+    return "border-gray-300 focus:border-indigo-500";
+  };
+
   return (
-    <div className="container">
-      <div className="form-header">
-        <h1>Bandy & Moot</h1>
-        <p>Previous Employment Information</p>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
+      <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-5xl animate-fadeInUp max-h-[90vh] overflow-y-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-5xl font-bold text-indigo-600 mb-3">Bandy & Moot</h1>
+          <p className="text-gray-600 text-xl">Previous Employment Information</p>
+        </div>
+        
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl mb-6 text-center font-semibold animate-slide-down">
+            {successMessage}
+          </div>
+        )}
+
+        <div onSubmit={e => e.preventDefault()} className="space-y-6">
+          <div className="bg-white rounded-3xl p-10 shadow-lg border-2 border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <h2 className="text-3xl font-bold text-center mb-8 pb-6 border-b-2 border-gray-200 text-gray-800">
+              Company & Position Details
+            </h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  name="companyName"
+                  placeholder="Enter company name"
+                  minLength={2}
+                  value={formData.companyName}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:-translate-y-1 focus:shadow-lg ${getInputBorderColor('companyName')}`}
+                />
+                {errors.companyName && formTouched.companyName && (
+                  <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Position/Job Title
+                </label>
+                <input
+                  type="text"
+                  name="position"
+                  placeholder="Enter your position"
+                  minLength={2}
+                  value={formData.position}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:-translate-y-1 focus:shadow-lg ${getInputBorderColor('position')}`}
+                />
+                {errors.position && formTouched.position && (
+                  <p className="text-red-500 text-sm mt-1">{errors.position}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Team Lead/Manager Name
+                </label>
+                <input
+                  type="text"
+                  name="teamLead"
+                  placeholder="Enter team lead/manager name"
+                  minLength={2}
+                  value={formData.teamLead}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:-translate-y-1 focus:shadow-lg ${getInputBorderColor('teamLead')}`}
+                />
+                {errors.teamLead && formTouched.teamLead && (
+                  <p className="text-red-500 text-sm mt-1">{errors.teamLead}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Annual Salary
+                </label>
+                <input
+                  type="number"
+                  name="salaryAnnum"
+                  placeholder="Enter annual salary"
+                  min={0}
+                  step={1000}
+                  value={formData.salaryAnnum}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:-translate-y-1 focus:shadow-lg ${getInputBorderColor('salaryAnnum')}`}
+                />
+                {errors.salaryAnnum && formTouched.salaryAnnum && (
+                  <p className="text-red-500 text-sm mt-1">{errors.salaryAnnum}</p>
+                )}
+              </div>
+              </div>
+
+              <div className="space-y-6">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Starting Date
+                  </label>
+                  <input
+                    type="date"
+                    name="startingDate"
+                    value={formData.startingDate}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:-translate-y-1 focus:shadow-lg ${getInputBorderColor('startingDate')}`}
+                  />
+                  {errors.startingDate && formTouched.startingDate && (
+                    <p className="text-red-500 text-sm mt-1">{errors.startingDate}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Ending Date
+                  </label>
+                  <input
+                    type="date"
+                    name="endingDate"
+                    value={formData.endingDate}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:-translate-y-1 focus:shadow-lg ${getInputBorderColor('endingDate')}`}
+                  />
+                  {errors.endingDate && formTouched.endingDate && (
+                    <p className="text-red-500 text-sm mt-1">{errors.endingDate}</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Work Experience (in months)
+                </label>
+                <input
+                  type="number"
+                  name="experienceMonths"
+                  placeholder="Total experience in months"
+                  min={1}
+                  max={600}
+                  value={formData.experienceMonths}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:-translate-y-1 focus:shadow-lg ${getInputBorderColor('experienceMonths')}`}
+                />
+                {errors.experienceMonths && formTouched.experienceMonths && (
+                  <p className="text-red-500 text-sm mt-1">{errors.experienceMonths}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Reason for Leaving
+                </label>
+                <select
+                  name="reasonLeaving"
+                  value={formData.reasonLeaving}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:-translate-y-1 focus:shadow-lg ${getInputBorderColor('reasonLeaving')}`}
+                >
+                  <option value="">Select Reason</option>
+                  {reasonLeavingOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                {errors.reasonLeaving && formTouched.reasonLeaving && (
+                  <p className="text-red-500 text-sm mt-1">{errors.reasonLeaving}</p>
+                )}
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-6 mt-10">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="flex-1 px-8 py-5 bg-gray-500 text-white rounded-2xl font-bold uppercase tracking-wide transition-all duration-300 hover:bg-gray-600 hover:-translate-y-1 hover:shadow-lg text-lg"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className={`flex-1 px-8 py-5 ${saveButtonColor} text-white rounded-2xl font-bold uppercase tracking-wide transition-all duration-300 hover:-translate-y-1 hover:shadow-lg text-lg`}
+            >
+              {saveButtonText}
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              className="flex-1 px-8 py-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-bold uppercase tracking-wide transition-all duration-300 hover:-translate-y-1 hover:shadow-lg text-lg"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
-      {successMessage && (
-        <div
-          className="success-message"
-          id="successMessage"
-          style={{ display: "block" }}
-          dangerouslySetInnerHTML={{ __html: successMessage }}
-        />
-      )}
-      <form id="employmentForm" autoComplete="off" onSubmit={e => e.preventDefault()}>
-        <div className="employment-card">
-          <h2 className="card-title">Company & Position Details</h2>
-          <div className="form-group">
-            <label>Company Name</label>
-            <input
-              type="text"
-              id="companyName"
-              name="companyName"
-              placeholder="Enter company name"
-              minLength={2}
-              value={formData.companyName}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              style={{
-                borderColor:
-                  errors.companyName && formTouched.companyName
-                    ? "#dc3545"
-                    : formData.companyName
-                    ? "#28a745"
-                    : undefined
-              }}
-            />
-            <div
-              className="error-message"
-              id="companyNameError"
-              style={{
-                display:
-                  errors.companyName && formTouched.companyName
-                    ? "block"
-                    : "none"
-              }}
-            >
-              {errors.companyName}
-            </div>
-          </div>
-          <div className="form-group">
-            <label>Position/Job Title</label>
-            <input
-              type="text"
-              id="position"
-              name="position"
-              placeholder="Enter your position"
-              minLength={2}
-              value={formData.position}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              style={{
-                borderColor:
-                  errors.position && formTouched.position
-                    ? "#dc3545"
-                    : formData.position
-                    ? "#28a745"
-                    : undefined
-              }}
-            />
-            <div
-              className="error-message"
-              id="positionError"
-              style={{
-                display:
-                  errors.position && formTouched.position
-                    ? "block"
-                    : "none"
-              }}
-            >
-              {errors.position}
-            </div>
-          </div>
-          <div className="form-group">
-            <label>Team Lead/Manager Name</label>
-            <input
-              type="text"
-              id="teamLead"
-              name="teamLead"
-              placeholder="Enter team lead/manager name"
-              minLength={2}
-              value={formData.teamLead}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              style={{
-                borderColor:
-                  errors.teamLead && formTouched.teamLead
-                    ? "#dc3545"
-                    : formData.teamLead
-                    ? "#28a745"
-                    : undefined
-              }}
-            />
-            <div
-              className="error-message"
-              id="teamLeadError"
-              style={{
-                display:
-                  errors.teamLead && formTouched.teamLead
-                    ? "block"
-                    : "none"
-              }}
-            >
-              {errors.teamLead}
-            </div>
-          </div>
-          <div className="form-group">
-            <label>Annual Salary</label>
-            <input
-              type="number"
-              id="salaryAnnum"
-              name="salaryAnnum"
-              placeholder="Enter annual salary"
-              min={0}
-              step={1000}
-              value={formData.salaryAnnum}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              style={{
-                borderColor:
-                  errors.salaryAnnum && formTouched.salaryAnnum
-                    ? "#dc3545"
-                    : formData.salaryAnnum
-                    ? "#28a745"
-                    : undefined
-              }}
-            />
-            <div
-              className="error-message"
-              id="salaryAnnumError"
-              style={{
-                display:
-                  errors.salaryAnnum && formTouched.salaryAnnum
-                    ? "block"
-                    : "none"
-              }}
-            >
-              {errors.salaryAnnum}
-            </div>
-          </div>
-          <div className="row">
-            <div className="form-group">
-              <label>Starting Date</label>
-              <input
-                type="date"
-                id="startingDate"
-                name="startingDate"
-                value={formData.startingDate}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.startingDate && formTouched.startingDate
-                      ? "#dc3545"
-                      : formData.startingDate
-                      ? "#28a745"
-                      : undefined
-                }}
-              />
-              <div
-                className="error-message"
-                id="startingDateError"
-                style={{
-                  display:
-                    errors.startingDate && formTouched.startingDate
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.startingDate}
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Ending Date</label>
-              <input
-                type="date"
-                id="endingDate"
-                name="endingDate"
-                value={formData.endingDate}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.endingDate && formTouched.endingDate
-                      ? "#dc3545"
-                      : formData.endingDate
-                      ? "#28a745"
-                      : undefined
-                }}
-              />
-              <div
-                className="error-message"
-                id="endingDateError"
-                style={{
-                  display:
-                    errors.endingDate && formTouched.endingDate
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.endingDate}
-              </div>
-            </div>
-          </div>
-          <div className="form-group">
-            <label>Work Experience (in months)</label>
-            <input
-              type="number"
-              id="experienceMonths"
-              name="experienceMonths"
-              placeholder="Total experience in months"
-              min={1}
-              max={600}
-              value={formData.experienceMonths}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              style={{
-                borderColor:
-                  errors.experienceMonths && formTouched.experienceMonths
-                    ? "#dc3545"
-                    : formData.experienceMonths
-                    ? "#28a745"
-                    : undefined
-              }}
-            />
-            <div
-              className="error-message"
-              id="experienceMonthsError"
-              style={{
-                display:
-                  errors.experienceMonths && formTouched.experienceMonths
-                    ? "block"
-                    : "none"
-              }}
-            >
-              {errors.experienceMonths}
-            </div>
-          </div>
-          <div className="form-group">
-            <label>Reason for Leaving</label>
-            <select
-              id="reasonLeaving"
-              name="reasonLeaving"
-              value={formData.reasonLeaving}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              style={{
-                borderColor:
-                  errors.reasonLeaving && formTouched.reasonLeaving
-                    ? "#dc3545"
-                    : formData.reasonLeaving
-                    ? "#28a745"
-                    : undefined
-              }}
-            >
-              <option value="">Select Reason</option>
-              {reasonLeavingOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-            <div
-              className="error-message"
-              id="reasonLeavingError"
-              style={{
-                display:
-                  errors.reasonLeaving && formTouched.reasonLeaving
-                    ? "block"
-                    : "none"
-              }}
-            >
-              {errors.reasonLeaving}
-            </div>
-          </div>
-        </div>
-        <div className="button-container">
-          <button
-            type="button"
-            id="backButton"
-            className="btn btn-back"
-            onClick={handleBack}
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            id="saveButton"
-            className="btn btn-save"
-            onClick={handleSave}
-            style={{ background: saveButtonColor }}
-          >
-            {saveButtonText}
-          </button>
-          <button
-            type="button"
-            id="nextButton"
-            className="btn btn-next"
-            onClick={handleNext}
-          >
-            skip
-          </button>
-        </div>
-      </form>
     </div>
   );
 };

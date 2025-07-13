@@ -81,22 +81,11 @@ const EducationForm = () => {
   const [isFormValid, setIsFormValid] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [saveButtonText, setSaveButtonText] = useState("Save");
-  const [saveButtonColor, setSaveButtonColor] = useState("linear-gradient(135deg, #667eea 0%, #764ba2 100%)");
+  const [saveButtonColor, setSaveButtonColor] = useState("bg-green-600");
   const timeoutRef = useRef();
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState(initialErrors);
-
-  // Style tag for CSS-in-JS
-  useEffect(() => {
-    let styleTag = document.getElementById("education-form-styles");
-    if (!styleTag) {
-      styleTag = document.createElement("style");
-      styleTag.id = "education-form-styles";
-      styleTag.innerHTML = styles;
-      document.head.appendChild(styleTag);
-    }
-  }, []);
 
   // Load saved data from localStorage (if available)
   useEffect(() => {
@@ -150,211 +139,6 @@ const EducationForm = () => {
     }
     setIsFormValid(allValid);
   }, [formData]);
-
-const styles = `
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-.container {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 700px;
-    animation: slideUp 0.6s ease-out;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px);}
-    to { opacity: 1; transform: translateY(0);}
-}
-.form-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-.form-header h1 {
-    color: rgb(0, 140, 255);
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 10px;
-}
-.form-header p {
-    color: #666;
-    font-size: 1.1rem;
-}
-.education-card {
-    padding: 30px;
-    border-radius: 20px;
-    background: white;
-    color: #333;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    margin-bottom: 30px;
-    border: 2px solid #f0f0f0;
-}
-.section-divider {
-    margin: 30px 0;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 20px;
-}
-.section-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #333;
-    text-align: center;
-}
-.form-group {
-    margin-bottom: 20px;
-    position: relative;
-}
-.form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-    color: #333;
-}
-.form-group label .required {
-    color: #ff6b6b;
-    margin-left: 3px;
-}
-.form-group input,
-.form-group select {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    background: white;
-    color: #333;
-}
-.form-group input::placeholder {
-    color: #999;
-}
-.form-group select {
-    color: #333;
-}
-.form-group select option {
-    background: white;
-    color: #333;
-}
-.form-group input:focus,
-.form-group select:focus {
-    outline: none;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    border-color: #667eea;
-    background: #f8f9ff;
-}
-.row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-.button-group {
-    display: flex;
-    gap: 15px;
-    margin-top: 30px;
-}
-.btn {
-    flex: 1;
-    padding: 18px;
-    border: none;
-    border-radius: 15px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-.btn:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-}
-.btn:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-    opacity: 0.6;
-}
-.error-message {
-    color: #ff6b6b;
-    font-size: 0.8rem;
-    margin-top: 5px;
-    display: none;
-}
-.success-message {
-    background: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: none;
-    text-align: center;
-    font-weight: 600;
-}
-.optional-note {
-    font-size: 0.8rem;
-    color: #666;
-    font-style: italic;
-    margin-top: 5px;
-}
-.mandatory-note {
-    font-size: 0.8rem;
-    color: #ff6b6b;
-    font-style: italic;
-    margin-top: 5px;
-}
-.either-or-note {
-    font-size: 0.8rem;
-    color: #007bff;
-    font-style: italic;
-    margin-top: 5px;
-    font-weight: 600;
-}
-.step-indicator {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #666;
-    font-size: 0.9rem;
-}
-@media (max-width: 768px) {
-    .container {
-        padding: 25px;
-        margin: 10px;
-    }
-    .form-header h1 {
-        font-size: 2rem;
-    }
-    .row {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    .button-group {
-        flex-direction: column;
-    }
-}
-`;
 
 function validateField(fieldId, value, formData) {
   switch (fieldId) {
@@ -545,12 +329,12 @@ function getErrorMessage(fieldId, value, formData) {
         }</small>`
       );
       setSaveButtonText("Saved ✓");
-      setSaveButtonColor("#198754");
+      setSaveButtonColor("bg-green-600");
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
         setSuccessMessage("");
         setSaveButtonText("Save");
-        setSaveButtonColor("linear-gradient(135deg, #667eea 0%, #764ba2 100%)");
+        setSaveButtonColor("bg-gradient-to-r from-blue-500 to-purple-600");
       }, 4000);
     }
   }
@@ -558,17 +342,7 @@ function getErrorMessage(fieldId, value, formData) {
   function handleNext() {
     if (!isFormValid) return;
     if (validateAllFields()) {
-      const saveData = {
-        ...formData,
-        savedAt: new Date().toLocaleString(),
-      };
-      setSuccessMessage(
-        `<strong>Education Information Saved Successfully! ✅</strong><br>
-        <small>Proceeding to next step...</small>`
-      );
-      setTimeout(() => {
-        navigate('/education2');
-      }, 1500);
+      navigate('/education45');
     }
   }
 
@@ -583,459 +357,303 @@ function getErrorMessage(fieldId, value, formData) {
   }, []);
 
   // Board options: both 10th and 12th are the same
-  const boardOptions = [
-    "CBSE (Central Board of Secondary Education)",
-    "ICSE (Indian Certificate of Secondary Education)",
-    "State Board - Andhra Pradesh",
-    "State Board - Assam",
-    "State Board - Bihar",
-    "State Board - Chhattisgarh",
-    "State Board - Delhi",
-    "State Board - Goa",
-    "State Board - Gujarat",
-    "State Board - Haryana",
-    "State Board - Himachal Pradesh",
-    "State Board - Jharkhand",
-    "State Board - Karnataka",
-    "State Board - Kerala",
-    "State Board - Madhya Pradesh",
-    "State Board - Maharashtra",
-    "State Board - Manipur",
-    "State Board - Meghalaya",
-    "State Board - Mizoram",
-    "State Board - Nagaland",
-    "State Board - Odisha",
-    "State Board - Punjab",
-    "State Board - Rajasthan",
-    "State Board - Sikkim",
-    "State Board - Tamil Nadu",
-    "State Board - Telangana",
-    "State Board - Tripura",
-    "State Board - Uttar Pradesh",
-    "State Board - Uttarakhand",
-    "State Board - West Bengal",
-    "NIOS (National Institute of Open Schooling)",
-    "Cambridge International",
-    "IB (International Baccalaureate)",
-    "Other"
-  ];
+  const boardOptions = tenthBoards;
+
+  const getInputStyle = (fieldName) => {
+    if (errors[fieldName] && formTouched[fieldName]) {
+      return "border-red-500 focus:border-red-500 focus:ring-red-500";
+    }
+    if (formData[fieldName]) {
+      return "border-green-500 focus:border-green-500 focus:ring-green-500";
+    }
+    return "border-gray-300 focus:border-blue-500 focus:ring-blue-500";
+  };
 
   return (
-    <div className="container">
-      <div className="step-indicator">
-        <p>Step 4 of 4 - Education Information</p>
-      </div>
-      <div className="form-header">
-        <h1>Bandy & Moot</h1>
-        <p>Education Information</p>
-      </div>
-      {successMessage && (
-        <div
-          className="success-message"
-          id="successMessage"
-          style={{ display: "block" }}
-          dangerouslySetInnerHTML={{ __html: successMessage }}
-        />
-      )}
-      <form id="educationForm" autoComplete="off" onSubmit={e => e.preventDefault()}>
-        <div className="education-card">
-          {/* 10th Section */}
-          <div className="section-title">10th Class Information</div>
-          <div className="mandatory-note">
-            School name, board, and year are mandatory. Either grade OR percentage is required.
+     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
+      <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-5xl animate-fadeInUp">
+        <div className="text-center mb-6 text-gray-600 text-sm">
+          <p>Step 4 of 4 - Education Information</p>
+        </div>
+        
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-blue-600 mb-2">Bandy & Moot</h1>
+          <p className="text-xl text-gray-600">Education Information</p>
+        </div>
+
+        {successMessage && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl mb-6 text-center font-semibold">
+            <div dangerouslySetInnerHTML={{ __html: successMessage }} />
           </div>
-          <div className="form-group">
-            <label>
-              10th School Name <span className="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="tenthSchool"
-              name="tenthSchool"
-              required
-              placeholder="Enter your 10th school name"
-              minLength={2}
-              value={formData.tenthSchool}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              style={{
-                borderColor:
-                  errors.tenthSchool && formTouched.tenthSchool
-                    ? "#ff6b6b"
-                    : formData.tenthSchool
-                    ? "#28a745"
-                    : undefined
-              }}
-            />
-            <div
-              className="error-message"
-              id="tenthSchoolError"
-              style={{
-                display:
-                  errors.tenthSchool && formTouched.tenthSchool
-                    ? "block"
-                    : "none"
-              }}
-            >
-              {errors.tenthSchool}
+        )}
+
+        <form autoComplete="off" onSubmit={e => e.preventDefault()}>
+          <div className="bg-white rounded-2xl p-8 shadow-lg border-2 border-gray-100 mb-8">
+            {/* 10th Section */}
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">10th Class Information</h2>
+              <p className="text-sm text-red-600 italic">
+                School name, board, and year are mandatory. Either grade OR percentage is required.
+              </p>
             </div>
-          </div>
-          <div className="row">
-            <div className="form-group">
-              <label>
-                10th Board <span className="required">*</span>
-              </label>
-              <select
-                id="tenthBoard"
-                name="tenthBoard"
-                required
-                value={formData.tenthBoard}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.tenthBoard && formTouched.tenthBoard
-                      ? "#ff6b6b"
-                      : formData.tenthBoard
-                      ? "#28a745"
-                      : undefined
-                }}
-              >
-                <option value="">Select Board</option>
-                {boardOptions.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-              <div
-                className="error-message"
-                id="tenthBoardError"
-                style={{
-                  display:
-                    errors.tenthBoard && formTouched.tenthBoard
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.tenthBoard}
-              </div>
-            </div>
-            <div className="form-group">
-              <label>
-                10th Year of Passing <span className="required">*</span>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                10th School Name <span className="text-red-500">*</span>
               </label>
               <input
-                type="number"
-                id="tenthYear"
-                name="tenthYear"
-                required
-                placeholder="Enter year"
-                min={1990}
-                max={2030}
-                value={formData.tenthYear}
+                type="text"
+                name="tenthSchool"
+                placeholder="Enter your 10th school name"
+                value={formData.tenthSchool}
                 onChange={handleInputChange}
                 onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.tenthYear && formTouched.tenthYear
-                      ? "#ff6b6b"
-                      : formData.tenthYear
-                      ? "#28a745"
-                      : undefined
-                }}
+                className={`w-full px-4 py-3 border-2 rounded-xl text-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 ${getInputStyle('tenthSchool')}`}
               />
-              <div
-                className="error-message"
-                id="tenthYearError"
-                style={{
-                  display:
-                    errors.tenthYear && formTouched.tenthYear
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.tenthYear}
+              {errors.tenthSchool && formTouched.tenthSchool && (
+                <p className="text-red-500 text-sm mt-1">{errors.tenthSchool}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  10th Board <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="tenthBoard"
+                  value={formData.tenthBoard}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 ${getInputStyle('tenthBoard')}`}
+                >
+                  <option value="">Select Board</option>
+                  {boardOptions.map((board) => (
+                    <option key={board} value={board}>
+                      {board}
+                    </option>
+                  ))}
+                </select>
+                {errors.tenthBoard && formTouched.tenthBoard && (
+                  <p className="text-red-500 text-sm mt-1">{errors.tenthBoard}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  10th Year of Passing <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="tenthYear"
+                  placeholder="Enter year"
+                  min="1990"
+                  max="2030"
+                  value={formData.tenthYear}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 ${getInputStyle('tenthYear')}`}
+                />
+                {errors.tenthYear && formTouched.tenthYear && (
+                  <p className="text-red-500 text-sm mt-1">{errors.tenthYear}</p>
+                )}
               </div>
             </div>
-          </div>
-          <div className="row">
-            <div className="form-group">
-              <label>10th Grade</label>
-              <select
-                id="tenthGrade"
-                name="tenthGrade"
-                value={formData.tenthGrade}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.tenthGrade && formTouched.tenthGrade
-                      ? "#ff6b6b"
-                      : formData.tenthGrade
-                      ? "#28a745"
-                      : undefined
-                }}
-              >
-                <option value="">Select Grade</option>
-                {grades.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
-              <div
-                className="error-message"
-                id="tenthGradeError"
-                style={{
-                  display:
-                    errors.tenthGrade && formTouched.tenthGrade
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.tenthGrade}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  10th Grade
+                </label>
+                <select
+                  name="tenthGrade"
+                  value={formData.tenthGrade}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 ${getInputStyle('tenthGrade')}`}
+                >
+                  <option value="">Select Grade</option>
+                  {grades.map((grade) => (
+                    <option key={grade} value={grade}>
+                      {grade}
+                    </option>
+                  ))}
+                </select>
+                {errors.tenthGrade && formTouched.tenthGrade && (
+                  <p className="text-red-500 text-sm mt-1">{errors.tenthGrade}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  10th Percentage
+                </label>
+                <input
+                  type="number"
+                  name="tenthPercentage"
+                  placeholder="Enter percentage"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={formData.tenthPercentage}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 ${getInputStyle('tenthPercentage')}`}
+                />
+                {errors.tenthPercentage && formTouched.tenthPercentage && (
+                  <p className="text-red-500 text-sm mt-1">{errors.tenthPercentage}</p>
+                )}
               </div>
             </div>
-            <div className="form-group">
-              <label>10th Percentage</label>
+
+            <p className="text-sm text-blue-600 font-semibold italic mb-8">
+              * Either Grade OR Percentage must be provided for 10th class
+            </p>
+
+            <div className="border-b-2 border-gray-200 pb-6 mb-6"></div>
+
+            {/* 12th Section */}
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">12th Class Information</h2>
+              <p className="text-sm text-gray-600 italic">All fields in this section are optional</p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                12th College/School Name
+              </label>
               <input
-                type="number"
-                id="tenthPercentage"
-                name="tenthPercentage"
-                placeholder="Enter percentage"
-                min={0}
-                max={100}
-                step={0.01}
-                value={formData.tenthPercentage}
+                type="text"
+                name="twelfthCollege"
+                placeholder="Enter college/school name"
+                value={formData.twelfthCollege}
                 onChange={handleInputChange}
                 onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.tenthPercentage && formTouched.tenthPercentage
-                      ? "#ff6b6b"
-                      : formData.tenthPercentage
-                      ? "#28a745"
-                      : undefined
-                }}
+                className={`w-full px-4 py-3 border-2 rounded-xl text-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 ${getInputStyle('twelfthCollege')}`}
               />
-              <div
-                className="error-message"
-                id="tenthPercentageError"
-                style={{
-                  display:
-                    errors.tenthPercentage && formTouched.tenthPercentage
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.tenthPercentage}
+              {errors.twelfthCollege && formTouched.twelfthCollege && (
+                <p className="text-red-500 text-sm mt-1">{errors.twelfthCollege}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  12th Board
+                </label>
+                <select
+                  name="twelfthBoard"
+                  value={formData.twelfthBoard}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 ${getInputStyle('twelfthBoard')}`}
+                >
+                  <option value="">Select Board</option>
+                  {boardOptions.map((board) => (
+                    <option key={board} value={board}>
+                      {board}
+                    </option>
+                  ))}
+                </select>
+                {errors.twelfthBoard && formTouched.twelfthBoard && (
+                  <p className="text-red-500 text-sm mt-1">{errors.twelfthBoard}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  12th Year of Passing
+                </label>
+                <input
+                  type="number"
+                  name="twelfthYear"
+                  placeholder="Enter year"
+                  min="1990"
+                  max="2030"
+                  value={formData.twelfthYear}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 ${getInputStyle('twelfthYear')}`}
+                />
+                {errors.twelfthYear && formTouched.twelfthYear && (
+                  <p className="text-red-500 text-sm mt-1">{errors.twelfthYear}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  12th Grade
+                </label>
+                <select
+                  name="twelfthGrade"
+                  value={formData.twelfthGrade}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 ${getInputStyle('twelfthGrade')}`}
+                >
+                  <option value="">Select Grade</option>
+                  {grades.map((grade) => (
+                    <option key={grade} value={grade}>
+                      {grade}
+                    </option>
+                  ))}
+                </select>
+                {errors.twelfthGrade && formTouched.twelfthGrade && (
+                  <p className="text-red-500 text-sm mt-1">{errors.twelfthGrade}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  12th Percentage
+                </label>
+                <input
+                  type="number"
+                  name="twelfthPercentage"
+                  placeholder="Enter percentage"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={formData.twelfthPercentage}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-opacity-50 ${getInputStyle('twelfthPercentage')}`}
+                />
+                {errors.twelfthPercentage && formTouched.twelfthPercentage && (
+                  <p className="text-red-500 text-sm mt-1">{errors.twelfthPercentage}</p>
+                )}
               </div>
             </div>
           </div>
-          <div className="either-or-note">
-            * Either Grade OR Percentage must be provided for 10th class
-          </div>
-          <div className="section-divider"></div>
-          {/* 12th Section */}
-          <div className="section-title">12th Class Information</div>
-          <div className="optional-note">All fields in this section are optional</div>
-          <div className="form-group">
-            <label>12th College/School Name</label>
-            <input
-              type="text"
-              id="twelfthCollege"
-              name="twelfthCollege"
-              placeholder="Enter college/school name"
-              minLength={2}
-              value={formData.twelfthCollege}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-            />
-            <div
-              className="error-message"
-              id="twelfthCollegeError"
-              style={{
-                display:
-                  errors.twelfthCollege && formTouched.twelfthCollege
-                    ? "block"
-                    : "none"
-              }}
+
+          <div className="flex flex-col md:flex-row gap-4">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg uppercase tracking-wide"
             >
-              {errors.twelfthCollege}
-            </div>
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className={`flex-1 ${saveButtonColor} hover:opacity-90 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg uppercase tracking-wide`}
+            >
+              {saveButtonText}
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={!isFormValid}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg uppercase tracking-wide disabled:opacity-60"
+            >
+              Next
+            </button>
           </div>
-          <div className="row">
-            <div className="form-group">
-              <label>12th Board</label>
-              <select
-                id="twelfthBoard"
-                name="twelfthBoard"
-                value={formData.twelfthBoard}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-              >
-                <option value="">Select Board</option>
-                {boardOptions.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-              <div
-                className="error-message"
-                id="twelfthBoardError"
-                style={{
-                  display:
-                    errors.twelfthBoard && formTouched.twelfthBoard
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.twelfthBoard}
-              </div>
-            </div>
-            <div className="form-group">
-              <label>12th Year of Passing</label>
-              <input
-                type="number"
-                id="twelfthYear"
-                name="twelfthYear"
-                placeholder="Enter year"
-                min={1990}
-                max={2030}
-                value={formData.twelfthYear}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.twelfthYear && formTouched.twelfthYear
-                      ? "#ff6b6b"
-                      : formData.twelfthYear
-                      ? "#28a745"
-                      : undefined
-                }}
-              />
-              <div
-                className="error-message"
-                id="twelfthYearError"
-                style={{
-                  display:
-                    errors.twelfthYear && formTouched.twelfthYear
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.twelfthYear}
-              </div>
-            </div>
-          </div>
-          <div className="row">
-            <div className="form-group">
-              <label>12th Grade</label>
-              <select
-                id="twelfthGrade"
-                name="twelfthGrade"
-                value={formData.twelfthGrade}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.twelfthGrade && formTouched.twelfthGrade
-                      ? "#ff6b6b"
-                      : formData.twelfthGrade
-                      ? "#28a745"
-                      : undefined
-                }}
-              >
-                <option value="">Select Grade</option>
-                {grades.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
-              <div
-                className="error-message"
-                id="twelfthGradeError"
-                style={{
-                  display:
-                    errors.twelfthGrade && formTouched.twelfthGrade
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.twelfthGrade}
-              </div>
-            </div>
-            <div className="form-group">
-              <label>12th Percentage</label>
-              <input
-                type="number"
-                id="twelfthPercentage"
-                name="twelfthPercentage"
-                placeholder="Enter percentage"
-                min={0}
-                max={100}
-                step={0.01}
-                value={formData.twelfthPercentage}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.twelfthPercentage && formTouched.twelfthPercentage
-                      ? "#ff6b6b"
-                      : formData.twelfthPercentage
-                      ? "#28a745"
-                      : undefined
-                }}
-              />
-              <div
-                className="error-message"
-                id="twelfthPercentageError"
-                style={{
-                  display:
-                    errors.twelfthPercentage && formTouched.twelfthPercentage
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.twelfthPercentage}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="button-group">
-          <button
-            type="button"
-            id="backButton"
-            className="btn"
-            onClick={handleBack}
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            id="saveButton"
-            className="btn"
-            style={{
-              background: saveButtonColor,
-            }}
-            onClick={handleSave}
-          >
-            {saveButtonText}
-          </button>
-          <button
-            type="button"
-            id="nextButton"
-            className="btn"
-            disabled={!isFormValid}
-            onClick={handleNext}
-          >
-            Next
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

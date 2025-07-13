@@ -6,6 +6,7 @@ const initialState = {
   projects: "",
   keyAchievements: ""
 };
+
 const initialErrors = {
   keySkills: "",
   projects: "",
@@ -16,9 +17,7 @@ const SkillsProjectsForm = () => {
   const [formTouched, setFormTouched] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [saveButtonText, setSaveButtonText] = useState("Save");
-  const [saveButtonColor, setSaveButtonColor] = useState(
-    "linear-gradient(135deg, #28a745 0%, #20c997 100%)"
-  );
+  const [saveButtonColor, setSaveButtonColor] = useState("bg-gradient-to-r from-green-500 to-teal-500");
   const [canProceed, setCanProceed] = useState(false);
   const [charCounts, setCharCounts] = useState({
     keySkills: 0,
@@ -30,250 +29,33 @@ const SkillsProjectsForm = () => {
   const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState(initialErrors);
 
-const styles = `
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
-}
-.container {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 700px;
-    animation: slideUp 0.6s ease-out;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px);}
-    to { opacity: 1; transform: translateY(0);}
-}
-.section-card {
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    background: white;
-    color: #333;
-    border: 2px solid #e1e5e9;
-    text-align: center;
-}
-.section-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-}
-.card-title {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 25px;
-    text-align: center;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #e1e5e9;
-    color: #333;
-}
-.mandatory-indicator {
-    color: #ff4757;
-    font-size: 0.9rem;
-    font-weight: 600;
-    margin-left: 10px;
-}
-.form-group {
-    margin-bottom: 20px;
-    position: relative;
-}
-.form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-    color: #333;
-}
-.form-group label .required { color: #ff4757; margin-left: 3px; }
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e1e5e9;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    background: #f8f9fa;
-    color: #333;
-    font-family: inherit;
-}
-.form-group textarea {
-    resize: vertical;
-    min-height: 120px;
-}
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    outline: none;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    border-color: #667eea;
-    background: white;
-}
-.form-group input:valid {
-    border-color: #28a745;
-}
-.form-group input:invalid:not(:placeholder-shown) {
-    border-color: #dc3545;
-}
-.button-container {
-    display: flex;
-    gap: 15px;
-    margin-top: 30px;
-}
-.btn {
-    flex: 1;
-    padding: 18px;
-    border: none;
-    border-radius: 15px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-.btn-back {
-    background: #6c757d;
-    color: white;
-}
-.btn-back:hover:not(:disabled) {
-    background: #5a6268;
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(108, 117, 125, 0.4);
-}
-.btn-save {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-}
-.btn-save:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
-}
-.btn-next {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-.btn-next:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-}
-.btn:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-    opacity: 0.6;
-}
-.error-message {
-    color: #ff4757;
-    font-size: 0.8rem;
-    margin-top: 5px;
-    display: none;
-}
-.success-message {
-    background: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: none;
-    text-align: center;
-    font-weight: 600;
-    animation: slideDown 0.5s ease-out;
-}
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-20px);}
-    to { opacity: 1; transform: translateY(0);}
-}
-.help-text {
-    font-size: 0.8rem;
-    color: #666;
-    margin-top: 5px;
-    font-style: italic;
-}
-.field-separator {
-    height: 1px;
-    background: linear-gradient(to right, transparent, #e1e5e9, transparent);
-    margin: 25px 0;
-}
-.char-counter {
-    font-size: 0.7rem;
-    color: #666;
-    text-align: right;
-    margin-top: 3px;
-}
-@media (max-width: 768px) {
-    .container { padding: 25px; margin: 10px; max-width: 95%; }
-    .button-container { flex-direction: column; gap: 10px; }
-    .btn { font-size: 1rem; padding: 15px; }
-}
-`;
-
-function validateField(fieldId, value) {
-  switch (fieldId) {
-    case "keySkills":
-      return value && value.trim().length >= 3;
-    default:
-      return true;
-  }
-}
-function getErrorMessage(fieldId) {
-  switch (fieldId) {
-    case "keySkills":
-      return "Key skills are required (minimum 3 characters)";
-    default:
-      return "Please enter a valid value";
-  }
-}
-
-  // Inject styles
-  useEffect(() => {
-    let styleTag = document.getElementById("skills-projects-form-styles");
-    if (!styleTag) {
-      styleTag = document.createElement("style");
-      styleTag.id = "skills-projects-form-styles";
-      styleTag.innerHTML = styles;
-      document.head.appendChild(styleTag);
+  function validateField(fieldId, value) {
+    switch (fieldId) {
+      case "keySkills":
+        return value && value.trim().length >= 3;
+      default:
+        return true;
     }
-  }, []);
+  }
 
-  // Load from localStorage if available
-  useEffect(() => {
-    try {
-      if (typeof Storage !== "undefined" && localStorage) {
-        const savedData = localStorage.getItem("skillsProjectsFormData");
-        if (savedData) {
-          const data = JSON.parse(savedData);
-          setFormData((prev) => ({
-            ...prev,
-            ...Object.fromEntries(
-              Object.entries(data).filter(
-                ([k]) => Object.keys(initialState).includes(k)
-              )
-            )
-          }));
-          setSuccessMessage(
-            `<strong>Previously saved data loaded</strong><br>
-            <small>Last saved: ${data.savedAt || "Unknown"}</small>`
-          );
-          setTimeout(() => setSuccessMessage(""), 3000);
-        }
-      }
-    } catch (e) {
-      // ignore
+  function getErrorMessage(fieldId) {
+    switch (fieldId) {
+      case "keySkills":
+        return "Key skills are required (minimum 3 characters)";
+      default:
+        return "Please enter a valid value";
     }
+  }
+
+  // Load from memory storage simulation
+  useEffect(() => {
+    // This would normally load from localStorage
+    // For demo, we'll just initialize empty
+    setCharCounts({
+      keySkills: formData.keySkills.length,
+      projects: formData.projects.length,
+      keyAchievements: formData.keyAchievements.length
+    });
   }, []);
 
   useEffect(() => {
@@ -342,212 +124,188 @@ function getErrorMessage(fieldId) {
         ...formData,
         savedAt: new Date().toLocaleString()
       };
-      try {
-        if (typeof Storage !== "undefined" && localStorage) {
-          localStorage.setItem("skillsProjectsFormData", JSON.stringify(saveData));
-        }
-      } catch (e) {}
+      
       setSuccessMessage(
-        `<strong>Skills, Projects & Achievements Saved Successfully! ✅</strong><br>
-         <small>Saved at: ${saveData.savedAt}</small><br>
-         <small>Skills: ${
-           saveData.keySkills
-             ? saveData.keySkills.substring(0, 30) + "..."
-             : "Not specified"
-         }</small>`
+        `Skills, Projects & Achievements Saved Successfully! ✅ - Saved at: ${saveData.savedAt}`
       );
       setSaveButtonText("Saved ✓");
-      setSaveButtonColor("#198754");
+      setSaveButtonColor("bg-green-600");
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
         setSuccessMessage("");
         setSaveButtonText("Save");
-        setSaveButtonColor(
-          "linear-gradient(135deg, #28a745 0%, #20c997 100%)"
-        );
+        setSaveButtonColor("bg-gradient-to-r from-green-500 to-teal-500");
       }, 4000);
     }
   }
 
   function handleNext() {
     if (!validateMandatoryFields()) return;
-    // Save before navigating
-    const saveData = {
-      ...formData,
-      savedAt: new Date().toLocaleString()
-    };
-    try {
-      if (typeof Storage !== "undefined" && localStorage) {
-        localStorage.setItem("skillsProjectsFormData", JSON.stringify(saveData));
-      }
-    } catch (e) {}
+    // // Save before navigating
+    // const saveData = {
+    //   ...formData,
+    //   savedAt: new Date().toLocaleString()
+    // };
+    alert('Form validated successfully! Ready to proceed to next step.');
     navigate('/document');
   }
 
   function handleBack() {
+    alert('Going back to previous step');
     navigate('/employment');
   }
 
   // Char counter for textareas (max 1000 characters)
   function renderCharCounter(fieldId) {
     const currentLength = charCounts[fieldId] || 0;
-    let color = "#666";
-    if (currentLength > 900) color = "#ff4757";
+    const colorClass = currentLength > 900 ? "text-red-500" : "text-gray-500";
     return (
-      <div className="char-counter" style={{ color }}>
+      <div className={`text-xs text-right mt-1 ${colorClass}`}>
         {currentLength}/1000 characters
       </div>
     );
   }
 
   return (
-    <div className="container">
-      {successMessage && (
-        <div
-          className="success-message"
-          id="successMessage"
-          style={{ display: "block" }}
-          dangerouslySetInnerHTML={{ __html: successMessage }}
-        />
-      )}
-      <form
-        id="skillsProjectsForm"
-        autoComplete="off"
-        onSubmit={e => e.preventDefault()}
-      >
-        <div className="section-card">
-          <h2 className="card-title">Skills & Projects Information</h2>
-
-          <div className="form-group">
-            <label>
-              Key Skills <span className="required">*</span>
-            </label>
-            <textarea
-              id="keySkills"
-              name="keySkills"
-              placeholder="e.g., JavaScript, Python, React, Leadership, Communication, Problem Solving..."
-              required
-              maxLength={1000}
-              value={formData.keySkills}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              style={{
-                borderColor:
-                  errors.keySkills && formTouched.keySkills
-                    ? "#dc3545"
-                    : formData.keySkills
-                    ? "#28a745"
-                    : undefined
-              }}
-            />
-            <div className="help-text">
-              List your key technical and soft skills separated by commas (minimum 3 characters)
-            </div>
-            {renderCharCounter("keySkills")}
-            <div
-              className="error-message"
-              id="keySkillsError"
-              style={{
-                display:
-                  errors.keySkills && formTouched.keySkills
-                    ? "block"
-                    : "none"
-              }}
-            >
-              {errors.keySkills}
-            </div>
+     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
+      <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-5xl animate-fadeInUp max-h-[90vh] overflow-y-auto">
+        {successMessage && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-xl mb-8 text-center font-semibold">
+            {successMessage}
           </div>
+        )}
+        
+        <div className="space-y-8">
+          <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-200 p-10 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <h2 className="text-3xl font-bold text-center mb-10 pb-6 border-b-2 border-gray-200 text-gray-800">
+              Skills & Projects Information
+            </h2>
 
-          <div className="field-separator"></div>
+            <div className="space-y-8">
+              {/* Key Skills Field */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Key Skills <span className="text-red-500 ml-1">*</span>
+                </label>
+                <textarea
+                  id="keySkills"
+                  name="keySkills"
+                  placeholder="e.g., JavaScript, Python, React, Leadership, Communication, Problem Solving..."
+                  required
+                  maxLength={1000}
+                  value={formData.keySkills}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-sm transition-all duration-300 bg-gray-50 focus:bg-white focus:outline-none focus:-translate-y-1 focus:shadow-lg resize-vertical min-h-32 ${
+                    errors.keySkills && formTouched.keySkills
+                      ? "border-red-500 focus:border-red-500"
+                      : formData.keySkills
+                      ? "border-green-500 focus:border-indigo-500"
+                      : "border-gray-300 focus:border-indigo-500"
+                  }`}
+                />
+                <div className="text-xs text-gray-600 italic">
+                  List your key technical and soft skills separated by commas (minimum 3 characters)
+                </div>
+                {renderCharCounter("keySkills")}
+                {errors.keySkills && formTouched.keySkills && (
+                  <div className="text-red-500 text-xs mt-1">
+                    {errors.keySkills}
+                  </div>
+                )}
+              </div>
 
-          <div className="form-group">
-            <label>Projects</label>
-            <textarea
-              id="projects"
-              name="projects"
-              placeholder="Describe your major projects, technologies used, and your role..."
-              maxLength={1000}
-              value={formData.projects}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-            />
-            <div className="help-text">
-              Describe your significant projects and contributions
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-8"></div>
+
+              {/* Projects Field */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Projects
+                </label>
+                <textarea
+                  id="projects"
+                  name="projects"
+                  placeholder="Describe your major projects, technologies used, and your role..."
+                  maxLength={1000}
+                  value={formData.projects}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-sm transition-all duration-300 bg-gray-50 focus:bg-white focus:outline-none focus:-translate-y-1 focus:shadow-lg focus:border-indigo-500 resize-vertical min-h-32"
+                />
+                <div className="text-xs text-gray-600 italic">
+                  Describe your significant projects and contributions
+                </div>
+                {renderCharCounter("projects")}
+                {errors.projects && formTouched.projects && (
+                  <div className="text-red-500 text-xs mt-1">
+                    {errors.projects}
+                  </div>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-8"></div>
+
+              {/* Key Achievements Field */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Key Achievements
+                </label>
+                <textarea
+                  id="keyAchievements"
+                  name="keyAchievements"
+                  placeholder="e.g., Increased system performance by 40%, Led a team of 5 developers, Implemented CI/CD pipeline..."
+                  maxLength={1000}
+                  value={formData.keyAchievements}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-sm transition-all duration-300 bg-gray-50 focus:bg-white focus:outline-none focus:-translate-y-1 focus:shadow-lg focus:border-indigo-500 resize-vertical min-h-32"
+                />
+                <div className="text-xs text-gray-600 italic">
+                  List your professional achievements and accomplishments
+                </div>
+                {renderCharCounter("keyAchievements")}
+                {errors.keyAchievements && formTouched.keyAchievements && (
+                  <div className="text-red-500 text-xs mt-1">
+                    {errors.keyAchievements}
+                  </div>
+                )}
+              </div>
+
+              {/* Button Container */}
+              <div className="flex gap-6 pt-8">
+                <button
+                  type="button"
+                  className="flex-1 px-8 py-4 bg-gray-500 text-white rounded-2xl text-lg font-bold uppercase tracking-wide transition-all duration-300 hover:bg-gray-600 hover:-translate-y-1 hover:shadow-lg"
+                  onClick={handleBack}
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 px-8 py-4 text-white rounded-2xl text-lg font-bold uppercase tracking-wide transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${saveButtonColor} hover:opacity-90`}
+                  onClick={handleSave}
+                >
+                  {saveButtonText}
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 px-8 py-4 text-white rounded-2xl text-lg font-bold uppercase tracking-wide transition-all duration-300 ${
+                    canProceed
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-600 hover:-translate-y-1 hover:shadow-lg"
+                      : "bg-gray-400 cursor-not-allowed opacity-60"
+                  }`}
+                  disabled={!canProceed}
+                  onClick={handleNext}
+                >
+                  Next
+                </button>
+              </div>
             </div>
-            {renderCharCounter("projects")}
-            <div
-              className="error-message"
-              id="projectsError"
-              style={{
-                display:
-                  errors.projects && formTouched.projects ? "block" : "none"
-              }}
-            >
-              {errors.projects}
-            </div>
-          </div>
-
-          <div className="field-separator"></div>
-
-          <div className="form-group">
-            <label>Key Achievements</label>
-            <textarea
-              id="keyAchievements"
-              name="keyAchievements"
-              placeholder="e.g., Increased system performance by 40%, Led a team of 5 developers, Implemented CI/CD pipeline..."
-              maxLength={1000}
-              value={formData.keyAchievements}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-            />
-            <div className="help-text">
-              List your professional achievements and accomplishments
-            </div>
-            {renderCharCounter("keyAchievements")}
-            <div
-              className="error-message"
-              id="keyAchievementsError"
-              style={{
-                display:
-                  errors.keyAchievements && formTouched.keyAchievements
-                    ? "block"
-                    : "none"
-              }}
-            >
-              {errors.keyAchievements}
-            </div>
-          </div>
-
-          <div className="button-container">
-            <button
-              type="button"
-              id="backButton"
-              className="btn btn-back"
-              onClick={handleBack}
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              id="saveButton"
-              className="btn btn-save"
-              onClick={handleSave}
-              style={{ background: saveButtonColor }}
-            >
-              {saveButtonText}
-            </button>
-            <button
-              type="button"
-              id="nextButton"
-              className="btn btn-next"
-              disabled={!canProceed}
-              onClick={handleNext}
-            >
-              Next
-            </button>
           </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 };

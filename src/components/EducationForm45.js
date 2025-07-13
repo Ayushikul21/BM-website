@@ -18,6 +18,7 @@ const initialState = {
   backlogStatus: "",
   backlogDetails: ""
 };
+
 const initialErrors = Object.fromEntries(
   Object.keys(initialState).map((k) => [k, ""])
 );
@@ -27,281 +28,69 @@ const EducationForm45 = () => {
   const [isFormValid, setIsFormValid] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [saveButtonText, setSaveButtonText] = useState("Save Data");
-  const [saveButtonColor, setSaveButtonColor] = useState(
-    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-  );
+  const [saveButtonColor, setSaveButtonColor] = useState("bg-green-600");
   const timeoutRef = useRef();
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState(initialErrors);
 
-const styles = `
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
-}
-.container {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 800px;
-    animation: slideUp 0.6s ease-out;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px);}
-    to { opacity: 1; transform: translateY(0);}
-}
-.form-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-.form-header h1 {
-    color: rgb(0, 140, 255);
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 10px;
-}
-.form-header p { color: #666; font-size: 1.1rem; }
-.education-card {
-    padding: 30px;
-    border-radius: 20px;
-    background: white;
-    color: #333;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    margin-bottom: 30px;
-    border: 2px solid #f0f0f0;
-}
-.section-divider {
-    margin: 30px 0;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 20px;
-}
-.section-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #333;
-    text-align: center;
-}
-.form-group {
-    margin-bottom: 20px;
-    position: relative;
-}
-.form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-    color: #333;
-}
-.form-group label .required { color: #ff6b6b; margin-left: 3px; }
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    background: white;
-    color: #333;
-}
-.form-group textarea { resize: vertical; min-height: 80px; }
-.form-group input::placeholder,
-.form-group textarea::placeholder { color: #999; }
-.form-group select { color: #333; }
-.form-group select option { background: white; color: #333; }
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    outline: none;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    border-color: #667eea;
-    background: #f8f9ff;
-}
-.row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-.row-three {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 15px;
-}
-.backlog-section {
-    background: #f8f9ff;
-    padding: 20px;
-    border-radius: 12px;
-    border: 2px solid #e0e6ff;
-    margin-top: 20px;
-}
-.backlog-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #667eea;
-    margin-bottom: 15px;
-}
-.radio-group {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 15px;
-}
-.radio-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.radio-option input[type="radio"] {
-    width: auto;
-    margin: 0;
-}
-.radio-option label { margin: 0; font-weight: 500; }
-.backlog-count { display: none; }
-.backlog-count.show { display: block; }
-.button-group {
-    display: flex;
-    gap: 15px;
-    margin-top: 30px;
-}
-.btn {
-    flex: 1;
-    padding: 18px;
-    border: none;
-    border-radius: 15px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-.btn:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-}
-.btn:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-    opacity: 0.6;
-}
-.error-message {
-    color: #ff6b6b;
-    font-size: 0.8rem;
-    margin-top: 5px;
-    display: none;
-}
-.success-message {
-    background: linear-gradient(135deg, #2ed573 0%, #1e90ff 100%);
-    color: white;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: none;
-    text-align: center;
-    font-weight: 600;
-}
-.optional-note {
-    font-size: 0.8rem;
-    color: #666;
-    font-style: italic;
-    margin-top: 5px;
-}
-.mandatory-note {
-    font-size: 0.8rem;
-    color: #ff6b6b;
-    font-style: italic;
-    margin-top: 5px;
-}
-@media (max-width: 768px) {
-    .container { padding: 25px; margin: 10px; }
-    .form-header h1 { font-size: 2rem; }
-    .row, .row-three { grid-template-columns: 1fr; gap: 10px; }
-    .button-group { flex-direction: column; }
-    .radio-group { flex-direction: column; gap: 10px; }
-}
-`;
+  const gradCourses = [
+    "B.Tech",
+    "B.E",
+    "BCA",
+    "B.Sc",
+    "B.Com",
+    "BBA",
+    "BA",
+    "Other"
+  ];
 
-const gradCourses = [
-  "B.Tech",
-  "B.E",
-  "BCA",
-  "B.Sc",
-  "B.Com",
-  "BBA",
-  "BA",
-  "Other"
-];
-
-function validateField(fieldId, value, formData) {
-  switch (fieldId) {
-    case "graduationCollege":
-      return value && value.trim().length >= 2;
-    case "graduationCourse":
-    case "graduationSpecialization":
-    case "graduationDuration":
-    case "graduationGrade":
-      return value && value.trim() !== "";
-    case "graduationYear":
-      if (!value) return false;
-      const year = parseInt(value, 10);
-      return year >= 1990 && year <= 2030;
-    case "hasBacklogs":
-      return value === "yes" || value === "no";
-    case "backlogCount":
-      if (formData.hasBacklogs !== "yes") return true;
-      const count = parseInt(value, 10);
-      return !isNaN(count) && count >= 1 && count <= 50;
-    default:
-      return true;
-  }
-}
-
-function getErrorMessage(fieldId, value, formData) {
-  switch (fieldId) {
-    case "graduationCollege":
-      return "College name is required (minimum 2 characters)";
-    case "graduationCourse":
-      return "Please select graduation course";
-    case "graduationSpecialization":
-      return "Specialization/Branch is required";
-    case "graduationDuration":
-      return "Please select graduation duration";
-    case "graduationYear":
-      return "Please enter a valid year (1990-2030)";
-    case "graduationGrade":
-      return "Percentage/CGPA is required";
-    case "hasBacklogs":
-      return "Please select if you have backlogs";
-    case "backlogCount":
-      return "Please enter number of backlogs (1-50)";
-    default:
-      return "";
-  }
-}
-
-  useEffect(() => {
-    let styleTag = document.getElementById("education-form45-styles");
-    if (!styleTag) {
-      styleTag = document.createElement("style");
-      styleTag.id = "education-form45-styles";
-      styleTag.innerHTML = styles;
-      document.head.appendChild(styleTag);
+  function validateField(fieldId, value, formData) {
+    switch (fieldId) {
+      case "graduationCollege":
+        return value && value.trim().length >= 2;
+      case "graduationCourse":
+      case "graduationSpecialization":
+      case "graduationDuration":
+      case "graduationGrade":
+        return value && value.trim() !== "";
+      case "graduationYear":
+        if (!value) return false;
+        const year = parseInt(value, 10);
+        return year >= 1990 && year <= 2030;
+      case "hasBacklogs":
+        return value === "yes" || value === "no";
+      case "backlogCount":
+        if (formData.hasBacklogs !== "yes") return true;
+        const count = parseInt(value, 10);
+        return !isNaN(count) && count >= 1 && count <= 50;
+      default:
+        return true;
     }
-  }, []);
+  }
+
+  function getErrorMessage(fieldId, value, formData) {
+    switch (fieldId) {
+      case "graduationCollege":
+        return "College name is required (minimum 2 characters)";
+      case "graduationCourse":
+        return "Please select graduation course";
+      case "graduationSpecialization":
+        return "Specialization/Branch is required";
+      case "graduationDuration":
+        return "Please select graduation duration";
+      case "graduationYear":
+        return "Please enter a valid year (1990-2030)";
+      case "graduationGrade":
+        return "Percentage/CGPA is required";
+      case "hasBacklogs":
+        return "Please select if you have backlogs";
+      case "backlogCount":
+        return "Please enter number of backlogs (1-50)";
+      default:
+        return "";
+    }
+  }
 
   // Load from localStorage if available
   useEffect(() => {
@@ -319,8 +108,7 @@ function getErrorMessage(fieldId, value, formData) {
             )
           }));
           setSuccessMessage(
-            `<strong>Previously saved data loaded</strong><br>
-            <small>Last saved: ${data.savedAt || "Unknown"}</small>`
+            `Previously saved data loaded - Last saved: ${data.savedAt || "Unknown"}`
           );
           setTimeout(() => setSuccessMessage(""), 3000);
         }
@@ -331,8 +119,7 @@ function getErrorMessage(fieldId, value, formData) {
   }, []);
 
   useEffect(() => {
-    validateAllFields(); // validate & set isFormValid
-    // eslint-disable-next-line
+    validateAllFields();
   }, [formData]);
 
   function handleInputChange(e) {
@@ -433,19 +220,15 @@ function getErrorMessage(fieldId, value, formData) {
         }
       } catch (e) {}
       setSuccessMessage(
-        `<strong>Education Details Saved Successfully! ✅</strong><br>
-        <small>Saved at: ${saveData.savedAt}</small><br>
-        <small>Course: ${saveData.graduationCourse} | Year: ${saveData.graduationYear}</small>`
+        `Education Details Saved Successfully! ✅ - Saved at: ${saveData.savedAt} - Course: ${saveData.graduationCourse} | Year: ${saveData.graduationYear}`
       );
       setSaveButtonText("Saved ✓");
-      setSaveButtonColor("#198754");
+      setSaveButtonColor("bg-green-600");
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
         setSuccessMessage("");
         setSaveButtonText("Save Data");
-        setSaveButtonColor(
-          "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-        );
+        setSaveButtonColor("bg-gradient-to-r from-blue-500 to-purple-600");
       }, 4000);
     }
   }
@@ -463,575 +246,410 @@ function getErrorMessage(fieldId, value, formData) {
           localStorage.setItem("educationFormData", JSON.stringify(saveData));
         }
       } catch (e) {}
-      setSuccessMessage(
-        `<strong>Education Details Saved Successfully! ✅</strong><br>
-        <small>Proceeding to next step...</small>`
-      );
+      setSuccessMessage("Education Details Saved Successfully! ✅ - Proceeding to next step...");
       setTimeout(() => {
-        navigate('/employment');
+        console.log('Navigate to employment page');
       }, 1500);
+      navigate('/employment');
     }
   }
 
   function handleBack() {
+    console.log('Navigate back to education page');
     navigate('/education');
   }
 
-  // On mount, validate in case pre-filled
-  useEffect(() => {
-    validateAllFields();
-    // eslint-disable-next-line
-  }, []);
+  const getFieldBorderColor = (fieldName) => {
+    if (errors[fieldName] && formTouched[fieldName]) {
+      return "border-red-500 focus:border-red-500";
+    }
+    if (formData[fieldName] && !errors[fieldName]) {
+      return "border-green-500 focus:border-green-500";
+    }
+    return "border-gray-300 focus:border-blue-500";
+  };
 
   return (
-    <div className="container">
-      <div className="form-header">
-        <h1>Bandy & Moot</h1>
-        <p>Higher Education Information</p>
-      </div>
-      {successMessage && (
-        <div
-          className="success-message"
-          id="successMessage"
-          style={{ display: "block" }}
-          dangerouslySetInnerHTML={{ __html: successMessage }}
-        />
-      )}
-      <form
-        id="educationForm"
-        autoComplete="off"
-        onSubmit={(e) => e.preventDefault()}
-      >
-        <div className="education-card">
-          {/* Diploma Section */}
-          <div className="section-title">Diploma Information</div>
-          <div className="optional-note">All fields in this section are optional</div>
-          <div className="form-group">
-            <label>Diploma College/Institute Name</label>
-            <input
-              type="text"
-              id="diplomaCollege"
-              name="diplomaCollege"
-              placeholder="Enter diploma college/institute name"
-              minLength={2}
-              value={formData.diplomaCollege}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-            />
-            <div
-              className="error-message"
-              id="diplomaCollegeError"
-              style={{
-                display:
-                  errors.diplomaCollege && formTouched.diplomaCollege
-                    ? "block"
-                    : "none"
-              }}
-            >
-              {errors.diplomaCollege}
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
+      <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-5xl animate-fadeInUp">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-blue-600 mb-2">Bandy & Moot</h1>
+          <p className="text-gray-600 text-lg">Higher Education Information</p>
+        </div>
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-4 rounded-xl mb-6 text-center font-semibold">
+            {successMessage}
           </div>
-          <div className="form-group">
-            <label>Diploma Course/Branch</label>
-            <input
-              type="text"
-              id="diplomaCourse"
-              name="diplomaCourse"
-              placeholder="e.g., Mechanical Engineering, Computer Science, etc."
-              minLength={2}
-              value={formData.diplomaCourse}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-            />
-            <div
-              className="error-message"
-              id="diplomaCourseError"
-              style={{
-                display:
-                  errors.diplomaCourse && formTouched.diplomaCourse
-                    ? "block"
-                    : "none"
-              }}
-            >
-              {errors.diplomaCourse}
-            </div>
-          </div>
-          <div className="row-three">
-            <div className="form-group">
-              <label>Diploma Duration</label>
-              <select
-                id="diplomaDuration"
-                name="diplomaDuration"
-                value={formData.diplomaDuration}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-              >
-                <option value="">Select Duration</option>
-                <option value="2 Years">2 Years</option>
-                <option value="3 Years">3 Years</option>
-              </select>
-              <div
-                className="error-message"
-                id="diplomaDurationError"
-                style={{
-                  display:
-                    errors.diplomaDuration && formTouched.diplomaDuration
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.diplomaDuration}
+        )}
+
+        <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+          <div className="bg-white rounded-2xl p-8 shadow-lg border-2 border-gray-100">
+            
+            {/* Diploma Section */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-center mb-4 text-gray-800">Diploma Information</h2>
+              <p className="text-sm text-gray-600 italic mb-6">All fields in this section are optional</p>
+              
+              <div className="mb-6">
+                <label className="block font-semibold mb-2 text-gray-700">Diploma College/Institute Name</label>
+                <input
+                  type="text"
+                  name="diplomaCollege"
+                  placeholder="Enter diploma college/institute name"
+                  value={formData.diplomaCollege}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:shadow-md transition-all duration-300"
+                />
+                {errors.diplomaCollege && formTouched.diplomaCollege && (
+                  <p className="text-red-500 text-sm mt-1">{errors.diplomaCollege}</p>
+                )}
               </div>
-            </div>
-            <div className="form-group">
-              <label>Diploma Year of Passing</label>
-              <input
-                type="number"
-                id="diplomaYear"
-                name="diplomaYear"
-                placeholder="Enter year"
-                min={1990}
-                max={2030}
-                value={formData.diplomaYear}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-              />
-              <div
-                className="error-message"
-                id="diplomaYearError"
-                style={{
-                  display:
-                    errors.diplomaYear && formTouched.diplomaYear
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.diplomaYear}
+
+              <div className="mb-6">
+                <label className="block font-semibold mb-2 text-gray-700">Diploma Course/Branch</label>
+                <input
+                  type="text"
+                  name="diplomaCourse"
+                  placeholder="e.g., Mechanical Engineering, Computer Science, etc."
+                  value={formData.diplomaCourse}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:shadow-md transition-all duration-300"
+                />
+                {errors.diplomaCourse && formTouched.diplomaCourse && (
+                  <p className="text-red-500 text-sm mt-1">{errors.diplomaCourse}</p>
+                )}
               </div>
-            </div>
-            <div className="form-group">
-              <label>Diploma Percentage/CGPA</label>
-              <input
-                type="text"
-                id="diplomaGrade"
-                name="diplomaGrade"
-                placeholder="e.g., 85% or 8.5 CGPA"
-                value={formData.diplomaGrade}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-              />
-              <div
-                className="error-message"
-                id="diplomaGradeError"
-                style={{
-                  display:
-                    errors.diplomaGrade && formTouched.diplomaGrade
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.diplomaGrade}
-              </div>
-            </div>
-          </div>
-          <div className="section-divider"></div>
-          {/* Graduation Section */}
-          <div className="section-title">Graduation Information</div>
-          <div className="mandatory-note">
-            All fields in this section are mandatory
-          </div>
-          <div className="form-group">
-            <label>
-              Graduation College/University Name <span className="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="graduationCollege"
-              name="graduationCollege"
-              required
-              placeholder="Enter graduation college/university name"
-              minLength={2}
-              value={formData.graduationCollege}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              style={{
-                borderColor:
-                  errors.graduationCollege && formTouched.graduationCollege
-                    ? "#ff6b6b"
-                    : formData.graduationCollege
-                    ? "#28a745"
-                    : undefined
-              }}
-            />
-            <div
-              className="error-message"
-              id="graduationCollegeError"
-              style={{
-                display:
-                  errors.graduationCollege && formTouched.graduationCollege
-                    ? "block"
-                    : "none"
-              }}
-            >
-              {errors.graduationCollege}
-            </div>
-          </div>
-          <div className="row">
-            <div className="form-group">
-              <label>
-                Graduation Course/Degree <span className="required">*</span>
-              </label>
-              <select
-                id="graduationCourse"
-                name="graduationCourse"
-                required
-                value={formData.graduationCourse}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.graduationCourse && formTouched.graduationCourse
-                      ? "#ff6b6b"
-                      : formData.graduationCourse
-                      ? "#28a745"
-                      : undefined
-                }}
-              >
-                <option value="">Select Course</option>
-                {gradCourses.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <div
-                className="error-message"
-                id="graduationCourseError"
-                style={{
-                  display:
-                    errors.graduationCourse && formTouched.graduationCourse
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.graduationCourse}
-              </div>
-            </div>
-            <div className="form-group">
-              <label>
-                Specialization/Branch <span className="required">*</span>
-              </label>
-              <input
-                type="text"
-                id="graduationSpecialization"
-                name="graduationSpecialization"
-                required
-                placeholder="Enter specialization/branch"
-                value={formData.graduationSpecialization}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.graduationSpecialization &&
-                    formTouched.graduationSpecialization
-                      ? "#ff6b6b"
-                      : formData.graduationSpecialization
-                      ? "#28a745"
-                      : undefined
-                }}
-              />
-              <div
-                className="error-message"
-                id="graduationSpecializationError"
-                style={{
-                  display:
-                    errors.graduationSpecialization &&
-                    formTouched.graduationSpecialization
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.graduationSpecialization}
-              </div>
-            </div>
-          </div>
-          <div className="row-three">
-            <div className="form-group">
-              <label>
-                Graduation Duration <span className="required">*</span>
-              </label>
-              <select
-                id="graduationDuration"
-                name="graduationDuration"
-                required
-                value={formData.graduationDuration}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.graduationDuration && formTouched.graduationDuration
-                      ? "#ff6b6b"
-                      : formData.graduationDuration
-                      ? "#28a745"
-                      : undefined
-                }}
-              >
-                <option value="">Select Duration</option>
-                <option value="3 Years">3 Years</option>
-                <option value="4 Years">4 Years</option>
-                <option value="5 Years">5 Years</option>
-              </select>
-              <div
-                className="error-message"
-                id="graduationDurationError"
-                style={{
-                  display:
-                    errors.graduationDuration && formTouched.graduationDuration
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.graduationDuration}
-              </div>
-            </div>
-            <div className="form-group">
-              <label>
-                Graduation Year of Passing <span className="required">*</span>
-              </label>
-              <input
-                type="number"
-                id="graduationYear"
-                name="graduationYear"
-                required
-                placeholder="Enter year"
-                min={1990}
-                max={2030}
-                value={formData.graduationYear}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.graduationYear && formTouched.graduationYear
-                      ? "#ff6b6b"
-                      : formData.graduationYear
-                      ? "#28a745"
-                      : undefined
-                }}
-              />
-              <div
-                className="error-message"
-                id="graduationYearError"
-                style={{
-                  display:
-                    errors.graduationYear && formTouched.graduationYear
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.graduationYear}
-              </div>
-            </div>
-            <div className="form-group">
-              <label>
-                Graduation Percentage/CGPA <span className="required">*</span>
-              </label>
-              <input
-                type="text"
-                id="graduationGrade"
-                name="graduationGrade"
-                required
-                placeholder="e.g., 75% or 7.5 CGPA"
-                value={formData.graduationGrade}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                style={{
-                  borderColor:
-                    errors.graduationGrade && formTouched.graduationGrade
-                      ? "#ff6b6b"
-                      : formData.graduationGrade
-                      ? "#28a745"
-                      : undefined
-                }}
-              />
-              <div
-                className="error-message"
-                id="graduationGradeError"
-                style={{
-                  display:
-                    errors.graduationGrade && formTouched.graduationGrade
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.graduationGrade}
-              </div>
-            </div>
-          </div>
-          {/* Backlog Section */}
-          <div className="backlog-section">
-            <div className="backlog-title">Academic Backlogs Information</div>
-            <div className="form-group">
-              <label>
-                Do you have any backlogs during graduation?{" "}
-                <span className="required">*</span>
-              </label>
-              <div className="radio-group">
-                <div className="radio-option">
-                  <input
-                    type="radio"
-                    id="backlogYes"
-                    name="hasBacklogs"
-                    value="yes"
-                    checked={formData.hasBacklogs === "yes"}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block font-semibold mb-2 text-gray-700">Diploma Duration</label>
+                  <select
+                    name="diplomaDuration"
+                    value={formData.diplomaDuration}
                     onChange={handleInputChange}
-                    required
-                  />
-                  <label htmlFor="backlogYes">Yes</label>
+                    onBlur={handleBlur}
+                    className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:shadow-md transition-all duration-300"
+                  >
+                    <option value="">Select Duration</option>
+                    <option value="2 Years">2 Years</option>
+                    <option value="3 Years">3 Years</option>
+                  </select>
+                  {errors.diplomaDuration && formTouched.diplomaDuration && (
+                    <p className="text-red-500 text-sm mt-1">{errors.diplomaDuration}</p>
+                  )}
                 </div>
-                <div className="radio-option">
+
+                <div>
+                  <label className="block font-semibold mb-2 text-gray-700">Diploma Year of Passing</label>
                   <input
-                    type="radio"
-                    id="backlogNo"
-                    name="hasBacklogs"
-                    value="no"
-                    checked={formData.hasBacklogs === "no"}
+                    type="number"
+                    name="diplomaYear"
+                    placeholder="Enter year"
+                    min="1990"
+                    max="2030"
+                    value={formData.diplomaYear}
                     onChange={handleInputChange}
-                    required
+                    onBlur={handleBlur}
+                    className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:shadow-md transition-all duration-300"
                   />
-                  <label htmlFor="backlogNo">No</label>
+                  {errors.diplomaYear && formTouched.diplomaYear && (
+                    <p className="text-red-500 text-sm mt-1">{errors.diplomaYear}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block font-semibold mb-2 text-gray-700">Diploma Percentage/CGPA</label>
+                  <input
+                    type="text"
+                    name="diplomaGrade"
+                    placeholder="e.g., 85% or 8.5 CGPA"
+                    value={formData.diplomaGrade}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:shadow-md transition-all duration-300"
+                  />
+                  {errors.diplomaGrade && formTouched.diplomaGrade && (
+                    <p className="text-red-500 text-sm mt-1">{errors.diplomaGrade}</p>
+                  )}
                 </div>
               </div>
-              <div
-                className="error-message"
-                id="backlogError"
-                style={{
-                  display:
-                    errors.hasBacklogs && formTouched.hasBacklogs
-                      ? "block"
-                      : "none"
-                }}
-              >
-                {errors.hasBacklogs}
-              </div>
             </div>
-            <div
-              className={
-                "backlog-count" +
-                (formData.hasBacklogs === "yes" ? " show" : "")
-              }
-              id="backlogCountSection"
-            >
-              <div className="row">
-                <div className="form-group">
-                  <label>
-                    Number of Backlogs <span className="required">*</span>
+
+            {/* Divider */}
+            <div className="border-b-2 border-gray-200 my-8"></div>
+
+            {/* Graduation Section */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-center mb-4 text-gray-800">Graduation Information</h2>
+              <p className="text-sm text-red-600 italic mb-6">All fields in this section are mandatory</p>
+              
+              <div className="mb-6">
+                <label className="block font-semibold mb-2 text-gray-700">
+                  Graduation College/University Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="graduationCollege"
+                  required
+                  placeholder="Enter graduation college/university name"
+                  value={formData.graduationCollege}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:shadow-md transition-all duration-300 ${getFieldBorderColor('graduationCollege')}`}
+                />
+                {errors.graduationCollege && formTouched.graduationCollege && (
+                  <p className="text-red-500 text-sm mt-1">{errors.graduationCollege}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Graduation Course/Degree <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="graduationCourse"
+                    required
+                    value={formData.graduationCourse}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:shadow-md transition-all duration-300 ${getFieldBorderColor('graduationCourse')}`}
+                  >
+                    <option value="">Select Course</option>
+                    {gradCourses.map((course) => (
+                      <option key={course} value={course}>{course}</option>
+                    ))}
+                  </select>
+                  {errors.graduationCourse && formTouched.graduationCourse && (
+                    <p className="text-red-500 text-sm mt-1">{errors.graduationCourse}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Specialization/Branch <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="graduationSpecialization"
+                    required
+                    placeholder="Enter specialization/branch"
+                    value={formData.graduationSpecialization}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:shadow-md transition-all duration-300 ${getFieldBorderColor('graduationSpecialization')}`}
+                  />
+                  {errors.graduationSpecialization && formTouched.graduationSpecialization && (
+                    <p className="text-red-500 text-sm mt-1">{errors.graduationSpecialization}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Graduation Duration <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="graduationDuration"
+                    required
+                    value={formData.graduationDuration}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:shadow-md transition-all duration-300 ${getFieldBorderColor('graduationDuration')}`}
+                  >
+                    <option value="">Select Duration</option>
+                    <option value="3 Years">3 Years</option>
+                    <option value="4 Years">4 Years</option>
+                    <option value="5 Years">5 Years</option>
+                  </select>
+                  {errors.graduationDuration && formTouched.graduationDuration && (
+                    <p className="text-red-500 text-sm mt-1">{errors.graduationDuration}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Graduation Year of Passing <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
-                    id="backlogCount"
-                    name="backlogCount"
-                    placeholder="Enter number of backlogs"
-                    min={1}
-                    max={50}
-                    value={formData.backlogCount}
+                    name="graduationYear"
+                    required
+                    placeholder="Enter year"
+                    min="1990"
+                    max="2030"
+                    value={formData.graduationYear}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
-                    required={formData.hasBacklogs === "yes"}
-                    style={{
-                      borderColor:
-                        errors.backlogCount && formTouched.backlogCount
-                          ? "#ff6b6b"
-                          : formData.backlogCount
-                          ? "#28a745"
-                          : undefined
-                    }}
+                    className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:shadow-md transition-all duration-300 ${getFieldBorderColor('graduationYear')}`}
                   />
-                  <div
-                    className="error-message"
-                    id="backlogCountError"
-                    style={{
-                      display:
-                        errors.backlogCount && formTouched.backlogCount
-                          ? "block"
-                          : "none"
-                    }}
-                  >
-                    {errors.backlogCount}
-                  </div>
+                  {errors.graduationYear && formTouched.graduationYear && (
+                    <p className="text-red-500 text-sm mt-1">{errors.graduationYear}</p>
+                  )}
                 </div>
-                <div className="form-group">
-                  <label>Current Status</label>
-                  <select
-                    id="backlogStatus"
-                    name="backlogStatus"
-                    value={formData.backlogStatus}
+
+                <div>
+                  <label className="block font-semibold mb-2 text-gray-700">
+                    Graduation Percentage/CGPA <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="graduationGrade"
+                    required
+                    placeholder="e.g., 75% or 7.5 CGPA"
+                    value={formData.graduationGrade}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
-                  >
-                    <option value="">Select Status</option>
-                    <option value="All Cleared">All Cleared</option>
-                    <option value="Partially Cleared">Partially Cleared</option>
-                    <option value="Not Cleared">Not Cleared</option>
-                  </select>
-                  <div
-                    className="error-message"
-                    id="backlogStatusError"
-                    style={{
-                      display:
-                        errors.backlogStatus && formTouched.backlogStatus
-                          ? "block"
-                          : "none"
-                    }}
-                  >
-                    {errors.backlogStatus}
-                  </div>
+                    className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:shadow-md transition-all duration-300 ${getFieldBorderColor('graduationGrade')}`}
+                  />
+                  {errors.graduationGrade && formTouched.graduationGrade && (
+                    <p className="text-red-500 text-sm mt-1">{errors.graduationGrade}</p>
+                  )}
                 </div>
-              </div>
-              <div className="form-group">
-                <label>Additional Details (Optional)</label>
-                <textarea
-                  id="backlogDetails"
-                  name="backlogDetails"
-                  placeholder="Any additional information about backlogs (subjects, reasons, etc.)"
-                  value={formData.backlogDetails}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                />
               </div>
             </div>
+
+            {/* Backlog Section */}
+            <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-100">
+              <h3 className="text-lg font-semibold text-blue-600 mb-4">Academic Backlogs Information</h3>
+              
+              <div className="mb-4">
+                <label className="block font-semibold mb-3 text-gray-700">
+                  Do you have any backlogs during graduation? <span className="text-red-500">*</span>
+                </label>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      id="backlogYes"
+                      name="hasBacklogs"
+                      value="yes"
+                      checked={formData.hasBacklogs === "yes"}
+                      onChange={handleInputChange}
+                      required
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="backlogYes" className="font-medium">Yes</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      id="backlogNo"
+                      name="hasBacklogs"
+                      value="no"
+                      checked={formData.hasBacklogs === "no"}
+                      onChange={handleInputChange}
+                      required
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="backlogNo" className="font-medium">No</label>
+                  </div>
+                </div>
+                {errors.hasBacklogs && formTouched.hasBacklogs && (
+                  <p className="text-red-500 text-sm mt-1">{errors.hasBacklogs}</p>
+                )}
+              </div>
+
+              {formData.hasBacklogs === "yes" && (
+                <div className="mt-6 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-semibold mb-2 text-gray-700">
+                        Number of Backlogs <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        name="backlogCount"
+                        placeholder="Enter number of backlogs"
+                        min="1"
+                        max="50"
+                        value={formData.backlogCount}
+                        onChange={handleInputChange}
+                        onBlur={handleBlur}
+                        required
+                        className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:shadow-md transition-all duration-300 ${getFieldBorderColor('backlogCount')}`}
+                      />
+                      {errors.backlogCount && formTouched.backlogCount && (
+                        <p className="text-red-500 text-sm mt-1">{errors.backlogCount}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block font-semibold mb-2 text-gray-700">Current Status</label>
+                      <select
+                        name="backlogStatus"
+                        value={formData.backlogStatus}
+                        onChange={handleInputChange}
+                        onBlur={handleBlur}
+                        className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:shadow-md transition-all duration-300"
+                      >
+                        <option value="">Select Status</option>
+                        <option value="All Cleared">All Cleared</option>
+                        <option value="Partially Cleared">Partially Cleared</option>
+                        <option value="Not Cleared">Not Cleared</option>
+                      </select>
+                      {errors.backlogStatus && formTouched.backlogStatus && (
+                        <p className="text-red-500 text-sm mt-1">{errors.backlogStatus}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold mb-2 text-gray-700">Additional Details (Optional)</label>
+                    <textarea
+                      name="backlogDetails"
+                      placeholder="Any additional information about backlogs (subjects, reasons, etc.)"
+                      value={formData.backlogDetails}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      rows="3"
+                      className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:shadow-md transition-all duration-300 resize-y"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="button-group">
-          <button
-            type="button"
-            id="backButton"
-            className="btn"
-            onClick={handleBack}
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            id="saveButton"
-            className="btn"
-            onClick={handleSave}
-            style={{
-              background: saveButtonColor
-            }}
-          >
-            {saveButtonText}
-          </button>
-          <button
-            type="button"
-            id="nextButton"
-            className="btn"
-            disabled={!isFormValid}
-            onClick={handleNext}
-          >
-            Next
-          </button>
-        </div>
-      </form>
+
+          {/* Button Group */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-8">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white py-4 rounded-2xl font-bold text-lg uppercase tracking-wide hover:from-gray-600 hover:to-gray-700 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+            >
+              Back
+            </button>
+            
+            <button
+              type="button"
+              onClick={handleSave}
+              className={`flex-1 text-white py-4 rounded-2xl font-bold text-lg uppercase tracking-wide hover:transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ${saveButtonColor}`}
+            >
+              {saveButtonText}
+            </button>
+            
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={!isFormValid}
+              className={`flex-1 py-4 rounded-2xl font-bold text-lg uppercase tracking-wide transition-all duration-300 ${
+                isFormValid
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 hover:transform hover:-translate-y-1 hover:shadow-lg'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

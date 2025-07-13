@@ -15,6 +15,7 @@ import EmploymentForm from './components/EmploymentForm';
 import SkillsProjectsForm from './components/SkillsProjectsForm';
 import ProfessionalReferencesForm from './components/ProfessionalReferencesForm';
 import DocumentUploadForm from './components/DocumentUploadForm';
+import ForgotPassword from './components/ForgotPassword';
 
 
 
@@ -25,13 +26,13 @@ function AppWrapper() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const path = window.location.pathname;
-    if (path.includes('login-trigger')) {
-      navigate('/login');
-      window.history.replaceState(null, '', '/');
-    }
-  }, [navigate]);
+  // useEffect(() => {
+  //   const path = window.location.pathname;
+  //   if (path.includes('login-trigger')) {
+  //     navigate('/login');
+  //     window.history.replaceState(null, '', '/');
+  //   }
+  // }, [navigate]);
 
   const userDatabase = {
     'admin001@company.com': { name: 'Admin', role: 'admin', password: 'admin001' },
@@ -69,12 +70,13 @@ function AppWrapper() {
       <Route path="/banking" element={<BankingInformationForm />} />
       <Route path="/personal" element={<PersonalDetailsForm/>}/>
       <Route path="/education" element={<EducationForm/>}/>
-      <Route path="/education2" element={<EducationForm45/>}/>
+      <Route path="/education45" element={<EducationForm45/>}/>
       <Route path="/employment" element={<EmploymentForm/>}/>
       <Route path="/skills" element={<SkillsProjectsForm/>}/>
       <Route path="/document" element={<DocumentUploadForm/>}/>
       <Route path="/professional" element={<ProfessionalReferencesForm/>}/>
       <Route path="/login" element={<LoginForm onLogin={handleLogin} />} />
+      <Route path="/forgotPassword" element={<ForgotPassword/>}/>
       <Route path="/leave" element={<LeaveForm userName={userName} onSubmit={handleLeaveSubmit} />} />
       <Route
         path="/dashboard"
