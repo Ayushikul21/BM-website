@@ -82,37 +82,58 @@ const EducationForm = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [saveButtonText, setSaveButtonText] = useState("Save");
   const [saveButtonColor, setSaveButtonColor] = useState("bg-green-600");
+  const [savedData, setSavedData] = useState(null); // In-memory storage
   const timeoutRef = useRef();
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState(initialErrors);
 
-  // Load saved data from localStorage (if available)
-  useEffect(() => {
+  // Check if localStorage is available
+  const isLocalStorageAvailable = () => {
     try {
-      if (typeof Storage !== "undefined" && localStorage) {
-        const savedData = localStorage.getItem("educationFormData");
-        if (savedData) {
-          const data = JSON.parse(savedData);
-          setFormData((prev) => ({
-            ...prev,
-            ...Object.fromEntries(
-              Object.entries(data).filter(([k]) =>
-                Object.keys(initialState).includes(k)
-              )
-            ),
-          }));
-          setSuccessMessage(
-            `<strong>Previously saved data loaded</strong><br>
-            <small>Last saved: ${data.savedAt || "Unknown"}</small>`
-          );
-          setTimeout(() => setSuccessMessage(""), 3000);
-        }
-      }
+      return typeof(Storage) !== "undefined" && window.localStorage;
     } catch (e) {
-      // ignore
+      return false;
     }
-  }, []);
+  };
+
+  // Load saved data from localStorage or in-memory storage
+  useEffect(() => {
+    let loadedData = null;
+    
+    // Try localStorage first
+    if (isLocalStorageAvailable()) {
+      try {
+        const savedDataString = localStorage.getItem("educationFormData");
+        if (savedDataString) {
+          loadedData = JSON.parse(savedDataString);
+        }
+      } catch (e) {
+        console.warn("Failed to load from localStorage:", e);
+      }
+    }
+    
+    // Fallback to in-memory storage
+    if (!loadedData && savedData) {
+      loadedData = savedData;
+    }
+    
+    if (loadedData) {
+      setFormData((prev) => ({
+        ...prev,
+        ...Object.fromEntries(
+          Object.entries(loadedData).filter(([k]) =>
+            Object.keys(initialState).includes(k)
+          )
+        ),
+      }));
+      setSuccessMessage(
+        `<strong>Previously saved data loaded</strong><br>
+        <small>Last saved: ${loadedData.savedAt || "Unknown"}</small>`
+      );
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+  }, [savedData]);
 
   // Validate form whenever formData changes
   useEffect(() => {
@@ -310,32 +331,44 @@ function getErrorMessage(fieldId, value, formData) {
         ...formData,
         savedAt: new Date().toLocaleString(),
       };
-      try {
-        if (typeof Storage !== "undefined" && localStorage) {
+      
+      let saveSuccess = false;
+      
+      // Try localStorage first
+      if (isLocalStorageAvailable()) {
+        try {
           localStorage.setItem("educationFormData", JSON.stringify(saveData));
+          saveSuccess = true;
+        } catch (e) {
+          console.warn("Failed to save to localStorage:", e);
         }
-      } catch (e) {
-        // ignore
       }
-      setSuccessMessage(
-        `<strong>Education Information Saved Successfully! ✅</strong><br>
-        <small>Saved at: ${saveData.savedAt}</small><br>
-        <small>10th: ${saveData.tenthSchool} (${saveData.tenthBoard}, ${saveData.tenthYear})${
-          saveData.twelfthYear
-            ? ` | 12th: ${saveData.twelfthCollege || "N/A"} (${
-                saveData.twelfthBoard || "N/A"
-              }, ${saveData.twelfthYear})`
-            : ""
-        }</small>`
-      );
-      setSaveButtonText("Saved ✓");
-      setSaveButtonColor("bg-green-600");
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => {
-        setSuccessMessage("");
-        setSaveButtonText("Save");
-        setSaveButtonColor("bg-gradient-to-r from-blue-500 to-purple-600");
-      }, 4000);
+      
+      // Always save to in-memory storage as fallback
+      setSavedData(saveData);
+      saveSuccess = true;
+      
+      if (saveSuccess) {
+        setSuccessMessage(
+          `<strong>Education Information Saved Successfully! ✅</strong><br>
+          <small>Saved at: ${saveData.savedAt}</small><br>
+          <small>10th: ${saveData.tenthSchool} (${saveData.tenthBoard}, ${saveData.tenthYear})${
+            saveData.twelfthYear
+              ? ` | 12th: ${saveData.twelfthCollege || "N/A"} (${
+                  saveData.twelfthBoard || "N/A"
+                }, ${saveData.twelfthYear})`
+              : ""
+          }</small>`
+        );
+        setSaveButtonText("Saved ✓");
+        setSaveButtonColor("bg-green-600");
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+          setSuccessMessage("");
+          setSaveButtonText("Save");
+          setSaveButtonColor("bg-gradient-to-r from-blue-500 to-purple-600");
+        }, 4000);
+      }
     }
   }
 
@@ -347,7 +380,7 @@ function getErrorMessage(fieldId, value, formData) {
   }
 
   function handleBack() {
-    navigate('/education');
+    navigate('/personal');
   }
 
   // On mount, validate in case pre-filled
@@ -371,7 +404,7 @@ function getErrorMessage(fieldId, value, formData) {
 
   return (
      <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-5xl animate-fadeInUp">
+      <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-5xl animate-fadeInUp max-h-[90vh] overflow-y-auto">
         <div className="text-center mb-6 text-gray-600 text-sm">
           <p>Step 4 of 4 - Education Information</p>
         </div>

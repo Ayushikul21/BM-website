@@ -22,11 +22,14 @@ function DocumentUploadForm() {
   const [sigFileName, setSigFileName] = useState("");
   const [resumeFileName, setResumeFileName] = useState("");
   const [addDocsFileNames, setAddDocsFileNames] = useState("");
+  const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState(initialErrors);
   const [successMessage, setSuccessMessage] = useState("");
   const [canProceed, setCanProceed] = useState(false);
   const [saveBtnText, setSaveBtnText] = useState("Save");
   const [isLocationLoading, setIsLocationLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const sigInputRef = useRef();
   const resumeInputRef = useRef();
   const addDocsInputRef = useRef();
@@ -43,6 +46,92 @@ function DocumentUploadForm() {
       second: "2-digit"
     });
   }
+
+  // Load saved data on component mount
+  useEffect(() => {
+    const loadSavedData = () => {
+      try {
+        const savedData = localStorage.getItem('documentUploadFormData');
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          
+          // Restore location if saved
+          if (parsedData.location) {
+            setLocation(parsedData.location);
+            setLocationDisplay(
+              `📍 ${parsedData.location.city}${parsedData.location.principalSubdivision ? ", " + parsedData.location.principalSubdivision : ""}, ${parsedData.location.countryName}`
+            );
+            setLocationStatus(`Previously saved location`);
+          }
+          
+          // Restore file information (metadata only, not actual files)
+          if (parsedData.signature) {
+            setSigFileName(`Previously selected: ${parsedData.signature.name} (${(parsedData.signature.size / 1024 / 1024).toFixed(2)} MB)`);
+          }
+          
+          if (parsedData.resume) {
+            setResumeFileName(`Previously selected: ${parsedData.resume.name} (${(parsedData.resume.size / 1024 / 1024).toFixed(2)} MB)`);
+          }
+          
+          if (parsedData.additionalDocs && parsedData.additionalDocs.length > 0) {
+            const fileNames = parsedData.additionalDocs.map(f => f.name).join(", ");
+            const totalSize = parsedData.additionalDocs.reduce((sum, file) => sum + file.size, 0);
+            setAddDocsFileNames(`Previously selected: ${fileNames} (Total: ${(totalSize / 1024 / 1024).toFixed(2)} MB)`);
+          }
+          
+          // Show restoration message
+          setSuccessMessage("📋 Previous form data restored successfully!");
+          setTimeout(() => setSuccessMessage(""), 3000);
+        }
+      } catch (error) {
+        console.error('Error loading saved data:', error);
+      } finally {
+        setIsDataLoaded(true);
+      }
+    };
+
+    loadSavedData();
+  }, []);
+
+  // Save data to localStorage whenever form data changes
+  useEffect(() => {
+    if (!isDataLoaded) return; // Don't save during initial load
+    
+    const saveData = () => {
+      try {
+        const dataToSave = {
+          location: location,
+          signature: signature ? {
+            name: signature.name,
+            size: signature.size,
+            type: signature.type,
+            lastModified: signature.lastModified
+          } : null,
+          resume: resume ? {
+            name: resume.name,
+            size: resume.size,
+            type: resume.type,
+            lastModified: resume.lastModified
+          } : null,
+          additionalDocs: additionalDocs.length ? Array.from(additionalDocs).map(f => ({
+            name: f.name,
+            size: f.size,
+            type: f.type,
+            lastModified: f.lastModified
+          })) : [],
+          lastSaved: new Date().toISOString()
+        };
+        
+        localStorage.setItem('documentUploadFormData', JSON.stringify(dataToSave));
+      } catch (error) {
+        console.error('Error saving data:', error);
+      }
+    };
+
+    // Debounce saving to avoid too frequent saves
+    const timeoutId = setTimeout(saveData, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [location, signature, resume, additionalDocs, isDataLoaded]);
 
   // Date/time updater
   useEffect(() => {
@@ -153,16 +242,18 @@ function DocumentUploadForm() {
   // File validation helpers
   function validateFile(file, allowedTypes, maxSizeMB) {
     if (!file) return false;
-    return allowedTypes.includes(file.type) && file.size <= maxSizeMB * 1024 * 1024;
+    const isValidType = allowedTypes.includes(file.type);
+    const isValidSize = file.size <= maxSizeMB * 1024 * 1024;
+    return isValidType && isValidSize;
   }
   
   function validateAll() {
-    const isSignatureValid = validateFile(
+    const isSignatureValid = signature && validateFile(
       signature,
       ["image/png", "image/jpeg", "image/jpg"],
       5
     );
-    const isResumeValid = validateFile(
+    const isResumeValid = resume && validateFile(
       resume,
       [
         "application/pdf",
@@ -171,31 +262,34 @@ function DocumentUploadForm() {
       ],
       10
     );
-    setCanProceed(isSignatureValid && isResumeValid);
-    return isSignatureValid && isResumeValid;
+    
+    const isValid = isSignatureValid && isResumeValid;
+    setCanProceed(isValid);
+    return isValid;
   }
 
-  // Update file name displays
+  // Update file name displays and validate
   useEffect(() => {
     if (signature) {
       setSigFileName(`Selected: ${signature.name} (${(signature.size / 1024 / 1024).toFixed(2)} MB)`);
     } else {
       setSigFileName("");
     }
+    
     if (resume) {
       setResumeFileName(`Selected: ${resume.name} (${(resume.size / 1024 / 1024).toFixed(2)} MB)`);
     } else {
       setResumeFileName("");
     }
+    
     if (additionalDocs.length > 0) {
-      setAddDocsFileNames(
-        `Selected: ${Array.from(additionalDocs)
-          .map(f => f.name)
-          .join(", ")}`
-      );
+      const totalSize = Array.from(additionalDocs).reduce((sum, file) => sum + file.size, 0);
+      const fileNames = Array.from(additionalDocs).map(f => f.name).join(", ");
+      setAddDocsFileNames(`Selected: ${fileNames} (Total: ${(totalSize / 1024 / 1024).toFixed(2)} MB)`);
     } else {
       setAddDocsFileNames("");
     }
+    
     validateAll();
   }, [signature, resume, additionalDocs]);
 
@@ -203,60 +297,105 @@ function DocumentUploadForm() {
   function showError(field, message) {
     setErrors(prev => ({ ...prev, [field]: message }));
   }
+  
   function clearError(field) {
     setErrors(prev => ({ ...prev, [field]: "" }));
   }
 
-  // Save button logic
-  function handleSave() {
-    let formIsValid = true;
-    const isSignatureValid = validateFile(
-      signature,
-      ["image/png", "image/jpeg", "image/jpg"],
-      5
-    );
-    if (!isSignatureValid) {
-      showError(
-        "signature",
-        "Please upload a valid signature file (PNG, JPG, max 5MB)."
-      );
-      formIsValid = false;
-    } else {
-      clearError("signature");
+  function clearAllErrors() {
+    setErrors(initialErrors);
+  }
+
+  // Validate individual fields
+  function validateSignature() {
+    if (!signature) {
+      showError("signature", "Please upload a signature file.");
+      return false;
     }
-    const isResumeValid = validateFile(
-      resume,
-      [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-      ],
-      10
-    );
-    if (!isResumeValid) {
-      showError(
-        "resume",
-        "Please upload a valid resume file (PDF, DOC, DOCX, max 10MB)."
-      );
-      formIsValid = false;
-    } else {
-      clearError("resume");
+    
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
+    const maxSizeMB = 5;
+    
+    if (!allowedTypes.includes(signature.type)) {
+      showError("signature", "Please upload a valid signature file (PNG, JPG, JPEG only).");
+      return false;
     }
-    if (formIsValid) {
+    
+    if (signature.size > maxSizeMB * 1024 * 1024) {
+      showError("signature", `Signature file must be smaller than ${maxSizeMB}MB.`);
+      return false;
+    }
+    
+    clearError("signature");
+    return true;
+  }
+
+  function validateResume() {
+    if (!resume) {
+      showError("resume", "Please upload a resume file.");
+      return false;
+    }
+    
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ];
+    const maxSizeMB = 10;
+    
+    if (!allowedTypes.includes(resume.type)) {
+      showError("resume", "Please upload a valid resume file (PDF, DOC, DOCX only).");
+      return false;
+    }
+    
+    if (resume.size > maxSizeMB * 1024 * 1024) {
+      showError("resume", `Resume file must be smaller than ${maxSizeMB}MB.`);
+      return false;
+    }
+    
+    clearError("resume");
+    return true;
+  }
+
+  // Save button logic - Fixed
+  async function handleSave() {
+    if (isSaving) return; // Prevent multiple saves
+    
+    setIsSaving(true);
+    setSaveBtnText("Saving...");
+    clearAllErrors();
+    
+    try {
+      // Validate required fields
+      const isSignatureValid = validateSignature();
+      const isResumeValid = validateResume();
+      
+      if (!isSignatureValid || !isResumeValid) {
+        setSuccessMessage("Please correct the errors before saving.");
+        setTimeout(() => setSuccessMessage(""), 4000);
+        return;
+      }
+      
+      // Prepare form data
       const formData = {
-        signature: signature
-          ? { name: signature.name, size: signature.size, type: signature.type }
-          : null,
-        resume: resume
-          ? { name: resume.name, size: resume.size, type: resume.type }
-          : null,
-        additionalDocs: additionalDocs.length
-          ? Array.from(additionalDocs).map(f => ({
-              name: f.name,
-              size: f.size,
-              type: f.type
-            }))
-          : [],
+        signature: signature ? {
+          name: signature.name,
+          size: signature.size,
+          type: signature.type,
+          lastModified: signature.lastModified
+        } : null,
+        resume: resume ? {
+          name: resume.name,
+          size: resume.size,
+          type: resume.type,
+          lastModified: resume.lastModified
+        } : null,
+        additionalDocs: additionalDocs.length ? Array.from(additionalDocs).map(f => ({
+          name: f.name,
+          size: f.size,
+          type: f.type,
+          lastModified: f.lastModified
+        })) : [],
         location: location,
         submissionDateTime: new Date().toISOString(),
         savedAt: new Date().toLocaleString(),
@@ -264,21 +403,43 @@ function DocumentUploadForm() {
         version: "1.0"
       };
       
+      // Simulate saving process (replace with actual API call)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Success message
+      const locationText = location 
+        ? `${location.city}, ${location.countryName}` 
+        : "Not detected";
+      
       setSuccessMessage(
-        `Document Details Saved Successfully! ✅\nSaved at: ${formData.savedAt}\nSignature: ${formData.signature ? formData.signature.name : "N/A"} | Resume: ${formData.resume ? formData.resume.name : "N/A"}\nLocation: ${
-          location
-            ? `${location.city}, ${location.countryName}`
-            : "Not detected"
-        }`
+        `Document Details Saved Successfully! ✅\n` +
+        `Saved at: ${formData.savedAt}\n` +
+        `Signature: ${formData.signature ? formData.signature.name : "N/A"}\n` +
+        `Resume: ${formData.resume ? formData.resume.name : "N/A"}\n` +
+        `Additional Docs: ${formData.additionalDocs.length} file(s)\n` +
+        `Location: ${locationText}`
       );
+      
       setSaveBtnText("Saved ✓");
+      
+      // Data is already auto-saved via useEffect
+      console.log('Form data saved:', formData);
+      
+      // Reset save button after delay
       setTimeout(() => {
         setSuccessMessage("");
         setSaveBtnText("Save");
       }, 4000);
-    } else {
-      setSuccessMessage("Please correct the errors before saving.");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      
+    } catch (error) {
+      console.error('Save error:', error);
+      setSuccessMessage("Error saving document details. Please try again.");
+      setTimeout(() => setSuccessMessage(""), 4000);
+    } finally {
+      setIsSaving(false);
+      if (saveBtnText === "Saving...") {
+        setSaveBtnText("Save");
+      }
     }
   }
 
@@ -289,39 +450,99 @@ function DocumentUploadForm() {
   }
   
   function handleNext() {
-    if (validateAll()) {
-      const finalFormData = {
-        signature: signature
-          ? { name: signature.name, size: signature.size, type: signature.type }
-          : null,
-        resume: resume
-          ? { name: resume.name, size: resume.size, type: resume.type }
-          : null,
-        additionalDocs: additionalDocs.length
-          ? Array.from(additionalDocs).map(f => ({
-              name: f.name,
-              size: f.size,
-              type: f.type
-            }))
-          : [],
-        location: location,
-        submissionDateTime: new Date().toISOString()
-      };
-      
-      console.log('Navigate to professional page', finalFormData);
-      navigate('/professional');
-    } else {
+    if (!validateAll()) {
       setSuccessMessage("Please ensure all required fields are valid before proceeding.");
       setTimeout(() => setSuccessMessage(""), 3000);
+      return;
     }
+    
+    const finalFormData = {
+      signature: signature ? {
+        name: signature.name,
+        size: signature.size,
+        type: signature.type,
+        lastModified: signature.lastModified
+      } : null,
+      resume: resume ? {
+        name: resume.name,
+        size: resume.size,
+        type: resume.type,
+        lastModified: resume.lastModified
+      } : null,
+      additionalDocs: additionalDocs.length ? Array.from(additionalDocs).map(f => ({
+        name: f.name,
+        size: f.size,
+        type: f.type,
+        lastModified: f.lastModified
+      })) : [],
+      location: location,
+      submissionDateTime: new Date().toISOString()
+    };
+    
+    console.log('Navigate to professional page', finalFormData);
+    navigate('/professional', { state: finalFormData });
   }
 
   // File input handlers
   function handleFileChange(e, field) {
     const files = e.target.files;
-    if (field === "signature") setSignature(files && files[0] ? files[0] : null);
-    if (field === "resume") setResume(files && files[0] ? files[0] : null);
-    if (field === "additionalDocs") setAdditionalDocs(files ? files : []);
+    
+    if (field === "signature") {
+      const file = files && files[0] ? files[0] : null;
+      setSignature(file);
+      if (file) {
+        // Clear any existing error when file is selected
+        clearError("signature");
+        // Auto-save indication
+        setSuccessMessage("📁 Signature file selected and auto-saved!");
+        setTimeout(() => setSuccessMessage(""), 2000);
+      }
+    }
+    
+    if (field === "resume") {
+      const file = files && files[0] ? files[0] : null;
+      setResume(file);
+      if (file) {
+        // Clear any existing error when file is selected
+        clearError("resume");
+        // Auto-save indication
+        setSuccessMessage("📁 Resume file selected and auto-saved!");
+        setTimeout(() => setSuccessMessage(""), 2000);
+      }
+    }
+    
+    if (field === "additionalDocs") {
+      setAdditionalDocs(files ? files : []);
+      if (files && files.length > 0) {
+        setSuccessMessage("📁 Additional documents selected and auto-saved!");
+        setTimeout(() => setSuccessMessage(""), 2000);
+      }
+    }
+  }
+
+  // Clear saved data function
+  function clearSavedData() {
+    try {
+      localStorage.removeItem('documentUploadFormData');
+      // Reset form
+      setSignature(null);
+      setResume(null);
+      setAdditionalDocs([]);
+      setSigFileName("");
+      setResumeFileName("");
+      setAddDocsFileNames("");
+      setLocation(null);
+      setLocationDisplay("📍 Detecting location...");
+      setLocationStatus("Please allow location access");
+      clearAllErrors();
+      setSuccessMessage("🗑️ All saved data cleared!");
+      setTimeout(() => setSuccessMessage(""), 2000);
+      
+      // Refresh location
+      fetchLocation();
+    } catch (error) {
+      console.error('Error clearing saved data:', error);
+    }
   }
 
   return (
@@ -333,7 +554,11 @@ function DocumentUploadForm() {
         </div>
 
         {successMessage && (
-          <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl mb-6 text-center font-semibold whitespace-pre-line">
+          <div className={`border px-4 py-3 rounded-xl mb-6 text-center font-semibold whitespace-pre-line ${
+            successMessage.includes('Successfully') || successMessage.includes('✅')
+              ? 'bg-green-50 border-green-200 text-green-800'
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
             {successMessage}
           </div>
         )}
@@ -373,9 +598,19 @@ function DocumentUploadForm() {
 
           {/* Documents Section */}
           <div className="bg-white rounded-3xl p-8 shadow-lg border-2 border-gray-200 mb-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <h2 className="text-xl font-bold text-center mb-6 pb-4 border-b-2 border-gray-200 text-gray-800">
-              Documents & Signature
-            </h2>
+            <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-gray-200">
+              <h2 className="text-xl font-bold text-gray-800">
+                Documents & Signature
+              </h2>
+              <button
+                type="button"
+                onClick={clearSavedData}
+                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm transition-all duration-300"
+                title="Clear all saved data"
+              >
+                🗑️ Clear Data
+              </button>
+            </div>
             
             {/* Signature Upload */}
             <div className="mb-5">
@@ -383,7 +618,11 @@ function DocumentUploadForm() {
                 Digital Signature Upload <span className="text-red-500 ml-1">*</span>
               </label>
               <div
-                className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50"
+                className={`border-2 border-dashed rounded-lg p-5 text-center transition-all duration-300 cursor-pointer ${
+                  errors.signature 
+                    ? 'border-red-300 bg-red-50 hover:border-red-400' 
+                    : 'border-gray-300 hover:border-indigo-400 hover:bg-indigo-50'
+                }`}
                 onClick={() => sigInputRef.current && sigInputRef.current.click()}
               >
                 <div className="text-2xl mb-2">✍️</div>
@@ -401,10 +640,17 @@ function DocumentUploadForm() {
                 required
               />
               {errors.signature && (
-                <div className="text-red-500 text-sm mt-2">{errors.signature}</div>
+                <div className="text-red-500 text-sm mt-2 font-semibold">{errors.signature}</div>
               )}
               {sigFileName && (
-                <div className="mt-2 text-sm opacity-80 text-gray-600">{sigFileName}</div>
+                <div className="mt-2 text-sm text-green-600 font-semibold">
+                  {sigFileName}
+                  {sigFileName.includes("Previously selected") && (
+                    <div className="text-xs text-amber-600 mt-1">
+                      ⚠️ Please re-select file to continue (files cannot be restored)
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -414,7 +660,11 @@ function DocumentUploadForm() {
                 Resume Upload <span className="text-red-500 ml-1">*</span>
               </label>
               <div
-                className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50"
+                className={`border-2 border-dashed rounded-lg p-5 text-center transition-all duration-300 cursor-pointer ${
+                  errors.resume 
+                    ? 'border-red-300 bg-red-50 hover:border-red-400' 
+                    : 'border-gray-300 hover:border-indigo-400 hover:bg-indigo-50'
+                }`}
                 onClick={() => resumeInputRef.current && resumeInputRef.current.click()}
               >
                 <div className="text-2xl mb-2">📄</div>
@@ -432,10 +682,17 @@ function DocumentUploadForm() {
                 required
               />
               {errors.resume && (
-                <div className="text-red-500 text-sm mt-2">{errors.resume}</div>
+                <div className="text-red-500 text-sm mt-2 font-semibold">{errors.resume}</div>
               )}
               {resumeFileName && (
-                <div className="mt-2 text-sm opacity-80 text-gray-600">{resumeFileName}</div>
+                <div className="mt-2 text-sm text-green-600 font-semibold">
+                  {resumeFileName}
+                  {resumeFileName.includes("Previously selected") && (
+                    <div className="text-xs text-amber-600 mt-1">
+                      ⚠️ Please re-select file to continue (files cannot be restored)
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -463,7 +720,14 @@ function DocumentUploadForm() {
                 onChange={e => handleFileChange(e, "additionalDocs")}
               />
               {addDocsFileNames && (
-                <div className="mt-2 text-sm opacity-80 text-gray-600">{addDocsFileNames}</div>
+                <div className="mt-2 text-sm text-green-600 font-semibold">
+                  {addDocsFileNames}
+                  {addDocsFileNames.includes("Previously selected") && (
+                    <div className="text-xs text-amber-600 mt-1">
+                      ⚠️ Please re-select files to continue (files cannot be restored)
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -480,8 +744,13 @@ function DocumentUploadForm() {
             
             <button
               type="button"
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-2xl font-bold uppercase tracking-wider transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+              className={`py-4 px-6 rounded-2xl font-bold uppercase tracking-wider transition-all duration-300 ${
+                isSaving
+                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:-translate-y-1 hover:shadow-lg'
+              }`}
               onClick={handleSave}
+              disabled={isSaving}
             >
               {saveBtnText}
             </button>

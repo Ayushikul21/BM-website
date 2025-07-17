@@ -26,39 +26,22 @@ function AppWrapper() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   const path = window.location.pathname;
-  //   if (path.includes('login-trigger')) {
-  //     navigate('/login');
-  //     window.history.replaceState(null, '', '/');
+  // const handleLogin = (idOrEmail) => {
+  //   const user = userDatabase[idOrEmail];
+  //   if (user) {
+  //     setUserName(user.name);
+  //     setUserRole(user.role);
+  //     setUserPassword(user.password);
+  //     setIsLoggedIn(true);
+  //     if (user.role === 'admin') {
+  //       navigate('/admin');
+  //     } else {
+  //       navigate('/dashboard');
+  //     }
+  //   } else {
+  //     alert('Invalid Email ID or Employee ID');
   //   }
-  // }, [navigate]);
-
-  const userDatabase = {
-    'admin001@company.com': { name: 'Admin', role: 'admin', password: 'admin001' },
-    'EMP1001': { name: 'Admin', role: 'admin', password: 'admin001' },
-    'ayushi123@company.com': { name: 'Ayushi Kulshrestha', role: 'user', password: 'ayushi123' },
-    'EMP2001': { name: 'Ayushi Kulshrestha', role: 'user', password: 'ayushi123' },
-    'rahul456@company.com': { name: 'Rahul Verma', role: 'user', password: 'rahul456' },
-    'EMP2002': { name: 'Rahul Verma', role: 'user', password: 'rahul456' }
-  };
-
-  const handleLogin = (idOrEmail) => {
-    const user = userDatabase[idOrEmail];
-    if (user) {
-      setUserName(user.name);
-      setUserRole(user.role);
-      setUserPassword(user.password);
-      setIsLoggedIn(true);
-      if (user.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
-    } else {
-      alert('Invalid Email ID or Employee ID');
-    }
-  };
+  // };
 
   const handleLeaveSubmit = () => {
     navigate('/dashboard');
@@ -75,41 +58,13 @@ function AppWrapper() {
       <Route path="/skills" element={<SkillsProjectsForm/>}/>
       <Route path="/document" element={<DocumentUploadForm/>}/>
       <Route path="/professional" element={<ProfessionalReferencesForm/>}/>
-      <Route path="/login" element={<LoginForm onLogin={handleLogin} />} />
+      <Route path="/login" element={<LoginForm/>} />
       <Route path="/forgotPassword" element={<ForgotPassword/>}/>
       <Route path="/leave" element={<LeaveForm userName={userName} onSubmit={handleLeaveSubmit} />} />
-      <Route
-        path="/dashboard"
-        element={
-          isLoggedIn && userRole === 'user' ? (
-            <MainEmployeeDashboard userName={userName} onSubmit={handleLeaveSubmit} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/admin"
-        element={
-          isLoggedIn && userRole === 'admin' ? (
-            <MainAdminDashboard />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/workplan"
-        element={
-          isLoggedIn && userRole === 'admin' ? (
-            <AdminWorkplan />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
+      <Route path="/dashboard" element={<MainEmployeeDashboard onSubmit={handleLeaveSubmit}/>} />
+      <Route path="/admin" element={<MainAdminDashboard/>}/>
+      <Route path="/workplan" element={<AdminWorkplan />}/>
     </Routes>
-
   );
 }
 

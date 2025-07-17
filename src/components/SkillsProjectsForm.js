@@ -13,6 +13,11 @@ const initialErrors = {
   keyAchievements: ""
 };
 
+// In-memory storage solution (since localStorage is not available)
+let formStorage = {
+  skillsProjectsData: null
+};
+
 const SkillsProjectsForm = () => {
   const [formTouched, setFormTouched] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
@@ -47,15 +52,23 @@ const SkillsProjectsForm = () => {
     }
   }
 
-  // Load from memory storage simulation
+  // Load saved data when component mounts
   useEffect(() => {
-    // This would normally load from localStorage
-    // For demo, we'll just initialize empty
-    setCharCounts({
-      keySkills: formData.keySkills.length,
-      projects: formData.projects.length,
-      keyAchievements: formData.keyAchievements.length
-    });
+    // Load from in-memory storage
+    if (formStorage.skillsProjectsData) {
+      setFormData(formStorage.skillsProjectsData);
+      setCharCounts({
+        keySkills: formStorage.skillsProjectsData.keySkills.length,
+        projects: formStorage.skillsProjectsData.projects.length,
+        keyAchievements: formStorage.skillsProjectsData.keyAchievements.length
+      });
+    } else {
+      setCharCounts({
+        keySkills: formData.keySkills.length,
+        projects: formData.projects.length,
+        keyAchievements: formData.keyAchievements.length
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -119,11 +132,15 @@ const SkillsProjectsForm = () => {
       }
     });
     setErrors(newErrors);
+    
     if (isValid) {
       const saveData = {
         ...formData,
         savedAt: new Date().toLocaleString()
       };
+      
+      // Actually save to in-memory storage
+      formStorage.skillsProjectsData = formData;
       
       setSuccessMessage(
         `Skills, Projects & Achievements Saved Successfully! ✅ - Saved at: ${saveData.savedAt}`
@@ -141,17 +158,15 @@ const SkillsProjectsForm = () => {
 
   function handleNext() {
     if (!validateMandatoryFields()) return;
-    // // Save before navigating
-    // const saveData = {
-    //   ...formData,
-    //   savedAt: new Date().toLocaleString()
-    // };
-    alert('Form validated successfully! Ready to proceed to next step.');
+    
+    // Auto-save before navigating
+    formStorage.skillsProjectsData = formData;
     navigate('/document');
   }
 
   function handleBack() {
-    alert('Going back to previous step');
+    // Auto-save before navigating
+    formStorage.skillsProjectsData = formData;
     navigate('/employment');
   }
 

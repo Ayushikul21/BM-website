@@ -1,42 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminWorkplan from './AdminWorkplan';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 
 const AdminAttendance = () => {
   const navigate = useNavigate();
-
-  // Load Font Awesome CSS
-  useEffect(() => {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
-    document.head.appendChild(link);
-    
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, []);
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [clockedIn, setClockedIn] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('');
   const [notification, setNotification] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [dateFilter, setDateFilter] = useState('month'); // 'month', 'year'
 
-  // Sample data
-  const attendanceData = [
-    { name: "Vandana Srivastav", id: "EMP001", department: "IT", checkIn: "09:00 AM", status: "Present", hours: "8.0h" },
-    { name: "Ayushi Kulshrestha", id: "EMP002", department: "IT", checkIn: "09:45 AM", status: "Late", hours: "8.0h" },
-    { name: "Shakshi Sharma", id: "EMP003", department: "IT", checkIn: "--", status: "Absent", hours: "0h" },
-    { name: "Riddhima", id: "EMP004", department: "IT", checkIn: "08:55 AM", status: "Present", hours: "8.0h" },
-    { name: "Rushda", id: "EMP005", department: "IT", checkIn: "09:30 AM", status: "Late", hours: "7.2h" },
-    { name: "Atul", id: "EMP006", department: "IT", checkIn: "09:15 AM", status: "Present", hours: "7.8h" },
-    { name: "Arvind", id: "EMP007", department: "IT", checkIn: "08:45 AM", status: "Present", hours: "8.2h" },
-    { name: "Afnan", id: "EMP008", department: "IT", checkIn: "09:10 AM", status: "Present", hours: "7.9h" },
-    { name: "Adarsh", id: "EMP009", department: "IT", checkIn: "09:05 AM", status: "Present", hours: "8.0h" }
-  ];
+  // Get formatted date
+  function getFormattedDate(date = selectedDate) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
 
-  // // Update time every second
+  const currentdate = getFormattedDate();
+  const attendanceApi = `https://api.etimeoffice.com/api/DownloadInOutPunchData?Empcode=ALL&FromDate=${currentdate}&ToDate=${currentdate}`;
+
+  // Fetch attendance data
+  useEffect(() => {
+    const fetchAttendanceData = async () => {
+      try {
+        const response = await fetch(attendanceApi, {
+          headers: {
+            'Authorization': `Basic ${btoa(`BANDYMOOT001:OMDUBEY:Rudra@123:true`)}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch attendance data');
+        }
+        
+        const data = await response.json();
+        setAttendanceData(data.InOutPunchData || []);
+      } catch (err) {
+        setError(err.message);
+        showNotification(err.message, 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAttendanceData();
+  }, [attendanceApi, selectedDate]);
+
+  // Update time every second
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -45,33 +62,74 @@ const AdminAttendance = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Transform API data to match our UI structure
+  const transformAttendanceData = (data) => {
+    return data.map(emp => ({
+      name: emp.Name,
+      id: emp.Empcode,
+      checkIn: emp.INTime === '--:--' ? '--' : formatTime(emp.INTime),
+      checkOut: emp.OUTTime === '--:--' ? '--' : formatTime(emp.OUTTime),
+      status: getStatus(emp.Status, emp.Late_In),
+      hours: emp.WorkTime === '00:00' ? '0h' : `${emp.WorkTime}h`,
+      lateIn: emp.Late_In
+    }));
+  };
+
+  // // Helper functions
+  // const getDepartmentFromRemark = (remark) => {
+  //   if (remark.includes('MIS-EI')) return 'IT';
+  //   if (remark.includes('MIS-LT')) return 'IT';
+  //   return 'Other';
+  // };
+
+  const formatTime = (time) => {
+    if (time === '--:--') return '--';
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  const getStatus = (statusCode, lateIn) => {
+    if (statusCode === 'A') return 'Absent';
+    if (statusCode === 'P') {
+      return lateIn > '00:05' ? 'Late' : 'Present';
+    }
+    return 'Unknown';
+  };
+
   // Filter data based on search and filters
   const getFilteredData = () => {
-    return attendanceData.filter(emp => {
-      const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = !statusFilter || emp.status.toLowerCase().includes(statusFilter.toLowerCase());
-      const matchesDepartment = !departmentFilter || emp.department.toLowerCase().includes(departmentFilter.toLowerCase());
+    const transformedData = transformAttendanceData(attendanceData);
+    
+    return transformedData.filter(emp => {
+      const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          emp.id.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = !statusFilter || emp.status.toLowerCase() === statusFilter.toLowerCase();
       
-      return matchesSearch && matchesStatus && matchesDepartment;
+      return matchesSearch && matchesStatus;
     });
   };
+
+  // Calculate stats
+  const calculateStats = () => {
+    const transformedData = transformAttendanceData(attendanceData);
+    const presentCount = transformedData.filter(emp => emp.status === 'Present').length;
+    const absentCount = transformedData.filter(emp => emp.status === 'Absent').length;
+    const lateCount = transformedData.filter(emp => emp.status === 'Late').length;
+    const totalCount = transformedData.length;
+
+    return { presentCount, absentCount, lateCount, totalCount };
+  };
+
+  const { presentCount, absentCount, lateCount, totalCount } = calculateStats();
 
   // Show notification
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
-
-  // // Clock in/out functionality
-  // const toggleClock = () => {
-  //   if (clockedIn) {
-  //     setClockedIn(false);
-  //     showNotification('Clocked out successfully!', 'success');
-  //   } else {
-  //     setClockedIn(true);
-  //     showNotification('Clocked in successfully!', 'success');
-  //   }
-  // };
 
   // Export functions
   const exportToPDF = () => {
@@ -96,80 +154,122 @@ const AdminAttendance = () => {
   };
 
   const filteredData = getFilteredData();
-  const presentCount = filteredData.filter(emp => emp.status === 'Present').length;
-  const absentCount = filteredData.filter(emp => emp.status === 'Absent').length;
-  const lateCount = filteredData.filter(emp => emp.status === 'Late').length;
+
+  // Handle date change from calendar
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+  };
+
+  // Handle view change (month/year)
+  const handleViewChange = (view) => {
+    setDateFilter(view);
+  };
+
+  // Load Font Awesome CSS
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+    document.head.appendChild(link);
+    
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+        <p>Loading attendance data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <p className="text-red-500 mb-4">{error}</p>
+        <button 
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div style={styles.body}>
-      <div style={styles.container}>
+    <div className="font-sans bg-gray-50 min-h-screen text-gray-800 text-sm">
+      <div className="max-w-7xl mx-auto p-4">
         {/* Stats Grid */}
-        <div style={styles.statsGrid}>
-          <div style={styles.statCard}>
-            <div style={styles.statContent}>
-              <div style={{...styles.statIcon, ...styles.statIconPresent}}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 transition-all cursor-pointer">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-green-100 text-green-800 flex items-center justify-center text-xl">
                 <i className="fas fa-user-check"></i>
               </div>
-              <div style={styles.statDetails}>
-                <div style={styles.statNumber}>11</div>
-                <div style={styles.statLabel}>Present Today</div>
+              <div>
+                <div className="text-2xl font-bold">{presentCount + lateCount}</div>
+                <div className="text-sm text-gray-500 font-medium">Present Today</div>
               </div>
             </div>
           </div>
-          <div style={styles.statCard}>
-            <div style={styles.statContent}>
-              <div style={{...styles.statIcon, ...styles.statIconAbsent}}>
+          <div className="bg-white border border-gray-200 rounded-xl p-5 transition-all cursor-pointer">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-red-100 text-red-800 flex items-center justify-center text-xl">
                 <i className="fas fa-user-times"></i>
               </div>
-              <div style={styles.statDetails}>
-                <div style={styles.statNumber}>1</div>
-                <div style={styles.statLabel}>Absent Today</div>
+              <div>
+                <div className="text-2xl font-bold">{absentCount}</div>
+                <div className="text-sm text-gray-500 font-medium">Absent Today</div>
               </div>
             </div>
           </div>
-          <div style={styles.statCard}>
-            <div style={styles.statContent}>
-              <div style={{...styles.statIcon, ...styles.statIconLate}}>
+          <div className="bg-white border border-gray-200 rounded-xl p-5 transition-all cursor-pointer">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-yellow-100 text-yellow-800 flex items-center justify-center text-xl">
                 <i className="fas fa-user-clock"></i>
               </div>
-              <div style={styles.statDetails}>
-                <div style={styles.statNumber}>1</div>
-                <div style={styles.statLabel}>Late Arrivals</div>
+              <div>
+                <div className="text-2xl font-bold">{lateCount}</div>
+                <div className="text-sm text-gray-500 font-medium">Late Arrivals</div>
               </div>
             </div>
           </div>
-          <div style={styles.statCard}>
-            <div style={styles.statContent}>
-              <div style={{...styles.statIcon, ...styles.statIconTotal}}>
+          <div className="bg-white border border-gray-200 rounded-xl p-5 transition-all cursor-pointer">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-indigo-100 text-indigo-800 flex items-center justify-center text-xl">
                 <i className="fas fa-users"></i>
               </div>
-              <div style={styles.statDetails}>
-                <div style={styles.statNumber}>16</div>
-                <div style={styles.statLabel}>Total Employees</div>
+              <div>
+                <div className="text-2xl font-bold">{totalCount}</div>
+                <div className="text-sm text-gray-500 font-medium">Total Employees</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div style={styles.mainContent}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Attendance Section */}
-          <div style={styles.attendanceSection}>
-            <h2 style={styles.sectionTitle}>
+          <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold mb-5 text-gray-800 flex items-center gap-2 pb-3 border-b border-gray-200">
               <i className="fas fa-table"></i>
-              Today's Attendance
+              Today's Attendance ({currentdate})
             </h2>
             
-            <div style={styles.filterSection}>
+            <div className="flex flex-wrap gap-3 mb-5">
               <input
                 type="text"
-                style={styles.filterInput}
+                className="flex-1 min-w-[140px] px-3 py-2 border border-gray-300 rounded text-sm transition-all bg-white"
                 placeholder="Search employee..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <select
-                style={styles.filterInput}
+                className="flex-1 min-w-[140px] px-3 py-2 border border-gray-300 rounded text-sm transition-all bg-white"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
@@ -178,58 +278,50 @@ const AdminAttendance = () => {
                 <option value="absent">Absent</option>
                 <option value="late">Late</option>
               </select>
-              <select
-                style={styles.filterInput}
-                value={departmentFilter}
-                onChange={(e) => setDepartmentFilter(e.target.value)}
-              >
-                <option value="">All Departments</option>
-                <option value="Data Analyst">Data Analyst</option>
-                <option value="Admin">Admin</option>
-              </select>
             </div>
 
-            <table style={styles.attendanceTable}>
-              <thead>
-                <tr>
-                  <th style={styles.tableHeader}>Employee</th>
-                  <th style={styles.tableHeader}>Employee ID</th>
-                  <th style={styles.tableHeader}>Department</th>
-                  <th style={styles.tableHeader}>Check In</th>
-                  <th style={styles.tableHeader}>Check Out</th>
-                  <th style={styles.tableHeader}>Hours</th>
-                  <th style={styles.tableHeader}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredData.map((emp, index) => (
-                  <tr key={index} style={styles.tableRow}>
-                    <td style={styles.tableCell}>{emp.name}</td>
-                    <td style={styles.tableCell}>{emp.id}</td>
-                    <td style={styles.tableCell}>{emp.department}</td>
-                    <td style={styles.tableCell}>{emp.checkIn}</td>
-                    <td style={styles.tableCell}>
-                      <span style={{
-                        ...styles.statusBadge,
-                        ...styles[`status${emp.status}`]
-                      }}>
-                        {emp.status}
-                      </span>
-                    </td>
-                    <td style={styles.tableCell}>{emp.hours}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full mt-4 text-sm">
+                <thead>
+                  <tr>
+                    <th className="px-3 py-3 text-left border-b border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs uppercase tracking-wider">Employee</th>
+                    <th className="px-3 py-3 text-left border-b border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs uppercase tracking-wider">Employee ID</th>
+                    <th className="px-3 py-3 text-left border-b border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs uppercase tracking-wider">Check In</th>
+                    <th className="px-3 py-3 text-left border-b border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs uppercase tracking-wider">Check Out</th>
+                    <th className="px-3 py-3 text-left border-b border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs uppercase tracking-wider">Hours</th>
+                    <th className="px-3 py-3 text-left border-b border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs uppercase tracking-wider">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredData.map((emp, index) => (
+                    <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer">
+                      <td className="px-3 py-3">{emp.name}</td>
+                      <td className="px-3 py-3">{emp.id}</td>
+                      <td className="px-3 py-3">{emp.checkIn}</td>
+                      <td className="px-3 py-3">{emp.checkOut}</td>
+                      <td className="px-3 py-3">{emp.hours}</td>
+                      <td className="px-3 py-3">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold uppercase tracking-wide ${
+                          emp.status === 'Present' ? 'bg-green-100 text-green-800' :
+                          emp.status === 'Absent' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {emp.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Quick Actions */}
-          <div style={styles.quickActions}>
-            <div style={styles.clockInSection}>
-              <div style={styles.currentTime}>
-                {currentTime.toLocaleTimeString()}
-              </div>
-              <div style={styles.currentDate}>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            {/* Current Time Display */}
+            <div className="bg-gradient-to-r from-blue-800 to-blue-900 text-black rounded-xl p-5 text-center mb-5">
+              <div className="text-2xl font-bold mb-1">{currentTime.toLocaleTimeString()}</div>
+              <div className="text-xs opacity-90 mb-4">
                 {currentTime.toLocaleDateString('en-US', { 
                   weekday: 'long', 
                   year: 'numeric', 
@@ -237,52 +329,100 @@ const AdminAttendance = () => {
                   day: 'numeric' 
                 })}
               </div>
-              {/* <button style={styles.clockBtn} onClick={toggleClock}>
-                <i className={clockedIn ? "fas fa-sign-out-alt" : "fas fa-clock"}></i>
-                {clockedIn ? ' Clock Out' : ' Clock In'}
-              </button> */}
             </div>
 
-            <div style={styles.exportSection}>
-              <h4 style={styles.exportTitle}>
+            {/* Calendar Section */}
+            <div className="mb-5">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-sm font-semibold text-gray-700">
+                  <i className="fas fa-calendar-alt mr-2"></i>
+                  Attendance Calendar
+                </h3>
+                <div className="flex gap-1">
+                  <button 
+                    onClick={() => handleViewChange('day')}
+                    className={`px-2 py-1 text-xs rounded ${dateFilter === 'day' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'}`}
+                  >
+                    Day
+                  </button>
+                  <button 
+                    onClick={() => handleViewChange('month')}
+                    className={`px-2 py-1 text-xs rounded ${dateFilter === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'}`}
+                  >
+                    Month
+                  </button>
+                  <button 
+                    onClick={() => handleViewChange('year')}
+                    className={`px-2 py-1 text-xs rounded ${dateFilter === 'year' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'}`}
+                  >
+                    Year
+                  </button>
+                </div>
+              </div>
+              <Calendar
+                onChange={handleDateChange}
+                value={selectedDate}
+                view={dateFilter === 'day' ? undefined : dateFilter === 'month' ? 'year' : 'decade'}
+                className="border border-gray-200 rounded-lg p-2 w-full"
+              />
+            </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-5">
+              <h4 className="text-sm font-semibold mb-3 text-gray-700 flex items-center gap-2">
                 <i className="fas fa-download"></i> Export Reports
               </h4>
-              <div style={styles.exportButtons}>
-                <button style={{...styles.actionBtn, ...styles.pdfBtn}} onClick={exportToPDF}>
+              <div className="flex gap-2">
+                <button 
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-xs font-medium flex items-center justify-center gap-1"
+                  onClick={exportToPDF}
+                >
                   <i className="fas fa-file-pdf"></i>
                   PDF
                 </button>
-                <button style={{...styles.actionBtn, ...styles.exportBtn}} onClick={exportToExcel}>
+                <button 
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-xs font-medium flex items-center justify-center gap-1"
+                  onClick={exportToExcel}
+                >
                   <i className="fas fa-file-excel"></i>
                   Excel
                 </button>
               </div>
             </div>
 
-            <h3 style={styles.sectionTitle}>
+            <h3 className="text-sm font-semibold mb-3 text-gray-700 flex items-center gap-2 pb-2 border-b border-gray-200">
               <i className="fas fa-bolt"></i>
               Quick Actions
             </h3>
             
-            <div style={styles.quickActionsList}>
+            <div className="flex flex-col gap-2">
               <button 
                 onClick={() => navigate('/workplan')}
-                style={{...styles.actionBtn, ...styles.actionBtnFullWidth}}>
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-xs font-medium flex items-center justify-center gap-2"
+              >
                 <i className="fas fa-chart-bar"></i>
                 View Workplan
               </button>
               
-              <button style={{...styles.actionBtn, ...styles.actionBtnFullWidth}} onClick={viewSchedule}>
+              <button 
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-xs font-medium flex items-center justify-center gap-2"
+                onClick={viewSchedule}
+              >
                 <i className="fas fa-calendar-alt"></i>
                 View Schedule
               </button>
               
-              <button style={{...styles.actionBtn, ...styles.actionBtnFullWidth}} onClick={sendNotifications}>
+              <button 
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-xs font-medium flex items-center justify-center gap-2"
+                onClick={sendNotifications}
+              >
                 <i className="fas fa-bell"></i>
                 Send Notifications
               </button>
 
-              <button style={{...styles.actionBtn, ...styles.actionBtnFullWidth}} onClick={generateDetailedReport}>
+              <button 
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-xs font-medium flex items-center justify-center gap-2"
+                onClick={generateDetailedReport}
+              >
                 <i className="fas fa-chart-line"></i>
                 Detailed Analytics
               </button>
@@ -293,284 +433,97 @@ const AdminAttendance = () => {
 
       {/* Notification */}
       {notification && (
-        <div style={{
-          ...styles.notification,
-          ...styles.notificationShow,
-          ...(notification.type === 'error' ? styles.notificationError : {})
-        }}>
+        <div className={`fixed top-5 right-5 p-3 px-4 bg-white rounded-lg shadow-lg text-sm font-medium z-50 border-l-4 ${
+          notification.type === 'error' ? 'border-red-500' : 'border-green-500'
+        }`}>
           {notification.message}
         </div>
       )}
+
+      {/* Custom Calendar CSS */}
+      <style jsx global>{`
+        .react-calendar-custom {
+          width: 100%;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.5rem;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          padding: 0.5rem;
+          font-family: inherit;
+        }
+        
+        .react-calendar-custom .react-calendar__navigation {
+          display: flex;
+          height: 44px;
+          margin-bottom: 1em;
+          background-color: #f8fafc;
+          border-radius: 0.375rem;
+        }
+        
+        .react-calendar-custom .react-calendar__navigation button {
+          min-width: 44px;
+          background: none;
+          border: none;
+          font-weight: 600;
+          color: #334155;
+        }
+        
+        .react-calendar-custom .react-calendar__navigation button:enabled:hover,
+        .react-calendar-custom .react-calendar__navigation button:enabled:focus {
+          background-color: #e2e8f0;
+        }
+        
+        .react-calendar-custom .react-calendar__month-view__weekdays {
+          text-align: center;
+          text-transform: uppercase;
+          font-weight: 600;
+          font-size: 0.75em;
+          color: #64748b;
+        }
+        
+        /* Highlight Friday and Saturday as weekends */
+        .react-calendar-custom .react-calendar__month-view__days__day--weekend {
+          color: #dc2626;
+        }
+        
+        /* Specifically target Friday (5) and Saturday (6) */
+        .react-calendar-custom .react-calendar__tile[aria-label$="Friday"],
+        .react-calendar-custom .react-calendar__tile[aria-label$="Saturday"] {
+          color: #dc2626;
+        }
+        
+        .react-calendar-custom .react-calendar__tile {
+          max-width: 100%;
+          padding: 0.5em 0.5em;
+          background: none;
+          text-align: center;
+          line-height: 16px;
+          border-radius: 0.25rem;
+        }
+        
+        .react-calendar-custom .react-calendar__tile:enabled:hover,
+        .react-calendar-custom .react-calendar__tile:enabled:focus {
+          background-color: #e2e8f0;
+        }
+        
+        .react-calendar-custom .react-calendar__tile--now {
+          background: #dbeafe;
+          color: #1e40af;
+          font-weight: bold;
+        }
+        
+        .react-calendar-custom .react-calendar__tile--active {
+          background: #3b82f6;
+          color: white;
+          font-weight: bold;
+        }
+        
+        .react-calendar-custom .react-calendar__tile--active:enabled:hover,
+        .react-calendar-custom .react-calendar__tile--active:enabled:focus {
+          background: #2563eb;
+        }
+      `}</style>
     </div>
   );
-};
-
-const styles = {
-  body: {
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    background: '#f8fafc',
-    minHeight: '100vh',
-    color: '#1e293b',
-    fontSize: '14px',
-    lineHeight: '1.5',
-    margin: 0,
-    padding: 0,
-    boxSizing: 'border-box'
-  },
-  container: {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    padding: '16px'
-  },
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: '16px',
-    marginBottom: '24px'
-  },
-  statCard: {
-    background: 'white',
-    border: '1px solid #e2e8f0',
-    borderRadius: '12px',
-    padding: '20px',
-    transition: 'all 0.2s ease',
-    position: 'relative',
-    cursor: 'pointer'
-  },
-  statContent: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px'
-  },
-  statIcon: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '8px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '20px'
-  },
-  statIconPresent: {
-    background: '#dcfce7',
-    color: '#166534'
-  },
-  statIconAbsent: {
-    background: '#fee2e2',
-    color: '#991b1b'
-  },
-  statIconLate: {
-    background: '#fef3c7',
-    color: '#92400e'
-  },
-  statIconTotal: {
-    background: '#e0e7ff',
-    color: '#3730a3'
-  },
-  statDetails: {
-    flex: 1
-  },
-  statNumber: {
-    fontSize: '28px',
-    fontWeight: '700',
-    color: '#1e293b'
-  },
-  statLabel: {
-    fontSize: '13px',
-    color: '#64748b',
-    fontWeight: '500',
-    marginTop: '2px'
-  },
-  mainContent: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 320px',
-    gap: '24px'
-  },
-  attendanceSection: {
-    background: 'white',
-    border: '1px solid #e2e8f0',
-    borderRadius: '12px',
-    padding: '24px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)'
-  },
-  quickActions: {
-    background: 'white',
-    border: '1px solid #e2e8f0',
-    borderRadius: '12px',
-    padding: '24px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)'
-  },
-  sectionTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    marginBottom: '20px',
-    color: '#1e293b',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    paddingBottom: '12px',
-    borderBottom: '1px solid #e2e8f0'
-  },
-  filterSection: {
-    display: 'flex',
-    gap: '12px',
-    marginBottom: '20px',
-    flexWrap: 'wrap'
-  },
-  filterInput: {
-    padding: '8px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    fontSize: '13px',
-    transition: 'all 0.2s ease',
-    flex: 1,
-    minWidth: '140px',
-    background: 'white'
-  },
-  attendanceTable: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    marginTop: '16px',
-    fontSize: '13px'
-  },
-  tableHeader: {
-    padding: '12px',
-    textAlign: 'left',
-    borderBottom: '1px solid #e2e8f0',
-    background: '#f8fafc',
-    color: '#374151',
-    fontWeight: '600',
-    fontSize: '12px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px'
-  },
-  tableRow: {
-    borderBottom: '1px solid #e2e8f0',
-    cursor: 'pointer'
-  },
-  tableCell: {
-    padding: '12px',
-    textAlign: 'left',
-    borderBottom: '1px solid #e2e8f0'
-  },
-  statusBadge: {
-    padding: '4px 8px',
-    borderRadius: '6px',
-    fontSize: '11px',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px'
-  },
-  statusPresent: {
-    background: '#dcfce7',
-    color: '#166534'
-  },
-  statusAbsent: {
-    background: '#fee2e2',
-    color: '#991b1b'
-  },
-  statusLate: {
-    background: '#fef3c7',
-    color: '#92400e'
-  },
-  clockInSection: {
-    background: 'linear-gradient(135deg, #1e40af, #1e3a8a)',
-    color: 'white',
-    borderRadius: '12px',
-    padding: '20px',
-    textAlign: 'center',
-    marginBottom: '20px'
-  },
-  currentTime: {
-    fontSize: '24px',
-    fontWeight: '700',
-    marginBottom: '4px'
-  },
-  currentDate: {
-    fontSize: '12px',
-    opacity: '0.9',
-    marginBottom: '16px'
-  },
-  clockBtn: {
-    background: 'rgba(255, 255, 255, 0.1)',
-    border: '1px solid rgba(255, 255, 255, 0.3)',
-    color: 'white',
-    padding: '10px 20px',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  },
-  exportSection: {
-    background: '#f8fafc',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    padding: '16px',
-    marginBottom: '20px'
-  },
-  exportTitle: {
-    marginBottom: '12px',
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151'
-  },
-  exportButtons: {
-    display: 'flex',
-    gap: '8px'
-  },
-  actionBtn: {
-    background: '#1e40af',
-    color: 'white',
-    border: 'none',
-    padding: '8px 12px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: '500',
-    fontSize: '12px',
-    transition: 'all 0.2s ease',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    justifyContent: 'center',
-    textDecoration: 'none',
-    flex: 1
-  },
-  actionBtnFullWidth: {
-    width: '100%',
-    marginBottom: '8px'
-  },
-  exportBtn: {
-    background: '#059669'
-  },
-  pdfBtn: {
-    background: '#dc2626'
-  },
-  quickActionsList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
-  },
-  notification: {
-    position: 'fixed',
-    top: '20px',
-    right: '20px',
-    padding: '12px 16px',
-    background: 'white',
-    borderRadius: '8px',
-    borderLeft: '4px solid #059669',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-    fontSize: '13px',
-    fontWeight: '500',
-    zIndex: 1000
-  },
-  notificationShow: {
-    opacity: 1,
-    transform: 'translateX(0)'
-  },
-  notificationError: {
-    borderLeftColor: '#dc2626'
-  }
 };
 
 export default AdminAttendance;

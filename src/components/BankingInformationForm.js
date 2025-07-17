@@ -185,7 +185,6 @@ const BankingInformationForm = () => {
     if (!isFormValid) return;
     if (validateAllFields()) {
       navigate('/Personal');
-      alert('Form validated successfully! Would navigate to Personal page.');
     }
   }
 
@@ -217,7 +216,6 @@ const BankingInformationForm = () => {
 
   function handleBack() {
     navigate('/');
-    alert('Would navigate back to registration page.');
   }
 
   // On mount, validate in case pre-filled

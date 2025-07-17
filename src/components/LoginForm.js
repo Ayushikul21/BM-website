@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const LoginForm = ({onLogin}) => {
+const LoginForm = ({ onLogin }) => {
   const [employeeId, setEmployeeId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -10,6 +10,9 @@ const LoginForm = ({onLogin}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+
+  // Updated login URL to match your backend
+  const loginUrl = 'http://137.97.126.110:5500/api/v1/auth/login';
 
   // Focus on employee ID input when component mounts
   useEffect(() => {
@@ -46,14 +49,12 @@ const LoginForm = ({onLogin}) => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onLogin(employeeId.trim().toLowerCase());
-
-    const empId = employeeId.trim().toUpperCase();
-    const pwd = password;
-
     hideMessages();
+
+    const empId = employeeId.trim();
+    const pwd = password;
 
     if (!validateEmployeeId(empId)) {
       showError('Employee ID must be at least 3 characters long');
@@ -69,28 +70,63 @@ const LoginForm = ({onLogin}) => {
 
     setIsLoading(true);
 
-    // Simulate login process - replace this with your actual login logic
-    setTimeout(() => {
-      // For demo purposes, any valid input will succeed
-      // Replace this with your actual authentication logic
-      showSuccess(`Login successful for ${empId}!`);
-      setTimeout(() => {
-        setIsLoggedIn(true);
-        console.log('Login successful for:', { id: empId, name: 'User', role: 'Employee' });
-      }, 1000);
-    }, 1500);
+    try {
+      const response = await fetch(loginUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: empId, // Changed to email to match backend
+          password: pwd
+        })
+      });
 
-    // const codedata= axios.post('http://localhost:4000/api/v1/auth/login', {
-    //   email:employeeId,
-    //   password:password})
-    // .then(response => console.log(response.data))
-    // .catch(error => console.error(error));
-    // console.log("response data",codedata)
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed. Please check your credentials.');
+      }
+
+      showSuccess(`Login successful for ${empId}!`);
+      
+      // Call parent login handler with employee ID
+      if (onLogin) {
+        onLogin(empId.toLowerCase());
+      }
+
+      setIsLoggedIn(true);
+      
+      // Store token in localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userData', JSON.stringify(data.user));
+      }
+      
+      if(empId === "omdubey@bandymoot.com" || empId === "coe211166.cse.coe@cgc.edu.in"){
+        navigate('/admin');
+      }
+
+      else {// Redirect to dashboard after successful login
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+    }
+
+    } catch (error) {
+      showError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {
     navigate('/forgotPassword');
   };
+
+  const handleRegistration = () => {
+    navigate('/');
+  }
 
   const logout = () => {
     setIsLoggedIn(false);
@@ -99,6 +135,10 @@ const LoginForm = ({onLogin}) => {
     setShowPassword(false);
     hideMessages();
     setIsLoading(false);
+    
+    // Clear authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('userData');
     
     // Focus on employee ID input after logout
     setTimeout(() => {
@@ -112,6 +152,9 @@ const LoginForm = ({onLogin}) => {
   // Expose logout function globally for external use
   useEffect(() => {
     window.logout = logout;
+    return () => {
+      delete window.logout;
+    };
   }, []);
 
   const inputErrorClass = (field) => {
@@ -152,18 +195,17 @@ const LoginForm = ({onLogin}) => {
             Employee Login
           </h2>
 
-          <div>
+          <form onSubmit={handleSubmit}>
             {/* Employee ID Input */}
             <div className="mb-5 relative">
               <input
                 type="text"
                 id="employeeId"
                 name="employeeId"
-                placeholder="Employee ID"
+                placeholder="Email or Employee ID"
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
                 className={`w-full px-5 py-4 pr-12 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 bg-white/90 focus:outline-none focus:border-blue-500 focus:shadow-lg focus:shadow-blue-500/10 focus:-translate-y-0.5 ${inputErrorClass('employeeId')}`}
-                onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
               />
             </div>
 
@@ -177,7 +219,6 @@ const LoginForm = ({onLogin}) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={`w-full px-5 py-4 pr-12 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 bg-white/90 focus:outline-none focus:border-blue-500 focus:shadow-lg focus:shadow-blue-500/10 focus:-translate-y-0.5 ${inputErrorClass('password')}`}
-                onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
               />
               <span 
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800 transition-colors duration-300 w-5 h-5 flex items-center justify-center"
@@ -199,7 +240,7 @@ const LoginForm = ({onLogin}) => {
 
             {/* Login Button */}
             <button 
-              onClick={handleSubmit}
+              type="submit"
               className={`w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none rounded-xl text-base font-semibold cursor-pointer transition-all duration-300 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30 active:translate-y-0 ${isLoading ? 'opacity-70 pointer-events-none' : ''}`}
               disabled={isLoading}
             >
@@ -211,7 +252,7 @@ const LoginForm = ({onLogin}) => {
                 'Login'
               )}
             </button>
-          </div>
+          </form>
 
           {/* Error Message */}
           {errorMessage && (
@@ -235,6 +276,19 @@ const LoginForm = ({onLogin}) => {
             >
               Forgot Password?
             </a>
+
+            {/* Link to Registration */}
+            <div className="text-center mt-8 pt-6 border-t border-gray-200">
+             <p className="text-gray-600">
+                Don't have an account?{" "}
+                <button
+                  onClick={handleRegistration}
+                  className="text-indigo-600 hover:text-purple-600 font-semibold hover:underline transition-colors duration-200"
+                >
+                Sign up here
+                </button>
+             </p>
+            </div> 
           </div>
         </div>
       </div>

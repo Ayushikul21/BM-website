@@ -381,7 +381,7 @@ const UserAttendance = () => {
 
   // Today's schedule
   const todaySchedule = {
-    shiftTime: '09:00 AM - 06:00 PM',
+    shiftTime: '09:05 AM - 06:00 PM',
     breakTime: '01:00 PM - 02:00 PM',
     lunchBreak: '12:00 PM - 01:00 PM',
     department: 'Software Development',
