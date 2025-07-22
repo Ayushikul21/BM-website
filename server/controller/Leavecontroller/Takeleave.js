@@ -13,6 +13,7 @@ exports.leave = async (req, res) => {
         const user = await User.findById(Userid)
         const name = user.firstName + " " + user.lastName
         const email = user.email
+        const userData=await User.findById(Userid).populate("leaveDetails")
         //console.log("hello",startdate,enddate,leaveType,description)  
         //console.log("hello",startdate,enddate,leaveType,description,name,email)
         //console.log("hellow",name,Userid)
@@ -27,7 +28,14 @@ exports.leave = async (req, res) => {
         const enddate1 = new Date(enddate)
         console.log("Newdate", startdate1)
         const newleave = await Leave.create({ name, email, startdate: startdate1, enddate: enddate1, leaveType, userId: Userid, description })
-
+         await leaveInfo.findByIdAndUpdate( userData.leaveDetails,
+            {
+                $push: {
+                    takenLeave: newleave._id
+                }
+            },
+            { new: true }
+        )
         const mailResponse = await mailSender(email,"Leave Approval Request",leaveRequestTemplate({name, email, leaveType, fromDate: startdate1.toLocaleDateString(),toDate: enddate1.toLocaleDateString(), reason: description}));
 		//console.log("Email sent successfully: ", mailResponse);
         res.status(200).json({
@@ -68,14 +76,14 @@ exports.approval = async (req, res) => {
             await userData.leaveDetails.save()
             await userData.save()
             await leaveData.save()
-            await leaveInfo.findByIdAndUpdate(userData.leaveDetails,
-                {
-                    $push: {
-                        takenLeave: leaveData._id
-                    }
-                },
-                { new: true }
-            )
+            // await leaveInfo.findByIdAndUpdate(userData.leaveDetails,
+            //     {
+            //         $push: {
+            //             takenLeave: leaveData._id
+            //         }
+            //     },
+            //     { new: true }
+            // )
             return res.status(200).json({
                 success: true,
                 data: leaveData,
@@ -227,14 +235,14 @@ exports.approval = async (req, res) => {
         await userData.leaveDetails.save()
         await userData.save()
         await leaveData.save()
-        await leaveInfo.findByIdAndUpdate( userData.leaveDetails,
-            {
-                $push: {
-                    takenLeave: leaveData._id
-                }
-            },
-            { new: true }
-        )
+        // await leaveInfo.findByIdAndUpdate( userData.leaveDetails,
+        //     {
+        //         $push: {
+        //             takenLeave: leaveData._id
+        //         }
+        //     },
+        //     { new: true }
+        // )
         //const userDetails=await User.findById({_id:userId})
         res.status(200).json({
             success: true,
