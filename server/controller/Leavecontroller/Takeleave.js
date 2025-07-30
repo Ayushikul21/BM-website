@@ -392,3 +392,21 @@ exports.leaveDelete = async (req, res) => {
         });
     }
 }
+exports.getAllLeaves = async (req, res) => {
+    console.log("Fetching all leaves...");
+    try {
+        const leaves = await Leave.find().populate("userId", "firstName lastName email");
+        res.status(200).json({
+            success: true,
+            data: leaves,
+            message: "All leaves fetched successfully",
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch leaves",
+            error: error.message,
+        });
+    }
+}
