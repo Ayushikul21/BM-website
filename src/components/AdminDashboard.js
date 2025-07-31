@@ -147,7 +147,7 @@ const customStyles = `
 
 const AdminDashboard = () => {
   // Mock data - replace with your API calls
-  const [employees] = useState([
+  const [employees,setEmployees] = useState([
     { id: 1, name: 'John Doe', department: 'SAP ABAP', email: 'john@company.com', totalLeaves: 22, usedLeaves: 12, pendingLeaves: 2 },
     { id: 2, name: 'Jane Smith', department: 'SAP MM', email: 'jane@company.com', totalLeaves: 22, usedLeaves: 8, pendingLeaves: 1 },
     { id: 3, name: 'Mike Johnson', department: 'IBM MAXIMO', email: 'mike@company.com', totalLeaves: 22, usedLeaves: 15, pendingLeaves: 0 },
@@ -155,20 +155,137 @@ const AdminDashboard = () => {
     { id: 5, name: 'David Brown', department: 'SAP HR', email: 'david@company.com', totalLeaves: 22, usedLeaves: 5, pendingLeaves: 1 }
   ]);
 
-  const [leaveApplications] = useState([
-    { id: 1, employeeId: 1, employeeName: 'John Doe', type: 'Sick Leave', startDate: '2025-07-01', endDate: '2025-07-03', days: 3, status: 'pending', reason: 'Medical checkup and recovery', appliedDate: '2025-06-20' },
-    { id: 2, employeeId: 2, employeeName: 'Jane Smith', type: 'Casual Leave', startDate: '2025-07-15', endDate: '2025-07-22', days: 8, status: 'pending', reason: 'Family vacation', appliedDate: '2025-06-18' },
-    { id: 3, employeeId: 1, employeeName: 'John Doe', type: 'Personal Leave', startDate: '2025-06-10', endDate: '2025-06-12', days: 3, status: 'approved', reason: 'Personal matters', appliedDate: '2025-06-01' },
-    { id: 4, employeeId: 4, employeeName: 'Sarah Wilson', type: 'Maternity/Paternity Leave', startDate: '2025-08-01', endDate: '2025-08-05', days: 5, status: 'pending', reason: 'Summer break', appliedDate: '2025-06-22' },
-    { id: 5, employeeId: 3, employeeName: 'Mike Johnson', type: 'Sick Leave', startDate: '2024-06-05', endDate: '2024-06-06', days: 2, status: 'rejected', reason: 'Flu symptoms', appliedDate: '2024-06-03' },
-    { id: 6, employeeId: 5, employeeName: 'David Brown', type: 'Casual Leave', startDate: '2025-07-20', endDate: '2025-07-25', days: 6, status: 'pending', reason: 'Wedding celebration', appliedDate: '2025-06-25' }
-  ]);
+  const [leaveApplications,setleaveApplication] = useState([
+    // { id: 1, employeeId: 1, employeeName: 'John Doe', type: 'Sick Leave', startDate: '2025-07-01', endDate: '2025-07-03', days: 3, status: 'pending', reason: 'Medical checkup and recovery', appliedDate: '2025-06-20' },
+    // { id: 2, employeeId: 2, employeeName: 'Jane Smith', type: 'Casual Leave', startDate: '2025-07-15', endDate: '2025-07-22', days: 8, status: 'pending', reason: 'Family vacation', appliedDate: '2025-06-18' },
+    // { id: 3, employeeId: 1, employeeName: 'John Doe', type: 'Personal Leave', startDate: '2025-06-10', endDate: '2025-06-12', days: 3, status: 'approved', reason: 'Personal matters', appliedDate: '2025-06-01' },
+    // { id: 4, employeeId: 4, employeeName: 'Sarah Wilson', type: 'Maternity/Paternity Leave', startDate: '2025-08-01', endDate: '2025-08-05', days: 5, status: 'pending', reason: 'Summer break', appliedDate: '2025-06-22' },
+    // { id: 5, employeeId: 3, employeeName: 'Mike Johnson', type: 'Sick Leave', startDate: '2024-06-05', endDate: '2024-06-06', days: 2, status: 'rejected', reason: 'Flu symptoms', appliedDate: '2024-06-03' },
+    // { id: 6, employeeId: 5, employeeName: 'David Brown', type: 'Casual Leave', startDate: '2025-07-20', endDate: '2025-07-25', days: 6, status: 'pending', reason: 'Wedding celebration', appliedDate: '2025-06-25' }
+   ]);
+
+const [employeeAll, setEmployeeAll] = useState([]);
+   useEffect(() => {
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch('http://137.97.126.110:5500/api/v1/employees/allemployees', {
+        method: 'GET',
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      const result = await response.json();
+      setEmployeeAll(result.data); // Just store raw list
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    }
+  };
+
+  fetchEmployees();
+}, []);
+
+
+   useEffect(() => {
+      const fetchUserDetails2 = async () => {
+        try {
+          const response = await fetch('http://137.97.126.110:5500/api/v1/leave/getAllLeaves', {
+            method: 'GET',
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+  
+          const result = await response.json();
+          const leavedata = result.data;
+          console.log("all leave",leavedata)
+  
+          if (Array.isArray(leavedata)) {
+            const transformed = leavedata.map(item => ({
+              id: item._id,
+              employeeName:item.name,
+              employeeId:"1",
+              userId:item.userId,
+              type: item.leaveType,
+              startDate: item.startdate.split("T")[0],
+              endDate: item.enddate.split("T")[0],
+              days: item.leavedays,
+              status: item.status,
+              appliedDate: item.createdAt.split("T")[0],
+              reason: item.description
+            }));
+            console.log("transfrom",transformed)
+            setleaveApplication(transformed);
+  
+  
+            console.log("✅ Transformed Applications:", transformed);
+          } else {
+            console.warn("❗ leaveData.takenLeave is not an array");
+          }
+        } catch (error) {
+          console.error('Error fetching user details:', error);
+        }
+      };
+  
+      fetchUserDetails2();
+    }, []);
+
+  
+  
+  const handleLeaveAction = async (leaveId,userid, action) => {
+    try {
+         const response = await fetch('http://137.97.126.110:5500/api/v1/leave/approve', {
+            method: 'POST',
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+              leaveId: leaveId, // Changed to email to match backend
+              userId: userid,
+              status:action
+            })
+          });
+  
+    } catch (error) {
+      console.log(error)
+    }
+
+    alert(`Leave ${action} successfully! (In real app, this would update the database)`);
+  };
+
+
+  useEffect(() => {
+  if (Array.isArray(employeeAll) && Array.isArray(leaveApplications)) {
+    const transformed = employeeAll.map(item => ({
+      id: item._id,
+      name: `${item.firstName} ${item.lastName}`,
+      department: item?.additionalDetails?.department || "N/A",
+      email: item.email,
+      totalLeaves: 22,
+      usedLeaves: leaveApplications.filter(app => app.userId === item._id && app.status === "Approved").length,
+      pendingLeaves: leaveApplications.filter(app => app.userId === item._id && app.status === "Pending").length,
+      rejectedLeaves: leaveApplications.filter(app => app.userId === item._id && app.status === "Rejected").length,
+
+    }));
+
+    setEmployees(transformed);
+  }
+}, [employeeAll, leaveApplications,handleLeaveAction]); // 🔁 Trigger only when both are available
+
+console.log("all emp",employees)
+  
+    console.log("h",leaveApplications)
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [statusFilter, setStatusFilter] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [leaveDetails,setleaveDetails]=useState(null)
+  const [ShowViewLeaveModal,setShowViewLeaveModal]=useState(false)
 
   // Filter employees based on search
   const filteredEmployees = employees.filter(emp => 
@@ -186,25 +303,122 @@ const AdminDashboard = () => {
   });
 
   // Get pending applications
-  const pendingApplications = leaveApplications.filter(app => app.status === 'pending');
+  const [pendingApplications ,setpendingApplication]=useState(1)
+  useEffect(()=>{
+  setpendingApplication(leaveApplications.filter(app => app.status === 'Pending'))
+
+  },[leaveApplications,handleLeaveAction])
+  
+  
+  
 
   // Get employee's leave applications
-  const getEmployeeLeaves = (employeeId) => {
-    return leaveApplications.filter(app => app.employeeId === employeeId);
+  const getEmployeeLeaves = (id) => {
+    return leaveApplications.filter(app => app.userId === id);
   };
+  
 
-  // Handle leave approval/rejection
-  const handleLeaveAction = (leaveId, action) => {
-    alert(`Leave ${action} successfully! (In real app, this would update the database)`);
+  const viewLeave = async(id) =>{
+     try {
+         const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/leaveDetails', {
+            method: 'POST',
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+              leaveId: id, // Changed to email to match backend
+            })
+          });
+          const result = await response.json();
+          const leavedata = result.data;
+          setleaveDetails(leavedata)
+          console.log("leavedata of user",leavedata)
+  
+    } catch (error) {
+      console.log(error)
+    }
+    console.log("hello1234")
+    setShowViewLeaveModal(true)
+  }
+  console.log("setleaveDetails data",leaveDetails)
+
+
+  const ViewAdminLeaveModal = () => {
+
+    //call userDetails of api and get leavedetails.......
+
+    return (
+      <form
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      >
+        <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <h3 className="text-lg font-semibold mb-4">User Leave Details</h3>
+
+          <div className="space-y-4">
+            {/* Leave Type */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Leave Type: 
+                <span className='pl-2 text-gray-500'>
+                  {leaveDetails.leaveType}  
+                </span>
+              </label>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Start Date:
+                  <span className='pl-2 text-gray-500'>
+                    {leaveDetails.startdate.split('T')[0]}
+                  </span>
+                </label>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">End Date:  
+                  <span className='pl-2 text-gray-500'>
+                    {leaveDetails.enddate.split('T')[0]}
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Description (Reason) */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Reason:</label>
+              <textarea
+                className="w-full p-2 border rounded-lg focus:ring-0 text-gray-500"
+                value={leaveDetails?.description || ""}
+                readOnly
+              />
+            </div>
+
+
+            {/* Actions */}
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowViewLeaveModal(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    );
   };
 
   // Calculate dashboard stats
   const totalEmployees = employees.length;
   const totalPendingRequests = pendingApplications.length;
   const totalApprovedThisMonth = leaveApplications.filter(app => 
-    app.status === 'approved' && new Date(app.appliedDate).getMonth() === new Date().getMonth()
+    app.status === 'Approved' && new Date(app.appliedDate).getMonth() === new Date().getMonth()
   ).length;
-  const avgLeavesUsed = Math.round(employees.reduce((acc, emp) => acc + emp.usedLeaves, 0) / employees.length);
+  const totalRejectedThisMonth = leaveApplications.filter(app => 
+    app.status === 'Rejected' 
+  ).length;
 
   const departments = [...new Set(employees.map(emp => emp.department))];
 
@@ -223,12 +437,17 @@ const AdminDashboard = () => {
         icon: '❌'
       }
     };
-    
-    const config = configs[status];
+
+    const normalizedStatus = status?.toLowerCase?.(); // handles undefined/null and capitalized statuses
+    const config = configs[normalizedStatus] || {
+      className: 'status-unknown leave-badge border-2 border-gray-200',
+      icon: '❓'
+    };
+
     return (
       <span className={config.className}>
         <span className="mr-1">{config.icon}</span>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown'}
       </span>
     );
   };
@@ -300,10 +519,10 @@ const AdminDashboard = () => {
             <div className="relative">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Avg. Leaves Used</p>
-                  <p className="text-3xl font-bold text-purple-600 mt-2">{avgLeavesUsed}</p>
+                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Rejected Leaves</p>
+                  <p className="text-3xl font-bold text-purple-600 mt-2">{totalRejectedThisMonth}</p>
                   <p className="text-sm text-purple-600 mt-1">
-                    <span className="font-medium">📊 Days per Employee</span>
+                    <span className="font-medium">📊 Rejected</span>
                   </p>
                 </div>
                 <div className="p-4 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl shadow-lg">
@@ -359,7 +578,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="space-y-4">
-                  {leaveApplications.slice(0, 5).map(app => (
+                  {leaveApplications.map(app => (
                     <div key={app.id} className="card-hover flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
                       <div className="flex items-center space-x-4">
                         <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-md">
@@ -492,8 +711,8 @@ const AdminDashboard = () => {
                       </h3>
                       <div className="grid grid-cols-3 gap-4 mb-4">
                         <div className="text-center p-3 bg-blue-50 rounded-lg">
-                          <p className="text-2xl font-bold text-blue-600">{selectedEmployee.totalLeaves}</p>
-                          <p className="text-sm text-gray-600">Total</p>
+                          <p className="text-2xl font-bold text-blue-600">{selectedEmployee.pendingLeaves}</p>
+                          <p className="text-sm text-gray-600">Pending</p>
                         </div>
                         <div className="text-center p-3 bg-red-50 rounded-lg">
                           <p className="text-2xl font-bold text-red-600">{selectedEmployee.usedLeaves}</p>
@@ -501,9 +720,9 @@ const AdminDashboard = () => {
                         </div>
                         <div className="text-center p-3 bg-green-50 rounded-lg">
                           <p className="text-2xl font-bold text-green-600">
-                            {selectedEmployee.totalLeaves - selectedEmployee.usedLeaves}
+                            {selectedEmployee.rejectedLeaves}
                           </p>
-                          <p className="text-sm text-gray-600">Remaining</p>
+                          <p className="text-sm text-gray-600">Rejected</p>
                         </div>
                       </div>
                     </div>
@@ -590,21 +809,21 @@ const AdminDashboard = () => {
                         </div>
                         <div className="flex items-center space-x-2 ml-6">
                           <button
-                            onClick={() => alert(`Viewing full details for ${app.employeeName}'s application`)}
+                            onClick={() => viewLeave(app.id)}
                             className="flex items-center space-x-1 px-3 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
                           >
                             <Eye className="h-4 w-4" />
                             <span>View</span>
                           </button>
                           <button
-                            onClick={() => handleLeaveAction(app.id, 'approved')}
+                            onClick={() => handleLeaveAction(app.id,app.userId, 'Approved')}
                             className="flex items-center space-x-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                           >
                             <CheckCircle className="h-4 w-4" />
                             <span>Approve</span>
                           </button>
                           <button
-                            onClick={() => handleLeaveAction(app.id, 'rejected')}
+                            onClick={() => handleLeaveAction(app.id,app.userId,'Rejected')}
                             className="flex items-center space-x-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                           >
                             <XCircle className="h-4 w-4" />
@@ -694,22 +913,17 @@ const AdminDashboard = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => alert(`Viewing details for application #${app.id}`)}
+                            onClick={() => viewLeave(app.id)}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
-                          {app.status === 'pending' && (
+                          
+                          {app.status === 'Approved' && (
                             <>
                               <button
-                                onClick={() => handleLeaveAction(app.id, 'approved')}
-                                className="text-green-600 hover:text-green-900"
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => handleLeaveAction(app.id, 'rejected')}
-                                className="text-red-600 hover:text-red-900"
+                                onClick={() => handleLeaveAction(app.id,app.userId, 'Cancelled')}
+                                className="text-gray-600 hover:text-gray-800"
                               >
                                 <XCircle className="h-4 w-4" />
                               </button>
@@ -725,6 +939,7 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
+      {ShowViewLeaveModal && <ViewAdminLeaveModal />}
     </div>
   );
 };

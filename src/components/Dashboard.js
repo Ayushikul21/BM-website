@@ -1,69 +1,121 @@
-import React, { useState } from 'react';
-import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Plus, User, Settings, Bell, Search, Filter, Download, Eye, Edit, Trash2, Users, BarChart3 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Plus, Filter, Download, Eye, Edit, Trash2, BarChart3 } from 'lucide-react';
 
-const Dashboard = ({ userName, onSubmit }) => {
+const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showNewLeaveModal, setShowNewLeaveModal] = useState(false);
-  const [selectedLeave, setSelectedLeave] = useState(null);
+  const navigate = useNavigate();
+  const [showViewLeaveModal, setShowViewLeaveModal] = useState(false)
+  const [leaveDetails, setleaveDetails] = useState(null)
   const [applications, setApplications] = useState([
     { id: 1, type: "Casual Leave", startDate: "2025-07-15", endDate: "2025-07-19", days: 5, status: "Approved", appliedOn: "2025-06-20", reason: "Family vacation" },
     { id: 2, type: "Sick Leave", startDate: "2024-06-10", endDate: "2024-06-12", days: 3, status: "Approved", appliedOn: "2024-06-09", reason: "Medical checkup" },
     { id: 3, type: "Personal Leave", startDate: "2025-08-05", endDate: "2025-08-05", days: 1, status: "Pending", appliedOn: "2025-06-29", reason: "Personal work" },
-    { id: 4, type: "Maternity/Paternity Leave", startDate: "2025-05-20", endDate: "2025-05-22", days: 3, status: "Rejected", appliedOn: "2025-05-15", reason: "Weekend trip", rejectionReason: "Insufficient notice period" },
+    // // { id: 4, type: "Maternity/Paternity Leave", startDate: "2025-05-20", endDate: "2025-05-22", days: 3, status: "Rejected", appliedOn: "2025-05-15", reason: "Weekend trip", rejectionReason: "Insufficient notice period" },
   ]);
-  
+  const today = new Date();
+  const futureLeaves = applications.filter(app => new Date(app.startDate) > today && app.status === "Approved");
+  const futureLeavesSorted = futureLeaves.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+
   // Filter states
   const [filterLeaveType, setFilterLeaveType] = useState('All');
   const [filterMonth, setFilterMonth] = useState('All');
   const [filterYear, setFilterYear] = useState('All');
-  
+  const [leaveinfo, setleaveinfo] = useState({
+    "Approvedleave": "",
+    "pendingleave": "",
+    "cancleleave": "",
+    "Rejectleave": "",
+    "casualleave": "",
+    "seekleave": "",
+    "persionalleave": "",
+    "Maternityleave": ""
+  })
+  // const [leavedata,setleavedata]=useState({
+  //   "leaveType":"",
+  //   "startDate":"",
+
+  // })
+
   // Current date for comparison
   const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
-  // Mock data
-  const userProfile = {
-    name: "John Doe",
-    empId: "EMP001",
-    department: "Engineering",
-    position: "Senior Developer",
-    manager: "Jane Smith",
-    joinDate: "Jan 15, 2022"
-  };
+  // // Mock data
+  // const userProfile = {
+  //   name: "John Doe",
+  //   empId: "EMP001",
+  //   department: "Engineering",
+  //   position: "Senior Developer",
+  //   manager: "Jane Smith",
+  //   joinDate: "Jan 15, 2022"
+  // };
 
   const leaveBalances = [
-    { type: "Casual Leave", total: 25, used: 8, remaining: 17, color: "bg-blue-500" },
-    { type: "Sick Leave", total: 12, used: 3, remaining: 9, color: "bg-red-500" },
-    { type: "Personal Leave", total: 5, used: 1, remaining: 4, color: "bg-green-500" },
-    { type: "Maternity/Paternity Leave", total: 90, used: 0, remaining: 90, color: "bg-purple-500" }
+    { type: "Casual Leave", total: 22, used: leaveinfo.casualleave, remaining: 2 - leaveinfo.casualleave, color: "bg-blue-500" },
+    { type: "Sick Leave", total: 22, used: leaveinfo.seekleave, remaining: 2 - leaveinfo.seekleave, color: "bg-red-500" },
+    { type: "Personal Leave", total: 22, used: leaveinfo.persionalleave, remaining: 2 - leaveinfo.persionalleave, color: "bg-green-500" },
+    { type: "Maternity/Paternity Leave", total: 22, used: leaveinfo.Maternityleave, remaining: 2 - leaveinfo.Maternityleave, color: "bg-purple-500" }
   ];
 
-  const recentApplications = [
-    { id: 1, type: "Casual Leave", startDate: "2025-07-15", endDate: "2025-07-19", days: 5, status: "Approved", appliedOn: "2025-06-20", reason: "Family vacation" },
-    { id: 2, type: "Sick Leave", startDate: "2025-06-10", endDate: "2025-06-12", days: 3, status: "Approved", appliedOn: "2025-06-09", reason: "Medical checkup" },
-    { id: 3, type: "Personal Leave", startDate: "2025-08-05", endDate: "2025-08-05", days: 1, status: "Pending", appliedOn: "2025-06-25", reason: "Personal work" },
-    { id: 4, type: "Casual Leave", startDate: "2025-05-20", endDate: "2025-05-22", days: 3, status: "Rejected", appliedOn: "2025-05-15", reason: "Weekend trip", rejectionReason: "Insufficient notice period" }
-  ];
+  // const recentApplications = [
+  //   { id: 1, type: "Casual Leave", startDate: "2025-07-15", endDate: "2025-07-19", days: 5, status: "Approved", appliedOn: "2025-06-20", reason: "Family vacation" },
+  //   { id: 2, type: "Sick Leave", startDate: "2025-06-10", endDate: "2025-06-12", days: 3, status: "Approved", appliedOn: "2025-06-09", reason: "Medical checkup" },
+  //   { id: 3, type: "Personal Leave", startDate: "2025-08-05", endDate: "2025-08-05", days: 1, status: "Pending", appliedOn: "2025-06-25", reason: "Personal work" },
+  //   { id: 4, type: "Casual Leave", startDate: "2025-05-20", endDate: "2025-05-22", days: 3, status: "Rejected", appliedOn: "2025-05-15", reason: "Weekend trip", rejectionReason: "Insufficient notice period" }
+  // ];
 
-  const upcomingLeaves = [
-    { type: "Casual Leave", startDate: "2025-07-15", endDate: "2025-07-19", days: 5 },
-    { type: "Personal Leave", startDate: "2025-08-05", endDate: "2025-08-05", days: 1 }
-  ];
+  // const upcomingLeaves = [
+  //   { type: "Casual Leave", startDate: "2025-07-15", endDate: "2025-07-19", days: 5 },
+  //   { type: "Personal Leave", startDate: "2025-08-05", endDate: "2025-08-05", days: 1 }
+  // ];
 
-  const teamLeaves = [
-    { name: "Alice Johnson", type: "Casual Leave", startDate: "2025-07-01", endDate: "2025-07-05", status: "Approved" },
-    { name: "Bob Wilson", type: "Sick Leave", startDate: "2025-06-28", endDate: "2025-06-30", status: "Approved" },
-    { name: "Carol Davis", type: "Personal Leave", startDate: "2025-07-10", endDate: "2025-07-12", status: "Pending" }
-  ];
+  // const teamLeaves = [
+  //   { name: "Alice Johnson", type: "Casual Leave", startDate: "2025-07-01", endDate: "2025-07-05", status: "Approved" },
+  //   { name: "Bob Wilson", type: "Sick Leave", startDate: "2025-06-28", endDate: "2025-06-30", status: "Approved" },
+  //   { name: "Carol Davis", type: "Personal Leave", startDate: "2025-07-10", endDate: "2025-07-12", status: "Pending" }
+  // ];
 
-  const handleLeaveApply = () => {  
-  // simulate save logic here...
+  // const handleLeaveApply = () => {  
+  // // simulate save logic here...
 
-    if (typeof onSubmit === 'function') {
-      onSubmit(); // this navigates back or shows confirmation
-    } else {
-      console.error("onSubmit is not a function");
-    }
-  };
+  //   if (typeof onSubmit === 'function') {
+  //     onSubmit(); // this navigates back or shows confirmation
+  //   } else {
+  //     console.error("onSubmit is not a function");
+  //   }
+  // };
+
+  // const submitLeave = () => {
+
+  //   navigate('/dashboard');
+  // };
+
+  //  const viewLeave = async(id) =>{
+  //     console.log("hello1")
+  //      try {
+  //          const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/leaveDetails', {
+  //             method: 'POST',
+  //             headers: {
+  //               "Content-Type": "application/json",
+  //               Authorization: `Bearer ${localStorage.getItem('token')}`
+  //             },
+  //             body: JSON.stringify({
+  //               leaveId: id, // Changed to email to match backend
+  //             })
+  //           });
+  //           const result = await response.json();
+  //           const leavedata = result.data;
+  //           setleaveDetails(leavedata)
+  //           console.log("leavedata of user",leavedata)
+
+  //     } catch (error) {
+  //       console.log(error)
+  //     }
+
+  //   }
+  //   console.log("setleaveDetails data",leaveDetails)
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -101,14 +153,27 @@ const Dashboard = ({ userName, onSubmit }) => {
       const appDate = new Date(app.appliedOn);
       const appMonth = appDate.getMonth() + 1; // JavaScript months are 0-indexed
       const appYear = appDate.getFullYear();
-      
+
       const matchesType = filterLeaveType === 'All' || app.type === filterLeaveType;
       const matchesMonth = filterMonth === 'All' || appMonth.toString() === filterMonth;
       const matchesYear = filterYear === 'All' || appYear.toString() === filterYear;
-      
+
       return matchesType && matchesMonth && matchesYear;
     });
   };
+
+
+  // Recent applications only of last 7 days
+  const getRecentApplications = () => {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    return applications.filter(app => {
+      const appliedDate = new Date(app.appliedOn || app.startDate); // fallback if no appliedOn
+      return appliedDate >= oneWeekAgo;
+    });
+  };
+
 
   // Get unique years from applications
   const getAvailableYears = () => {
@@ -131,92 +196,296 @@ const Dashboard = ({ userName, onSubmit }) => {
     }
   };
 
-  const NewLeaveModal = () => (
-    <form
-      onSubmit={handleLeaveApply}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    >
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">Apply for Leave</h3>
+  useEffect(() => {
+    const fetchUserDetails1 = async () => {
+      try {
+        const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/userDetails', {
+          method: 'GET',
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
 
-        <div className="space-y-4">
-          {/* Leave Type */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Leave Type</label>
-            <select
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            >
-              <option value="">Select</option>
-              <option>Casual Leave</option>
-              <option>Sick Leave</option>
-              <option>Personal Leave</option>
-              <option>Earned Leave</option>
-              <option>Maternity/Paternity Leave</option>
-            </select>
-          </div>
+        const result = await response.json();
+        const leavedata = result.leaveData.takenLeave;
 
-          {/* Dates */}
-          <div className="grid grid-cols-2 gap-4">
+        if (Array.isArray(leavedata)) {
+          const transformed = leavedata.map(item => ({
+            id: item._id,
+            type: item.leaveType,
+            startDate: item.startdate.split("T")[0],
+            endDate: item.enddate.split("T")[0],
+            days: item.leavedays,
+            status: item.status,
+            appliedOn: item.createdAt.split("T")[0],
+            reason: item.description
+          }));
+
+          // ✅ Set once
+          setApplications(transformed);
+
+          // ✅ Count without waiting for state
+          const approved = transformed.filter(app => app.status === 'Approved').length;
+          const pending = transformed.filter(app => app.status === 'Pending').length;
+          const rejected = transformed.filter(app => app.status === 'Rejected').length;
+          const cancelled = transformed.filter(app => app.status === 'Cancelled').length;
+
+          const casualleave = transformed.filter(app => app.type === 'Casual Leave').length;
+          const seekleave = transformed.filter(app => app.type === 'Sick Leave').length;
+          const persionalleave = transformed.filter(app => app.type === 'Persional Leave').length;
+          const Maternityleave = transformed.filter(app => app.type === 'Maternity/Peternity Leave').length;
+          console.log("Casual Leave", casualleave)
+
+          setleaveinfo({
+            Approvedleave: approved,
+            pendingleave: pending,
+            Rejectleave: rejected,
+            cancleleave: cancelled,
+            casualleave: casualleave,
+            seekleave: seekleave,
+            persionalleave: persionalleave,
+            Maternityleave: Maternityleave
+          });
+
+
+          console.log("✅ Transformed Applications:", transformed);
+        } else {
+          console.warn("❗ leaveData.takenLeave is not an array");
+        }
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
+
+    fetchUserDetails1();
+  }, []); // ✅ Run only once on mount
+
+
+  const viewLeave = async (id) => {
+    console.log("he;;o", id)
+    try {
+      const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/leaveDetails', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          leaveId: id, // Changed to email to match backend
+        })
+      });
+      const result = await response.json();
+      const leavedata = result.data;
+      console.log("leave data from api",leavedata)
+      setleaveDetails(leavedata)
+
+    } catch (error) {
+      console.log(error)
+    }
+
+    setShowViewLeaveModal(true)
+
+  }
+  console.log("setleaveDetails", leaveDetails)
+
+
+  const ViewLeaveModal = () => {
+
+    //call userDetails of api and get leavedetails.......
+
+    return (
+      <form
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      >
+        <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <h3 className="text-lg font-semibold mb-4">User Leave Details</h3>
+
+          <div className="space-y-4">
+            {/* Leave Type */}
             <div>
-              <label className="block text-sm font-medium mb-1">Start Date</label>
-              <input
-                type="date"
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
+              <label className="block text-sm font-medium mb-1">Leave Type:
+                <span className='pl-2 text-gray-500'>{leaveDetails.leaveType}</span></label>
             </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Start Date: 
+                  <span
+                  className='pl-2 text-gray-500' 
+                  >
+                    {leaveDetails.startdate.split('T')[0]}
+                  </span>
+                </label>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">End Date:
+                  <span
+                  className='pl-2 text-gray-500' 
+                  >
+                    {leaveDetails.enddate.split('T')[0]}   
+                  </span>
+                </label>  
+              </div>
+            </div>
+
+            {/* Description (Reason) */}
             <div>
-              <label className="block text-sm font-medium mb-1">End Date</label>
-              <input
-                type="date"
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
+              <label className="block text-sm font-medium mb-1">Reason: </label>
+              <textarea
+                className="w-full p-2 border rounded-lg focus:ring-2 text-gray-500"
+                value={leaveDetails.description}
+                readOnly
+              ></textarea>
             </div>
-          </div>
 
-          {/* Reason */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Reason</label>
-            <textarea
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              rows="3"
-              placeholder="Please provide reason for leave..."
-              required
-            ></textarea>
-          </div>
-
-          {/* Emergency Contact */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Emergency Contact</label>
-            <input
-              type="text"
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Phone number or email"
-            />
-          </div>
-
-          {/* Actions */}
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={() => setShowNewLeaveModal(false)}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Submit Application
-            </button>
+            {/* Actions */}
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowViewLeaveModal(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </form>
-  );
+      </form>
+    );
+  };
+
+  const NewLeaveModal = () => {
+    const [leaveType, setLeaveType] = useState("");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [description, setDescription] = useState("");
+
+    const handleLeaveApply = async (e) => {
+      e.preventDefault();
+
+      const leaveData = {
+        leaveType,
+        startdate: startDate,
+        enddate: endDate,
+        description,
+      };
+      console.log("formdata", leaveData)
+
+      // Save to localStorage
+      localStorage.setItem("leaveApplication", JSON.stringify(leaveData));
+
+      try {
+        const response = await fetch("http://137.97.126.110:5500/api/v1/leave/Takeleave", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('token')}` // or hardcoded token
+          },
+          body: JSON.stringify(leaveData),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to apply leave");
+        }
+
+        const result = await response.json();
+        alert("Leave applied successfully!");
+        setShowNewLeaveModal(false);
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Failed to apply leave.");
+      }
+    };
+
+    //call userDetails of api and get leavedetails.......
+
+    return (
+      <form
+        onSubmit={handleLeaveApply}
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      >
+        <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <h3 className="text-lg font-semibold mb-4">Apply for Leave</h3>
+
+          <div className="space-y-4">
+            {/* Leave Type */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Leave Type</label>
+              <select
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={leaveType}
+                onChange={(e) => setLeaveType(e.target.value)}
+                required
+              >
+                <option value="">Select</option>
+                <option>Casual Leave</option>
+                <option>Sick Leave</option>
+                <option>Personal Leave</option>
+                <option>Earned Leave</option>
+                <option>Maternity/Paternity Leave</option>
+              </select>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Start Date</label>
+                <input
+                  type="date"
+                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">End Date</label>
+                <input
+                  type="date"
+                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Description (Reason) */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Reason</label>
+              <textarea
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                rows="3"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Please provide reason for leave..."
+                required
+              ></textarea>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowNewLeaveModal(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Submit Application
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -241,7 +510,7 @@ const Dashboard = ({ userName, onSubmit }) => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Used</p>
-                <p className="text-2xl font-semibold text-gray-900">12</p>
+                <p className="text-2xl font-semibold text-gray-900">{leaveinfo.Approvedleave}</p>
               </div>
             </div>
           </div>
@@ -252,7 +521,7 @@ const Dashboard = ({ userName, onSubmit }) => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-semibold text-gray-900">1</p>
+                <p className="text-2xl font-semibold text-gray-900">{leaveinfo.pendingleave}</p>
               </div>
             </div>
           </div>
@@ -263,7 +532,7 @@ const Dashboard = ({ userName, onSubmit }) => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Remaining</p>
-                <p className="text-2xl font-semibold text-gray-900">19</p>
+                <p className="text-2xl font-semibold text-gray-900">{22 - leaveinfo.Approvedleave}</p>
               </div>
             </div>
           </div>
@@ -277,11 +546,10 @@ const Dashboard = ({ userName, onSubmit }) => {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm capitalize ${
-                    activeTab === tab
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm capitalize ${activeTab === tab
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
                 >
                   {tab}
                 </button>
@@ -332,9 +600,9 @@ const Dashboard = ({ userName, onSubmit }) => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Leaves</h3>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    {upcomingLeaves.length > 0 ? (
+                    {futureLeavesSorted.length > 0 ? (
                       <div className="space-y-3">
-                        {upcomingLeaves.map((leave, index) => (
+                        {futureLeavesSorted.map((leave, index) => (
                           <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg">
                             <div>
                               <p className="font-medium text-gray-900">{leave.type}</p>
@@ -354,7 +622,7 @@ const Dashboard = ({ userName, onSubmit }) => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Applications</h3>
                   <div className="space-y-3">
-                    {recentApplications.slice(0, 3).map((app) => (
+                    {getRecentApplications().slice(0, 7).map((app) => (
                       <div key={app.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3">
@@ -366,24 +634,25 @@ const Dashboard = ({ userName, onSubmit }) => {
                           </div>
                           <p className="text-sm text-gray-600 mt-1">{app.startDate} to {app.endDate} ({app.days} days)</p>
                         </div>
-                        <button className="text-blue-600 hover:text-blue-800">
+                        <button onClick={() => viewLeave(app.id)} className="text-blue-600 hover:text-blue-800">
                           <Eye className="w-4 h-4" />
                         </button>
                       </div>
                     ))}
                   </div>
-                {getFilteredApplications().length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">No applications found matching the selected filters.</p>
-                  </div>
-                )}
+
+                  {getRecentApplications().length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No applications found in the last 7 days.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
             {activeTab === 'applications' && (
               <div>
-               <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-semibold text-gray-900">Leave Applications</h3>
                   <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                     <Download className="h-4 w-4" />
@@ -393,8 +662,8 @@ const Dashboard = ({ userName, onSubmit }) => {
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex space-x-3">
                     {/* Leave Type Filter */}
-                    <Filter className='h-4 w-4 my-3 text-gray-400'/>
-                    <select 
+                    <Filter className='h-4 w-4 my-3 text-gray-400' />
+                    <select
                       value={filterLeaveType}
                       onChange={(e) => setFilterLeaveType(e.target.value)}
                       className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -404,9 +673,9 @@ const Dashboard = ({ userName, onSubmit }) => {
                         <option key={type} value={type}>{type}</option>
                       ))}
                     </select>
-                    
+
                     {/* Month Filter */}
-                    <select 
+                    <select
                       value={filterMonth}
                       onChange={(e) => setFilterMonth(e.target.value)}
                       className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -425,9 +694,9 @@ const Dashboard = ({ userName, onSubmit }) => {
                       <option value="11">November</option>
                       <option value="12">December</option>
                     </select>
-                    
+
                     {/* Year Filter */}
-                    <select 
+                    <select
                       value={filterYear}
                       onChange={(e) => setFilterYear(e.target.value)}
                       className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -447,13 +716,13 @@ const Dashboard = ({ userName, onSubmit }) => {
                     <div>
                       <h4 className="text-blue-900 font-medium">Withdrawal Policy</h4>
                       <p className="text-blue-800 text-sm mt-1">
-                        Leave applications can only be withdrawn on the same day they are applied. 
+                        Leave applications can only be withdrawn on the same day they are applied.
                         Once the application day has passed, applications cannot be withdrawn or modified.
                       </p>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -481,7 +750,7 @@ const Dashboard = ({ userName, onSubmit }) => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex space-x-2">
-                              <button className="text-blue-600 hover:text-blue-900" title="View Details">
+                              <button onClick={() => viewLeave(app.id)} className="text-blue-600 hover:text-blue-900" title="View Details">
                                 <Eye className="w-4 h-4" />
                               </button>
                               {app.status === 'Pending' && canWithdrawApplication(app) && (
@@ -489,9 +758,9 @@ const Dashboard = ({ userName, onSubmit }) => {
                                   <button className="text-gray-600 hover:text-gray-900" title="Edit Application">
                                     <Edit className="w-4 h-4" />
                                   </button>
-                                  <button 
+                                  <button
                                     onClick={() => withdrawApplication(app.id)}
-                                    className="text-red-600 hover:text-red-900" 
+                                    className="text-red-600 hover:text-red-900"
                                     title={getWithdrawalMessage(app)}
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -556,6 +825,7 @@ const Dashboard = ({ userName, onSubmit }) => {
       </div>
 
       {showNewLeaveModal && <NewLeaveModal />}
+      {showViewLeaveModal && <ViewLeaveModal />}
     </div>
   );
 };

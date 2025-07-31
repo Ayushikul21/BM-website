@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Dashboard from './Dashboard';
 import UserAttendance from './UserAttendance';
 import { 
@@ -22,6 +22,53 @@ import {
 
 
 const MainEmployeeDashboard = () => {
+  const [userName, setUserName] = useState('');
+  const [email, setEmail] = useState('');
+  const [employeeId, setEmployeeId] = useState('');
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/userDetails', {
+          method: 'GET',
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('token')}` // or hardcoded token
+          }
+        });
+
+        const result = await response.json();
+       // const leavedata=result.leaveData.takenLeave
+        const data = result.data;  // Get the data object
+        console.log("data",data);
+        //console.log("leavedata",leavedata);
+        //const filterleave=leavedata.filter(item => item.status === "Approved")
+        //console.log("length of approved leave",filterleave.length)
+        //console.log("approved leave",filterleave)
+        // Correctly extract values from the response
+        const fullName = `${data.firstName} ${data.lastName}`;
+        const emailId = data.email;        // Directly access email
+        const employeeIds = data.employeeId;  // Directly access employeeId
+
+        setUserName(fullName);
+        setEmail(emailId);
+        setEmployeeId(employeeIds);
+        
+        // Update employeeData with all relevant fields
+        setEmployeeData(prev => ({ 
+          ...prev, 
+          name: fullName,
+          email: emailId,
+          id: employeeIds
+        }));
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
+
   const [activeSection, setActiveSection] = useState('overview');
   const [notifications, setNotifications] = useState(3);
 
@@ -37,17 +84,23 @@ const MainEmployeeDashboard = () => {
   // State for selected month and year
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+   
+  // //Get userDetails from Token
+  // const token = localStorage.getItem('token');
+  // console.log("token", token);
+
+
 
   // Sample employee data
   const [employeeData, setEmployeeData] = useState({
-    name: "Sarah Johnson",
-    id: "EMP001",
-    department: "Software Development",
-    position: "Senior Developer",
-    email: "sarah.johnson@company.com",
+    name: userName,
+    id: employeeId,
+    department: "Data Analyst",
+    position: "SAP Data Analyst",
+    email: email,
     phone: "+1 (555) 123-4567",
-    joinDate: "January 15, 2022",
-    manager: "Michael Chen",
+    joinDate: "June 15, 2025",
+    manager: "Samaksh Gupta",
     avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
   });
 
