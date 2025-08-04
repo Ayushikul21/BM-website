@@ -410,3 +410,22 @@ exports.getAllLeaves = async (req, res) => {
         });
     }
 }
+
+exports.getAllLeavesByUser = async (req, res) => {
+    try {
+        const userId = req.body
+        const leaves = await Leave.find({ userId }).populate("userId", "firstName lastName email");
+        res.status(200).json({
+            success: true,
+            data: leaves,
+            message: "Leaves fetched successfully for user",
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch leaves for user",
+            error: error.message,
+        });
+    }
+}
