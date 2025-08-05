@@ -1,4 +1,4 @@
-const leaveRequestTemplate = ({ name,email, leaveType, fromDate, toDate, reason }) => {
+const leaveRequestTemplate = ({ name=null,email=null, leaveType=null, fromDate=null, toDate=null, reason=null }) => {
   return `<!DOCTYPE html>
   <html>
   
