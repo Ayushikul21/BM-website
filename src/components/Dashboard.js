@@ -8,16 +8,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [showViewLeaveModal, setShowViewLeaveModal] = useState(false)
   const [leaveDetails, setleaveDetails] = useState(null)
-  const [applications, setApplications] = useState([
-    { id: 1, type: "Casual Leave", startDate: "2025-07-15", endDate: "2025-07-19", days: 5, status: "Approved", appliedOn: "2025-06-20", reason: "Family vacation" },
-    { id: 2, type: "Sick Leave", startDate: "2024-06-10", endDate: "2024-06-12", days: 3, status: "Approved", appliedOn: "2024-06-09", reason: "Medical checkup" },
-    { id: 3, type: "Personal Leave", startDate: "2025-08-05", endDate: "2025-08-05", days: 1, status: "Pending", appliedOn: "2025-06-29", reason: "Personal work" },
-    // // { id: 4, type: "Maternity/Paternity Leave", startDate: "2025-05-20", endDate: "2025-05-22", days: 3, status: "Rejected", appliedOn: "2025-05-15", reason: "Weekend trip", rejectionReason: "Insufficient notice period" },
-  ]);
-  const today = new Date();
-  const futureLeaves = applications.filter(app => new Date(app.startDate) > today && app.status === "Approved");
-  const futureLeavesSorted = futureLeaves.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-
+  const [applications, setApplications] = useState([]);
 
   // Filter states
   const [filterLeaveType, setFilterLeaveType] = useState('All');
@@ -33,89 +24,84 @@ const Dashboard = () => {
     "persionalleave": "",
     "Maternityleave": ""
   })
-  // const [leavedata,setleavedata]=useState({
-  //   "leaveType":"",
-  //   "startDate":"",
-
-  // })
 
   // Current date for comparison
   const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
-  // // Mock data
-  // const userProfile = {
-  //   name: "John Doe",
-  //   empId: "EMP001",
-  //   department: "Engineering",
-  //   position: "Senior Developer",
-  //   manager: "Jane Smith",
-  //   joinDate: "Jan 15, 2022"
-  // };
+  // Move fetchUserDetails1 outside of useEffect so it can be called from modal
+  const fetchUserDetails1 = async () => {
+    try {
+      const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/userDetails', {
+        method: 'GET',
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
 
+      const result = await response.json();
+      const leavedata = result.leaveData.takenLeave;
+
+      if (Array.isArray(leavedata)) {
+        const transformed = leavedata.map(item => ({
+          id: item._id,
+          type: item.leaveType,
+          startDate: item.startdate.split("T")[0],
+          endDate: item.enddate.split("T")[0],
+          days: item.leavedays,
+          status: item.status,
+          appliedOn: item.createdAt.split("T")[0],
+          reason: item.description
+        }));
+
+        // ✅ Set applications
+        setApplications(transformed);
+
+        // ✅ Count without waiting for state
+        const approved = transformed.filter(app => app.status === 'Approved').length;
+        const pending = transformed.filter(app => app.status === 'Pending').length;
+        const rejected = transformed.filter(app => app.status === 'Rejected').length;
+        const cancelled = transformed.filter(app => app.status === 'Cancelled').length;
+
+        const casualleave = transformed.filter(app => app.type === 'Casual Leave').length;
+        const seekleave = transformed.filter(app => app.type === 'Sick Leave').length;
+        const persionalleave = transformed.filter(app => app.type === 'Personal Leave').length;
+        const Maternityleave = transformed.filter(app => app.type === 'Maternity/Paternity Leave').length;
+
+        setleaveinfo({
+          Approvedleave: approved,
+          pendingleave: pending,
+          Rejectleave: rejected,
+          cancleleave: cancelled,
+          casualleave: casualleave,
+          seekleave: seekleave,
+          persionalleave: persionalleave,
+          Maternityleave: Maternityleave
+        });
+
+        console.log("✅ Transformed Applications:", transformed);
+      } else {
+        console.warn("❗ leaveData.takenLeave is not an array");
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  };
+
+  // Fix the upcoming leaves calculation - only show APPROVED future leaves
+  const today = new Date();
+  const futureLeaves = applications.filter(app => 
+    new Date(app.startDate) > today && app.status === "Approved" // Only approved leaves
+  );
+  const futureLeavesSorted = futureLeaves.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+  // Rest of your existing functions remain the same...
   const leaveBalances = [
     { type: "Casual Leave", total: 22, used: leaveinfo.casualleave, remaining: 2 - leaveinfo.casualleave, color: "bg-blue-500" },
     { type: "Sick Leave", total: 22, used: leaveinfo.seekleave, remaining: 2 - leaveinfo.seekleave, color: "bg-red-500" },
     { type: "Personal Leave", total: 22, used: leaveinfo.persionalleave, remaining: 2 - leaveinfo.persionalleave, color: "bg-green-500" },
     { type: "Maternity/Paternity Leave", total: 22, used: leaveinfo.Maternityleave, remaining: 2 - leaveinfo.Maternityleave, color: "bg-purple-500" }
   ];
-
-  // const recentApplications = [
-  //   { id: 1, type: "Casual Leave", startDate: "2025-07-15", endDate: "2025-07-19", days: 5, status: "Approved", appliedOn: "2025-06-20", reason: "Family vacation" },
-  //   { id: 2, type: "Sick Leave", startDate: "2025-06-10", endDate: "2025-06-12", days: 3, status: "Approved", appliedOn: "2025-06-09", reason: "Medical checkup" },
-  //   { id: 3, type: "Personal Leave", startDate: "2025-08-05", endDate: "2025-08-05", days: 1, status: "Pending", appliedOn: "2025-06-25", reason: "Personal work" },
-  //   { id: 4, type: "Casual Leave", startDate: "2025-05-20", endDate: "2025-05-22", days: 3, status: "Rejected", appliedOn: "2025-05-15", reason: "Weekend trip", rejectionReason: "Insufficient notice period" }
-  // ];
-
-  // const upcomingLeaves = [
-  //   { type: "Casual Leave", startDate: "2025-07-15", endDate: "2025-07-19", days: 5 },
-  //   { type: "Personal Leave", startDate: "2025-08-05", endDate: "2025-08-05", days: 1 }
-  // ];
-
-  // const teamLeaves = [
-  //   { name: "Alice Johnson", type: "Casual Leave", startDate: "2025-07-01", endDate: "2025-07-05", status: "Approved" },
-  //   { name: "Bob Wilson", type: "Sick Leave", startDate: "2025-06-28", endDate: "2025-06-30", status: "Approved" },
-  //   { name: "Carol Davis", type: "Personal Leave", startDate: "2025-07-10", endDate: "2025-07-12", status: "Pending" }
-  // ];
-
-  // const handleLeaveApply = () => {  
-  // // simulate save logic here...
-
-  //   if (typeof onSubmit === 'function') {
-  //     onSubmit(); // this navigates back or shows confirmation
-  //   } else {
-  //     console.error("onSubmit is not a function");
-  //   }
-  // };
-
-  // const submitLeave = () => {
-
-  //   navigate('/dashboard');
-  // };
-
-  //  const viewLeave = async(id) =>{
-  //     console.log("hello1")
-  //      try {
-  //          const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/leaveDetails', {
-  //             method: 'POST',
-  //             headers: {
-  //               "Content-Type": "application/json",
-  //               Authorization: `Bearer ${localStorage.getItem('token')}`
-  //             },
-  //             body: JSON.stringify({
-  //               leaveId: id, // Changed to email to match backend
-  //             })
-  //           });
-  //           const result = await response.json();
-  //           const leavedata = result.data;
-  //           setleaveDetails(leavedata)
-  //           console.log("leavedata of user",leavedata)
-
-  //     } catch (error) {
-  //       console.log(error)
-  //     }
-
-  //   }
-  //   console.log("setleaveDetails data",leaveDetails)
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -196,71 +182,10 @@ const Dashboard = () => {
     }
   };
 
+  // Call fetchUserDetails1 on component mount
   useEffect(() => {
-    const fetchUserDetails1 = async () => {
-      try {
-        const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/userDetails', {
-          method: 'GET',
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        const result = await response.json();
-        const leavedata = result.leaveData.takenLeave;
-
-        if (Array.isArray(leavedata)) {
-          const transformed = leavedata.map(item => ({
-            id: item._id,
-            type: item.leaveType,
-            startDate: item.startdate.split("T")[0],
-            endDate: item.enddate.split("T")[0],
-            days: item.leavedays,
-            status: item.status,
-            appliedOn: item.createdAt.split("T")[0],
-            reason: item.description
-          }));
-
-          // ✅ Set once
-          setApplications(transformed);
-
-          // ✅ Count without waiting for state
-          const approved = transformed.filter(app => app.status === 'Approved').length;
-          const pending = transformed.filter(app => app.status === 'Pending').length;
-          const rejected = transformed.filter(app => app.status === 'Rejected').length;
-          const cancelled = transformed.filter(app => app.status === 'Cancelled').length;
-
-          const casualleave = transformed.filter(app => app.type === 'Casual Leave').length;
-          const seekleave = transformed.filter(app => app.type === 'Sick Leave').length;
-          const persionalleave = transformed.filter(app => app.type === 'Persional Leave').length;
-          const Maternityleave = transformed.filter(app => app.type === 'Maternity/Peternity Leave').length;
-          console.log("Casual Leave", casualleave)
-
-          setleaveinfo({
-            Approvedleave: approved,
-            pendingleave: pending,
-            Rejectleave: rejected,
-            cancleleave: cancelled,
-            casualleave: casualleave,
-            seekleave: seekleave,
-            persionalleave: persionalleave,
-            Maternityleave: Maternityleave
-          });
-
-
-          console.log("✅ Transformed Applications:", transformed);
-        } else {
-          console.warn("❗ leaveData.takenLeave is not an array");
-        }
-      } catch (error) {
-        console.error('Error fetching user details:', error);
-      }
-    };
-
     fetchUserDetails1();
   }, []); // ✅ Run only once on mount
-
 
   const viewLeave = async (id) => {
     console.log("he;;o", id)
@@ -361,9 +286,11 @@ const Dashboard = () => {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [description, setDescription] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleLeaveApply = async (e) => {
       e.preventDefault();
+      setIsSubmitting(true);
 
       const leaveData = {
         leaveType,
@@ -371,17 +298,13 @@ const Dashboard = () => {
         enddate: endDate,
         description,
       };
-      console.log("formdata", leaveData)
-
-      // Save to localStorage
-      localStorage.setItem("leaveApplication", JSON.stringify(leaveData));
 
       try {
         const response = await fetch("http://137.97.126.110:5500/api/v1/leave/Takeleave", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem('token')}` // or hardcoded token
+            Authorization: `Bearer ${localStorage.getItem('token')}`
           },
           body: JSON.stringify(leaveData),
         });
@@ -392,14 +315,20 @@ const Dashboard = () => {
 
         const result = await response.json();
         alert("Leave applied successfully!");
+        
+        // Close modal first
         setShowNewLeaveModal(false);
+        
+        // Refresh the data by calling fetchUserDetails1 again
+        await fetchUserDetails1();
+        
       } catch (error) {
         console.error("Error:", error);
-        alert("Failed to apply leave.");
+        alert("Failed to apply leave. Please try again.");
+      } finally {
+        setIsSubmitting(false);
       }
     };
-
-    //call userDetails of api and get leavedetails.......
 
     return (
       <form
@@ -418,6 +347,7 @@ const Dashboard = () => {
                 value={leaveType}
                 onChange={(e) => setLeaveType(e.target.value)}
                 required
+                disabled={isSubmitting}
               >
                 <option value="">Select</option>
                 <option>Casual Leave</option>
@@ -438,6 +368,7 @@ const Dashboard = () => {
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <div>
@@ -448,6 +379,7 @@ const Dashboard = () => {
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -462,6 +394,7 @@ const Dashboard = () => {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Please provide reason for leave..."
                 required
+                disabled={isSubmitting}
               ></textarea>
             </div>
 
@@ -471,14 +404,16 @@ const Dashboard = () => {
                 type="button"
                 onClick={() => setShowNewLeaveModal(false)}
                 className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                disabled={isSubmitting}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
               >
-                Submit Application
+                {isSubmitting ? "Submitting..." : "Submit Application"}
               </button>
             </div>
           </div>

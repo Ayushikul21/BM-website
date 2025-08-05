@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminDashboard from './AdminDashboard';
 import { 
   Users, 
   Calendar, 
   Clock, 
-  DollarSign, 
+  IndianRupee, 
   FileText, 
   TrendingUp, 
   Settings, 
@@ -42,11 +43,82 @@ const MainAdminDashboard = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
+
+  const [employeeData, setEmployeeData] = useState([]);
+
+  // Sample employee data
+    const [adminData] = useState({
+      name: "Om Prakash Dubey",
+      id: "10100",
+      department: "Administration",
+      position: "SAP Data Analyst",
+      email: "omdubey@bandymoot.com",
+      phone: "+1 (555) 123-4567",
+      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
+    });
+    
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await fetch('http://137.97.126.110:5500/api/v1/employees/allemployees', {
+          method: 'GET',
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        const result = await response.json();
+        const employees = result.data;
+        console.log("employees",employees)
+
+        const enriched = employees.map(emp => ({
+          name: emp.firstName+" "+emp.lastName || "Unnamed",
+          email: emp.email || "unknown@example.com",
+          id: emp.employeeId || emp.id || "N/A",
+          department: emp.department || "Data Analyst",
+          position: emp.position || "SAP Data Analyst",
+          phone: emp.phone || "+1 (555) 123-4567",
+          joinDate: emp.joinDate || "June 15, 2025",
+          manager: emp.manager || "Samaksh Gupta",
+          avatar: emp.name ? emp.name.charAt(0).toUpperCase() : "U",
+          status: emp.status || "Active",
+          salary: emp.salary || 80000,
+        }));
+        console.log("employee data", enriched)
+        setEmployeeData(enriched);
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
+
+
+  //   // Admin Details
+  // const [employeeData, setEmployeeData] = useState([
+  //   {
+  //     name: userName,
+  //     id: employeeId,
+  //     department: "Data Analyst",
+  //     position: "SAP Data Analyst",
+  //     email: email,
+  //     phone: "+1 (555) 123-4567",
+  //     joinDate: "June 15, 2025",
+  //     manager: "Samaksh Gupta",
+  //     avatar: "A", // Use initial or avatar text
+  //     status: "Active",
+  //     salary: 80000,
+  //   },
+  // ]);
 
   // Sample data - in real app, this would come from API
   const [employees] = useState([
@@ -122,7 +194,7 @@ const MainAdminDashboard = () => {
     { id: 'employees', label: 'Employee Management', icon: Users },
     { id: 'attendance', label: 'Attendance', icon: Clock },
     { id: 'leaves', label: 'Leave Management', icon: Calendar },
-    { id: 'salary', label: 'Salary & Benefits', icon: DollarSign },
+    { id: 'salary', label: 'Salary & Benefits', icon: IndianRupee },
     { id: 'documents', label: 'Documents', icon: FileText },
     { id: 'performance', label: 'Performance', icon: Award },
     { id: 'settings', label: 'Settings', icon: Settings }
@@ -211,7 +283,7 @@ const MainAdminDashboard = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {employees.filter(emp => 
+              {employeeData.filter(emp => 
                 emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 emp.department.toLowerCase().includes(searchTerm.toLowerCase())
@@ -297,7 +369,7 @@ const MainAdminDashboard = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {employees.map(employee => {
+              {employeeData.map(employee => {
                 const allowances = Math.round(employee.salary * 0.15);
                 const deductions = Math.round(employee.salary * 0.12);
                 const netSalary = employee.salary + allowances - deductions;
@@ -316,16 +388,16 @@ const MainAdminDashboard = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${employee.salary.toLocaleString()}
+                      ₹{employee.salary.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
-                      +${allowances.toLocaleString()}
+                      +₹{allowances.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
-                      -${deductions.toLocaleString()}
+                      -₹{deductions.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                      ${netSalary.toLocaleString()}
+                      ₹{netSalary.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
@@ -393,7 +465,7 @@ const renderProfile = () => {
               {profileImage ? (
                 <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                'AD'
+                'OD'
               )}
             </div>
             <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition-colors">
@@ -407,28 +479,28 @@ const renderProfile = () => {
             </label>
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-gray-900">Admin User</h3>
+            <h3 className="text-2xl font-bold text-gray-900">{adminData.name}</h3>
             <p className="text-gray-600">System Administrator</p>
-            <p className="text-gray-600">admin@company.com</p>
+            <p className="text-gray-600">{adminData.email}</p>
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-            <input type="text" defaultValue="Admin User" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.name}</p>          
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-            <input type="email" defaultValue="admin@company.com" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.email}</p>          
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-            <input type="tel" defaultValue="+1 234 567 8900" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.phone}</p>          
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-            <input type="text" defaultValue="Administration" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.department}</p>          
           </div>
         </div>
         
@@ -1051,10 +1123,10 @@ const renderProfile = () => {
           {/* User Profile */}
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">AD</span>
+              <span className="text-white text-sm font-medium">OD</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">Admin</p>
+              <p className="text-sm font-medium text-gray-900">{adminData.name}</p>
               <p className="text-xs text-gray-600">Administrator</p>
             </div>
           </div>
@@ -1083,7 +1155,9 @@ const renderProfile = () => {
           </nav>
 
           <div className="p-6 border-t">
-            <button className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+            <button
+              onClick={() => navigate('/login')} 
+              className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
               <LogOut className="w-5 h-5" />
               <span>Logout</span>
             </button>

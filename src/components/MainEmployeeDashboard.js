@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Dashboard from './Dashboard';
 import UserAttendance from './UserAttendance';
 import { 
@@ -69,6 +70,7 @@ const MainEmployeeDashboard = () => {
     fetchUserDetails();
   }, []);
 
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('overview');
   const [notifications, setNotifications] = useState(3);
 
@@ -1147,7 +1149,7 @@ const MainEmployeeDashboard = () => {
           </nav>
 
           <div className="p-6 border-t">
-              <button className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+              <button onClick={()=>navigate('/login')} className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
               <LogOut className="w-5 h-5" />
               <span>Logout</span>
             </button>

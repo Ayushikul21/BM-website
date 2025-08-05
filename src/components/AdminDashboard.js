@@ -148,11 +148,11 @@ const customStyles = `
 const AdminDashboard = () => {
   // Mock data - replace with your API calls
   const [employees,setEmployees] = useState([
-    { id: 1, name: 'John Doe', department: 'SAP ABAP', email: 'john@company.com', totalLeaves: 22, usedLeaves: 12, pendingLeaves: 2 },
-    { id: 2, name: 'Jane Smith', department: 'SAP MM', email: 'jane@company.com', totalLeaves: 22, usedLeaves: 8, pendingLeaves: 1 },
-    { id: 3, name: 'Mike Johnson', department: 'IBM MAXIMO', email: 'mike@company.com', totalLeaves: 22, usedLeaves: 15, pendingLeaves: 0 },
-    { id: 4, name: 'Sarah Wilson', department: 'Finance', email: 'sarah@company.com', totalLeaves: 22, usedLeaves: 20, pendingLeaves: 3 },
-    { id: 5, name: 'David Brown', department: 'SAP HR', email: 'david@company.com', totalLeaves: 22, usedLeaves: 5, pendingLeaves: 1 }
+    // { id: 1, name: 'John Doe', department: 'SAP ABAP', email: 'john@company.com', totalLeaves: 22, usedLeaves: 12, pendingLeaves: 2 },
+    // { id: 2, name: 'Jane Smith', department: 'SAP MM', email: 'jane@company.com', totalLeaves: 22, usedLeaves: 8, pendingLeaves: 1 },
+    // { id: 3, name: 'Mike Johnson', department: 'IBM MAXIMO', email: 'mike@company.com', totalLeaves: 22, usedLeaves: 15, pendingLeaves: 0 },
+    // { id: 4, name: 'Sarah Wilson', department: 'Finance', email: 'sarah@company.com', totalLeaves: 22, usedLeaves: 20, pendingLeaves: 3 },
+    // { id: 5, name: 'David Brown', department: 'SAP HR', email: 'david@company.com', totalLeaves: 22, usedLeaves: 5, pendingLeaves: 1 }
   ]);
 
   const [leaveApplications,setleaveApplication] = useState([
@@ -165,119 +165,133 @@ const AdminDashboard = () => {
    ]);
 
 const [employeeAll, setEmployeeAll] = useState([]);
-   useEffect(() => {
-  const fetchEmployees = async () => {
+// Add these functions at the top level of your component
+
+const fetchAllLeaves = async () => {
+  try {
+    const response = await fetch('http://137.97.126.110:5500/api/v1/leave/getAllLeaves', {
+      method: 'GET',
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    const result = await response.json();
+    const leavedata = result.data;
+
+    if (Array.isArray(leavedata)) {
+      const transformed = leavedata.map(item => ({
+        id: item._id,
+        employeeName: item.name,
+        employeeId: "1",
+        userId: item.userId,
+        type: item.leaveType,
+        startDate: item.startdate.split("T")[0],
+        endDate: item.enddate.split("T")[0],
+        days: item.leavedays,
+        status: item.status,
+        appliedDate: item.createdAt.split("T")[0],
+        reason: item.description
+      }));
+      setleaveApplication(transformed);
+    }
+  } catch (error) {
+    console.error('Error fetching leaves:', error);
+  }
+};
+
+const fetchAllEmployees = async () => {
+  try {
+    const response = await fetch('http://137.97.126.110:5500/api/v1/employees/allemployees', {
+      method: 'GET',
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    const result = await response.json();
+    setEmployeeAll(result.data);
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+  }
+};
+
+  const handleLeaveAction = async (leaveId, userid, action) => {
     try {
-      const response = await fetch('http://137.97.126.110:5500/api/v1/employees/allemployees', {
-        method: 'GET',
+      const response = await fetch('http://137.97.126.110:5500/api/v1/leave/approve', {
+        method: 'POST',
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
+        },
+        body: JSON.stringify({
+          leaveId: leaveId,
+          userId: userid,
+          status: action
+        })
       });
 
-      const result = await response.json();
-      setEmployeeAll(result.data); // Just store raw list
+      if (response.ok) {
+        // Option 1: Update state immediately (faster UI response)
+        setleaveApplication(prevApplications => 
+          prevApplications.map(app => 
+            app.id === leaveId 
+              ? { ...app, status: action }
+              : app
+          )
+        );
+
+        // Option 2: Or refresh data from server (more reliable)
+        // await fetchAllLeaves();
+
+        alert(`Leave ${action} successfully!`);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to update leave status: ${errorData.message || 'Please try again.'}`);
+      }
     } catch (error) {
-      console.error('Error fetching employees:', error);
+      console.error('Error updating leave:', error);
+      alert('An error occurred. Please try again.');
     }
   };
 
-  fetchEmployees();
-}, []);
-
-
-   useEffect(() => {
-      const fetchUserDetails2 = async () => {
-        try {
-          const response = await fetch('http://137.97.126.110:5500/api/v1/leave/getAllLeaves', {
-            method: 'GET',
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-  
-          const result = await response.json();
-          const leavedata = result.data;
-          console.log("all leave",leavedata)
-  
-          if (Array.isArray(leavedata)) {
-            const transformed = leavedata.map(item => ({
-              id: item._id,
-              employeeName:item.name,
-              employeeId:"1",
-              userId:item.userId,
-              type: item.leaveType,
-              startDate: item.startdate.split("T")[0],
-              endDate: item.enddate.split("T")[0],
-              days: item.leavedays,
-              status: item.status,
-              appliedDate: item.createdAt.split("T")[0],
-              reason: item.description
-            }));
-            console.log("transfrom",transformed)
-            setleaveApplication(transformed);
-  
-  
-            console.log("✅ Transformed Applications:", transformed);
-          } else {
-            console.warn("❗ leaveData.takenLeave is not an array");
-          }
-        } catch (error) {
-          console.error('Error fetching user details:', error);
-        }
-      };
-  
-      fetchUserDetails2();
-    }, []);
-
-  
-  
-  const handleLeaveAction = async (leaveId,userid, action) => {
-    try {
-         const response = await fetch('http://137.97.126.110:5500/api/v1/leave/approve', {
-            method: 'POST',
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-              leaveId: leaveId, // Changed to email to match backend
-              userId: userid,
-              status:action
-            })
-          });
-  
-    } catch (error) {
-      console.log(error)
-    }
-
-    alert(`Leave ${action} successfully! (In real app, this would update the database)`);
-  };
-
-
+  // 1. Fetch employees on component mount
   useEffect(() => {
-  if (Array.isArray(employeeAll) && Array.isArray(leaveApplications)) {
-    const transformed = employeeAll.map(item => ({
-      id: item._id,
-      name: `${item.firstName} ${item.lastName}`,
-      department: item?.additionalDetails?.department || "N/A",
-      email: item.email,
-      totalLeaves: 22,
-      usedLeaves: leaveApplications.filter(app => app.userId === item._id && app.status === "Approved").length,
-      pendingLeaves: leaveApplications.filter(app => app.userId === item._id && app.status === "Pending").length,
-      rejectedLeaves: leaveApplications.filter(app => app.userId === item._id && app.status === "Rejected").length,
+    fetchAllEmployees();
+  }, []);
 
-    }));
+  // 2. Fetch leaves on component mount  
+  useEffect(() => {
+    fetchAllLeaves();
+  }, []);
 
-    setEmployees(transformed);
-  }
-}, [employeeAll, leaveApplications,handleLeaveAction]); // 🔁 Trigger only when both are available
+  // 3. Transform employee data when both datasets are available
+  useEffect(() => {
+    if (Array.isArray(employeeAll) && Array.isArray(leaveApplications)) {
+      const transformed = employeeAll.map(item => ({
+        id: item._id,
+        name: `${item.firstName} ${item.lastName}`,
+        department: item?.additionalDetails?.department || "N/A",
+        email: item.email,
+        totalLeaves: 22,
+        usedLeaves: leaveApplications.filter(app => app.userId === item._id && app.status === "Approved").length,
+        pendingLeaves: leaveApplications.filter(app => app.userId === item._id && app.status === "Pending").length,
+        rejectedLeaves: leaveApplications.filter(app => app.userId === item._id && app.status === "Rejected").length,
+      }));
 
-console.log("all emp",employees)
-  
-    console.log("h",leaveApplications)
+      setEmployees(transformed);
+    }
+  }, [employeeAll, leaveApplications]);
+
+  // 4. Update pending applications when leave applications change
+  useEffect(() => {
+    const pending = leaveApplications.filter(app => app.status === 'Pending');
+    setpendingApplication(pending);
+  }, [leaveApplications]);
+
+
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
