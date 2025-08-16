@@ -7,6 +7,9 @@ const DashboardRoutes=require('./routes/LeaveRoutes/Dashboard')
 const employeeRoutes = require('./routes/ProfileRoutes/employeeRouts');
 const salaryRoutes = require('./routes/ProfileRoutes/salaryRoutes');
 const PerchaseRoutes = require('./routes/PerchaseOrder/Perchase');
+const attendanceRoutes = require('./routes/AttendenceRoutes/Attendence');
+const fetchAndSaveAttendance = require('./controller/Attendence/AttendenceUser')
+const updateAttendance = require('./controller/Attendence/AttendenceUser')
 
 const connectDB=require('./config/Database')
 const cookieParser = require("cookie-parser");
@@ -38,7 +41,11 @@ app.use("/api/v1/Dashboard", DashboardRoutes);
 app.use('/api/v1/employees', employeeRoutes);
 app.use('/api/v1/salaries', salaryRoutes);
 app.use('/api/v1/perchase', PerchaseRoutes);
+app.use('/api/v1/attendance', attendanceRoutes);
 
 app.listen(process.env.PORT,()=>{
     console.log(`server started.${process.env.PORT}`)
 })
+
+//fetchAndSaveAttendance.fetchAndSaveAttendance();
+//updateAttendance.updateAttendance();
