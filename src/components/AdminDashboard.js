@@ -31,7 +31,12 @@ const customStyles = `
     background: linear-gradient(135deg, #fee2e2, #fecaca);
     color: #991b1b;
   }
-  
+
+  .status-rejected {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #991b1b;
+}
+
   .sidebar-shadow {
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   }
@@ -285,14 +290,6 @@ const fetchAllEmployees = async () => {
     }
   }, [employeeAll, leaveApplications]);
 
-  // 4. Update pending applications when leave applications change
-  useEffect(() => {
-    const pending = leaveApplications.filter(app => app.status === 'Pending');
-    setpendingApplication(pending);
-  }, [leaveApplications]);
-
-
-
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -300,6 +297,7 @@ const fetchAllEmployees = async () => {
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [leaveDetails,setleaveDetails]=useState(null)
   const [ShowViewLeaveModal,setShowViewLeaveModal]=useState(false)
+  const [pendingApplications, setpendingApplication] = useState([]);
 
   // Filter employees based on search
   const filteredEmployees = employees.filter(emp => 
@@ -310,21 +308,17 @@ const fetchAllEmployees = async () => {
 
   // Filter leave applications
   const filteredLeaveApplications = leaveApplications.filter(app => {
-    const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || app.status.toLowerCase() === statusFilter.toLowerCase();
     const matchesDepartment = departmentFilter === 'all' || 
-      employees.find(emp => emp.id === app.employeeId)?.department === departmentFilter;
+      employees.find(emp => emp.id === app.userId)?.department === departmentFilter;
     return matchesStatus && matchesDepartment;
   });
 
   // Get pending applications
-  const [pendingApplications ,setpendingApplication]=useState(1)
-  useEffect(()=>{
-  setpendingApplication(leaveApplications.filter(app => app.status === 'Pending'))
-
-  },[leaveApplications,handleLeaveAction])
-  
-  
-  
+  useEffect(() => {
+    const pending = leaveApplications.filter(app => app.status === 'Pending');
+    setpendingApplication(pending);
+  }, [leaveApplications]);
 
   // Get employee's leave applications
   const getEmployeeLeaves = (id) => {
@@ -334,6 +328,7 @@ const fetchAllEmployees = async () => {
 
   const viewLeave = async(id) =>{
      try {
+      console.log("leaveId123443564y6y",id)
          const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/leaveDetails', {
             method: 'POST',
             headers: {
@@ -345,7 +340,9 @@ const fetchAllEmployees = async () => {
             })
           });
           const result = await response.json();
+          console.log("leaveDetails",result)
           const leavedata = result.data;
+          console.log("leaveType error solution",leavedata)
           setleaveDetails(leavedata)
           console.log("leavedata of user",leavedata)
   
@@ -359,45 +356,42 @@ const fetchAllEmployees = async () => {
 
 
   const ViewAdminLeaveModal = () => {
-
-    //call userDetails of api and get leavedetails.......
+    const handleClose = () => {
+      setShowViewLeaveModal(false);
+      console.log("hello...")
+    };
 
     return (
-      <form
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      >
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
           <h3 className="text-lg font-semibold mb-4">User Leave Details</h3>
 
           <div className="space-y-4">
-            {/* Leave Type */}
             <div>
               <label className="block text-sm font-medium mb-1">Leave Type: 
                 <span className='pl-2 text-gray-500'>
-                  {leaveDetails.leaveType}  
+                  {leaveDetails?.leaveType}  
                 </span>
               </label>
             </div>
 
-            {/* Dates */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Start Date:
                   <span className='pl-2 text-gray-500'>
-                    {leaveDetails.startdate.split('T')[0]}
+                    {leaveDetails?.startdate?.split('T')[0]}
                   </span>
                 </label>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">End Date:  
                   <span className='pl-2 text-gray-500'>
-                    {leaveDetails.enddate.split('T')[0]}
+                    {leaveDetails?.enddate?.split('T')[0]}
                   </span>
                 </label>
               </div>
             </div>
 
-            {/* Description (Reason) */}
             <div>
               <label className="block text-sm font-medium mb-1">Reason:</label>
               <textarea
@@ -407,12 +401,10 @@ const fetchAllEmployees = async () => {
               />
             </div>
 
-
-            {/* Actions */}
             <div className="flex justify-end space-x-3 pt-4">
               <button
                 type="button"
-                onClick={() => setShowViewLeaveModal(false)}
+                onClick={handleClose}
                 className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Cancel
@@ -420,7 +412,7 @@ const fetchAllEmployees = async () => {
             </div>
           </div>
         </div>
-      </form>
+      </div>
     );
   };
 
@@ -433,24 +425,31 @@ const fetchAllEmployees = async () => {
   const totalRejectedThisMonth = leaveApplications.filter(app => 
     app.status === 'Rejected' 
   ).length;
+  const totalCancelledThisMonth = leaveApplications.filter(app => 
+    app.status === 'Cancelled' 
+  ).length;
 
   const departments = [...new Set(employees.map(emp => emp.department))];
 
   const StatusBadge = ({ status }) => {
-    const configs = {
-      pending: {
-        className: 'status-pending leave-badge border-2 border-orange-200',
-        icon: '⏳'
-      },
-      approved: {
-        className: 'status-approved leave-badge border-2 border-green-200',
-        icon: '✅'
-      },
-      rejected: {
-        className: 'status-rejected leave-badge border-2 border-red-200',
-        icon: '❌'
-      }
-    };
+  const configs = {
+    pending: {
+      className: 'status-pending leave-badge border-2 border-orange-200',
+      icon: '⏳'
+    },
+    approved: {
+      className: 'status-approved leave-badge border-2 border-green-200',
+      icon: '✅'
+    },
+    rejected: {
+      className: 'status-rejected leave-badge border-2 border-red-200',
+      icon: '❌'
+    },
+    cancelled: {
+      className: 'status-cancelled leave-badge border-2 border-gray-300',
+      icon: '🚫'
+    }
+  };
 
     const normalizedStatus = status?.toLowerCase?.(); // handles undefined/null and capitalized statuses
     const config = configs[normalizedStatus] || {
@@ -466,6 +465,300 @@ const fetchAllEmployees = async () => {
     );
   };
 
+  // Export PDF
+  const exportEmployeePDF = async () => {
+    if (!selectedEmployee) {
+      alert('Please select an employee first');
+      return;
+    }
+
+    try {
+      // Load jsPDF dynamically
+      if (!window.jspdf) {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        document.head.appendChild(script);
+        
+        // Wait for script to load
+        await new Promise((resolve) => {
+          script.onload = resolve;
+        });
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Title
+      doc.setFontSize(20);
+      doc.setFont(undefined, 'bold');
+      doc.text('Employee Leave Report', 20, 20);
+      
+      // Employee Details
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text(`${selectedEmployee.name} - Leave Summary`, 20, 40);
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Department: ${selectedEmployee.department}`, 20, 50);
+      doc.text(`Email: ${selectedEmployee.email}`, 20, 60);
+      
+      // Leave Statistics
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('Leave Statistics', 20, 80);
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Pending Leaves: ${selectedEmployee.pendingLeaves}`, 30, 95);
+      doc.text(`Used Leaves: ${selectedEmployee.usedLeaves}`, 30, 105);
+      doc.text(`Rejected Leaves: ${selectedEmployee.rejectedLeaves}`, 30, 115);
+      doc.text(`Total Leaves Allocated: ${selectedEmployee.totalLeaves}`, 30, 125);
+      doc.text(`Remaining Leaves: ${selectedEmployee.totalLeaves - selectedEmployee.usedLeaves}`, 30, 135);
+      
+      // Leave Applications Header
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('Leave Applications', 20, 155);
+      
+      const employeeLeaves = getEmployeeLeaves(selectedEmployee.id);
+      
+      if (employeeLeaves.length === 0) {
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'italic');
+        doc.text('No leave applications found', 30, 170);
+      } else {
+        let yPosition = 170;
+        
+        employeeLeaves.forEach((leave, index) => {
+          // Check if we need a new page
+          if (yPosition > 250) {
+            doc.addPage();
+            yPosition = 20;
+          }
+          
+          doc.setFontSize(12);
+          doc.setFont(undefined, 'bold');
+          doc.text(`${index + 1}. ${leave.type}`, 30, yPosition);
+          
+          doc.setFont(undefined, 'normal');
+          doc.text(`Status: ${leave.status}`, 120, yPosition);
+          
+          yPosition += 10;
+          doc.text(`Duration: ${leave.startDate} to ${leave.endDate} (${leave.days} days)`, 35, yPosition);
+          
+          yPosition += 10;
+          doc.text(`Applied Date: ${leave.appliedDate}`, 35, yPosition);
+          
+          yPosition += 10;
+          doc.text(`Reason: ${leave.reason}`, 35, yPosition);
+          
+          yPosition += 15; // Space between applications
+        });
+      }
+      
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Generated on: ${new Date().toLocaleDateString()} | Page ${i} of ${pageCount}`, 20, 290);
+      }
+      
+      // Save the PDF
+      doc.save(`${selectedEmployee.name.replace(/\s+/g, '_')}_Leave_Report.pdf`);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
+
+// Export all applications
+  const exportAllApplicationsPDF = async () => {
+    try {
+      // Load jsPDF dynamically
+      if (!window.jspdf) {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        document.head.appendChild(script);
+        
+        // Wait for script to load
+        await new Promise((resolve) => {
+          script.onload = resolve;
+        });
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape'); // Use landscape orientation for more space
+      
+      // Get filtered data (same as what's shown on screen)
+      const dataToExport = filteredLeaveApplications;
+      
+      // Title
+      doc.setFontSize(18);
+      doc.setFont(undefined, 'bold');
+      doc.text('Leave Applications Report', 20, 20);
+      
+      // Filter Information
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      const statusText = statusFilter === 'all' ? 'All Status' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
+      const deptText = departmentFilter === 'all' ? 'All Departments' : departmentFilter;
+      doc.text(`Status Filter: ${statusText}`, 20, 35);
+      doc.text(`Department Filter: ${deptText}`, 150, 35);
+      doc.text(`Total Records: ${dataToExport.length}`, 20, 45);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 150, 45);
+      
+      // Table Headers
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      let yPosition = 65;
+      
+      // Column positions (adjusted for landscape)
+      const cols = {
+        employee: 20,
+        department: 70,
+        type: 120,
+        duration: 170,
+        days: 220,
+        status: 240,
+        applied: 270
+      };
+      
+      // Draw table header
+      doc.text('Employee', cols.employee, yPosition);
+      doc.text('Department', cols.department, yPosition);
+      doc.text('Type', cols.type, yPosition);
+      doc.text('Duration', cols.duration, yPosition);
+      doc.text('Days', cols.days, yPosition);
+      doc.text('Status', cols.status, yPosition);
+      doc.text('Applied', cols.applied, yPosition);
+      
+      // Draw header line
+      yPosition += 3;
+      doc.line(20, yPosition, 290, yPosition);
+      yPosition += 8;
+      
+      // Table Data
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(9);
+      
+      if (dataToExport.length === 0) {
+        doc.setFont(undefined, 'italic');
+        doc.text('No applications found matching the selected filters', 20, yPosition);
+      } else {
+        dataToExport.forEach((app, index) => {
+          // Check if we need a new page
+          if (yPosition > 180) {
+            doc.addPage();
+            yPosition = 20;
+            
+            // Redraw headers on new page
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text('Employee', cols.employee, yPosition);
+            doc.text('Department', cols.department, yPosition);
+            doc.text('Type', cols.type, yPosition);
+            doc.text('Duration', cols.duration, yPosition);
+            doc.text('Days', cols.days, yPosition);
+            doc.text('Status', cols.status, yPosition);
+            doc.text('Applied', cols.applied, yPosition);
+            
+            yPosition += 3;
+            doc.line(20, yPosition, 290, yPosition);
+            yPosition += 8;
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+          }
+          
+          // Get employee department
+          const employee = employees.find(emp => emp.id === app.userId);
+          const department = employee?.department || 'N/A';
+          
+          // Truncate long text to fit columns
+          const truncateText = (text, maxLength) => {
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+          };
+          
+          // Employee name (truncated if too long)
+          doc.text(truncateText(app.employeeName, 15), cols.employee, yPosition);
+          
+          // Department (truncated)
+          doc.text(truncateText(department, 12), cols.department, yPosition);
+          
+          // Leave type (truncated)
+          doc.text(truncateText(app.type, 12), cols.type, yPosition);
+          
+          // Duration (split into two lines if needed)
+          const durationText = `${app.startDate} to ${app.endDate}`;
+          if (durationText.length > 20) {
+            doc.text(app.startDate, cols.duration, yPosition);
+            doc.text(`to ${app.endDate}`, cols.duration, yPosition + 5);
+          } else {
+            doc.text(durationText, cols.duration, yPosition);
+          }
+          
+          // Days
+          doc.text(app.days.toString(), cols.days, yPosition);
+          
+          // Status
+          doc.text(app.status, cols.status, yPosition);
+          
+          // Applied date
+          doc.text(app.appliedDate, cols.applied, yPosition);
+          
+          yPosition += 12;
+          
+          // Add reason on separate line
+          if (yPosition < 175) {
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'italic');
+            const reason = truncateText(app.reason, 80);
+            doc.text(`Reason: ${reason}`, cols.employee + 5, yPosition);
+            yPosition += 8;
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+          }
+          
+          // Draw separator line
+          if (index < dataToExport.length - 1 && yPosition < 175) {
+            doc.setDrawColor(220, 220, 220);
+            doc.line(20, yPosition, 290, yPosition);
+            yPosition += 5;
+          }
+        });
+      }
+      
+      // Footer with page numbers
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Page ${i} of ${pageCount} | Generated from Admin Dashboard - ${new Date().toLocaleString()}`, 20, 200);
+      }
+      
+      // Generate filename based on filters
+      let filename = 'Leave_Applications_Report';
+      if (statusFilter !== 'all') {
+        filename += `_${statusFilter}`;
+      }
+      if (departmentFilter !== 'all') {
+        filename += `_${departmentFilter.replace(/\s+/g, '_')}`;
+      }
+      filename += `_${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      // Save the PDF
+      doc.save(filename);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Inject custom styles */}
@@ -474,73 +767,69 @@ const fetchAllEmployees = async () => {
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-2 py-2">
         {/* Dashboard Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="stats-card card-hover bg-white rounded-2xl shadow-lg p-6 border-0 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-blue-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Total Employees</p>
-                  <p className="text-3xl font-bold text-blue-600 mt-2">{totalEmployees}</p>
-                  <p className="text-sm text-green-600 mt-1">
-                    <span className="font-medium">↗ Active</span>
-                  </p>
-                </div>
-                <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-lg">
-                  <Users className="h-5 w-5 text-white" />
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="stats-card card-hover bg-white rounded-2xl shadow-lg p-6 border-0 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-orange-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Pending Requests</p>
-                  <p className="text-3xl font-bold text-orange-600 mt-2">{totalPendingRequests}</p>
-                  <p className="text-sm text-orange-600 mt-1">
-                    <span className="font-medium">⏳ Awaiting Action</span>
-                  </p>
-                </div>
-                <div className="p-4 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl shadow-lg">
-                  <Clock className="h-5 w-5 text-white" />
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="stats-card card-hover bg-white rounded-2xl shadow-lg p-6 border-0 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-green-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
+          <div className="stats-card card-hover bg-white rounded-2xl shadow-lg p-4 border-0 overflow-hidden relative">            <div className="absolute top-0 right-0 w-20 h-20 bg-green-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
             <div className="relative">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Approved This Month</p>
-                  <p className="text-3xl font-bold text-green-600 mt-2">{totalApprovedThisMonth}</p>
+                  <p className="text-2xl font-bold text-green-600 mt-2">{totalApprovedThisMonth}</p>
                   <p className="text-sm text-green-600 mt-1">
-                    <span className="font-medium">✓ Processed</span>
+                    <span className="font-medium">✓ Approved</span>
                   </p>
                 </div>
-                <div className="p-4 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl shadow-lg">
-                  <CheckCircle className="h-5 w-5 text-white" />
+                <div className="p-3 bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg">
+                  <CheckCircle className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
           </div>
           
-          <div className="stats-card card-hover bg-white rounded-2xl shadow-lg p-6 border-0 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-purple-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
+          <div className="stats-card card-hover bg-white rounded-2xl shadow-lg p-4 border-0 overflow-hidden relative">            <div className="absolute top-0 right-0 w-20 h-20 bg-orange-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Pending Requests</p>
+                  <p className="text-2xl font-bold text-orange-600 mt-2">{totalPendingRequests}</p>
+                  <p className="text-sm text-orange-600 mt-1">
+                    <span className="font-medium">⏳ Awaiting Action</span>
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg">
+                  <Clock className="h-4 w-4 text-white" />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="stats-card card-hover bg-white rounded-2xl shadow-lg p-4 border-0 overflow-hidden relative">            <div className="absolute top-0 right-0 w-20 h-20 bg-purple-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
             <div className="relative">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Rejected Leaves</p>
-                  <p className="text-3xl font-bold text-purple-600 mt-2">{totalRejectedThisMonth}</p>
+                  <p className="text-2xl font-bold text-purple-600 mt-2">{totalRejectedThisMonth}</p>
                   <p className="text-sm text-purple-600 mt-1">
                     <span className="font-medium">📊 Rejected</span>
                   </p>
                 </div>
-                <div className="p-4 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl shadow-lg">
-                  <TrendingUp className="h-5 w-5 text-white" />
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg">
+                  <TrendingUp className="h-4 w-4 text-white" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="stats-card card-hover bg-white rounded-2xl shadow-lg p-4 border-0 overflow-hidden relative">            <div className="absolute top-0 right-0 w-20 h-20 bg-gray-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Cancelled Leaves</p>
+                  <p className="text-2xl font-bold text-gray-600 mt-2">{totalCancelledThisMonth}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    <span className="font-medium">🚫 Cancelled</span>
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl shadow-lg">
+                  <XCircle className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
@@ -671,9 +960,17 @@ const fetchAllEmployees = async () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <button 
+                  onClick={exportEmployeePDF}
+                  disabled={!selectedEmployee}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                    selectedEmployee 
+                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
                   <Download className="h-4 w-4" />
-                  <span>Export</span>
+                  <span>Export PDF</span>
                 </button>
               </div>
             </div>
@@ -815,10 +1112,6 @@ const fetchAllEmployees = async () => {
                               <p className="font-medium">{app.days} days</p>
                             </div>
                           </div>
-                          <div className="mb-4">
-                            <p className="text-sm text-gray-600 mb-1">Reason</p>
-                            <p className="text-gray-900">{app.reason}</p>
-                          </div>
                           <p className="text-sm text-gray-500">Applied on: {app.appliedDate}</p>
                         </div>
                         <div className="flex items-center space-x-2 ml-6">
@@ -859,7 +1152,10 @@ const fetchAllEmployees = async () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">All Leave Applications</h3>
-                <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <button 
+                  onClick={exportAllApplicationsPDF}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
                   <Download className="h-4 w-4" />
                   <span>Export Report</span>
                 </button>
@@ -876,6 +1172,7 @@ const fetchAllEmployees = async () => {
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
+                    <option value="cancelled">Cancelled</option>
                   </select>
                 </div>
                 <select
@@ -911,7 +1208,7 @@ const fetchAllEmployees = async () => {
                         <div>
                           <p className="font-medium text-gray-900">{app.employeeName}</p>
                           <p className="text-sm text-gray-500">
-                            {employees.find(emp => emp.id === app.employeeId)?.department}
+                            {employees.find(emp => emp.id === app.userId)?.department}
                           </p>
                         </div>
                       </td>

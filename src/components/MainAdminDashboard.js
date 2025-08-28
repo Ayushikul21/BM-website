@@ -59,7 +59,7 @@ const MainAdminDashboard = () => {
       department: "Administration",
       position: "SAP Data Analyst",
       email: "omdubey@bandymoot.com",
-      phone: "+1 (555) 123-4567",
+      phone: "+91 7905226299",
       avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
     });
     
@@ -85,7 +85,7 @@ const MainAdminDashboard = () => {
           id: emp.employeeId || emp.id || "N/A",
           department: emp.department || "Data Analyst",
           position: emp.position || "SAP Data Analyst",
-          phone: emp.phone || "+1 (555) 123-4567",
+          phone: emp.phone || "+91 7905226299",
           joinDate: emp.joinDate || "June 15, 2025",
           manager: emp.manager || "Samaksh Gupta",
           avatar: emp.name ? emp.name.charAt(0).toUpperCase() : "U",

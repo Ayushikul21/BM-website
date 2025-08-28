@@ -80,7 +80,7 @@ const UserAttendance = () => {
     const [hours, minutes] = time.split(':').map(Number);
     
     // Consider late if after 9:00 AM
-    return hours > 9 || (hours === 9 && minutes > 0);
+    return hours > 9 || (hours === 9 && minutes > 5);
   };
 
   // Function to calculate attendance statistics
