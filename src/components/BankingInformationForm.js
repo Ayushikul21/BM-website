@@ -184,12 +184,6 @@ const BankingInformationForm = () => {
   function handleNext() {
     if (!isFormValid) return;
     if (validateAllFields()) {
-      navigate('/Personal');
-    }
-  }
-
-  function handleSave() {
-    if (validateAllFields()) {
       const saveData = {
         ...formData,
         savedAt: new Date().toLocaleString()
@@ -211,6 +205,8 @@ const BankingInformationForm = () => {
         setSaveButtonText("Save");
         setSaveButtonColor("bg-green-600");
       }, 4000);
+
+      navigate('/salary');
     }
   }
 
@@ -452,16 +448,7 @@ const BankingInformationForm = () => {
             >
               Next →
             </button>
-          </div>
-
-          {/* Save Button */}
-          <button
-            type="button"
-            onClick={handleSave}
-            className={`w-full py-4 px-6 ${saveButtonColor} hover:bg-green-700 text-white rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg`}
-          >
-            💾 {saveButtonText}
-          </button>
+          </div> 
         </div>
       </div>
 

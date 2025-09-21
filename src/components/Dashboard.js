@@ -31,7 +31,7 @@ const Dashboard = () => {
   // Move fetchUserDetails1 outside of useEffect so it can be called from modal
   const fetchUserDetails1 = async () => {
     try {
-      const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/userDetails', {
+      const response = await fetch('https://bandymoot.com/api/v1/Dashboard/userDetails', {
         method: 'GET',
         headers: {
           "Content-Type": "application/json",
@@ -76,7 +76,8 @@ const Dashboard = () => {
           casualleave: casualleave,
           seekleave: seekleave,
           persionalleave: persionalleave,
-          Maternityleave: Maternityleave
+          Maternityleave: Maternityleave,
+          creditleave: 22 - approved // Assuming total credit leave is 22
         });
 
         console.log("✅ Transformed Applications:", transformed);
@@ -129,8 +130,35 @@ const Dashboard = () => {
   };
 
   // Function to withdraw/delete application
-  const withdrawApplication = (applicationId) => {
-    setApplications(prev => prev.filter(app => app.id !== applicationId));
+  // Function to withdraw/delete application - UPDATED WITH API CALL
+  const withdrawApplication = async (applicationId) => {
+    try {
+      const response = await fetch('https://bandymoot.com/api/v1/Dashboard/leavedelete', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          leaveID: applicationId
+        })
+      });
+
+      if (response.ok) {
+        // Remove the application from the UI if the API call was successful
+        setApplications(prev => prev.filter(app => app.id !== applicationId));
+        alert("Leave application deleted successfully!");
+        
+        // Refresh the data to get updated counts
+        await fetchUserDetails1();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to delete leave application: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting leave application:', error);
+      alert('Failed to delete leave application. Please try again.');
+    }
   };
 
   // Filter applications based on selected criteria
@@ -188,9 +216,8 @@ const Dashboard = () => {
   }, []); // ✅ Run only once on mount
 
   const viewLeave = async (id) => {
-    console.log("he;;o", id)
     try {
-      const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/leaveDetails', {
+      const response = await fetch('https://bandymoot.com/api/v1/Dashboard/leaveDetails', {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
@@ -287,20 +314,67 @@ const Dashboard = () => {
     const [endDate, setEndDate] = useState("");
     const [description, setDescription] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [halfDayType, setHalfDayType] = useState("First Half"); // State for half day type
+
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
 
     const handleLeaveApply = async (e) => {
       e.preventDefault();
       setIsSubmitting(true);
 
-      const leaveData = {
-        leaveType,
-        startdate: startDate,
-        enddate: endDate,
-        description,
-      };
+      // Validate dates
+      if (new Date(startDate) < new Date(today)) {
+        alert("Start date cannot be in the past.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (leaveType === "Half Day Leave") {
+        // For half day leave, end date must be same as start date
+        if (startDate !== endDate) {
+          alert("For Half Day Leave, end date must be the same as start date.");
+          setIsSubmitting(false);
+          return;
+        }
+      } else {
+        // For other leave types, end date must be >= start date
+        if (new Date(endDate) < new Date(startDate)) {
+          alert("End date cannot be before start date.");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+    //   // Calculate leave days
+    // let leaveDays = 0;
+    // if (leaveType === "Half Day Leave") {
+    //   leaveDays = 0.5; // Half day leave is 0.5 days
+    // } else {
+    //   // Calculate days for other leave types
+    //   const start = new Date(startDate);
+    //   const end = new Date(endDate);
+    //   const diffTime = Math.abs(end - start);
+    //   leaveDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end dates
+    // }
+
+    // Prepare leave data
+    let leaveData = {
+      leaveType,
+      startdate: startDate,
+      enddate: endDate,
+      HalfDayLeave: halfDayType,
+      description,
+    };
+
+
+      // If it's a half day leave, add the half day type to the description
+      if (leaveType === "Half Day Leave") {
+        leaveData.description = `${halfDayType === "firstHalf" ? "First Half" : "Second Half"}: ${description}`;
+      }
 
       try {
-        const response = await fetch("http://137.97.126.110:5500/api/v1/leave/Takeleave", {
+        const response = await fetch("https://bandymoot.com/api/v1/leave/Takeleave", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -314,6 +388,7 @@ const Dashboard = () => {
         }
 
         const result = await response.json();
+        console.log('result', result);
         alert("Leave applied successfully!");
         
         // Close modal first
@@ -327,6 +402,28 @@ const Dashboard = () => {
         alert("Failed to apply leave. Please try again.");
       } finally {
         setIsSubmitting(false);
+      }
+    };
+
+    // Handle leave type change
+    const handleLeaveTypeChange = (e) => {
+      const selectedType = e.target.value;
+      setLeaveType(selectedType);
+      
+      // If Half Day Leave is selected, set end date to start date
+      if (selectedType === "Half Day Leave" && startDate) {
+        setEndDate(startDate);
+      }
+    };
+
+    // Handle start date change
+    const handleStartDateChange = (e) => {
+      const selectedStartDate = e.target.value;
+      setStartDate(selectedStartDate);
+      
+      // If Half Day Leave is selected, update end date to match start date
+      if (leaveType === "Half Day Leave") {
+        setEndDate(selectedStartDate);
       }
     };
 
@@ -345,11 +442,12 @@ const Dashboard = () => {
               <select
                 className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={leaveType}
-                onChange={(e) => setLeaveType(e.target.value)}
+                onChange={handleLeaveTypeChange}
                 required
                 disabled={isSubmitting}
               >
-                <option value="">Select</option>
+                <option value="">--Select Leave Type--</option>
+                <option>Half Day Leave</option>
                 <option>Casual Leave</option>
                 <option>Sick Leave</option>
                 <option>Personal Leave</option>
@@ -357,6 +455,37 @@ const Dashboard = () => {
                 <option>Maternity/Paternity Leave</option>
               </select>
             </div>
+
+            {/* Half Day Type Selection (only shown when Half Day Leave is selected) */}
+            {leaveType === "Half Day Leave" && (
+              <div>
+                <label className="block text-sm font-medium mb-1">Half Day Type</label>
+                <div className="flex space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      value="First Half"
+                      checked={halfDayType === "First Half"}
+                      onChange={(e) => setHalfDayType(e.target.value)}
+                      className="form-radio h-4 w-4 text-blue-600"
+                      disabled={isSubmitting}
+                    />
+                    <span className="ml-2">First Half</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      value="Second Half"
+                      checked={halfDayType === "Second Half"}
+                      onChange={(e) => setHalfDayType(e.target.value)}
+                      className="form-radio h-4 w-4 text-blue-600"
+                      disabled={isSubmitting}
+                    />
+                    <span className="ml-2">Second Half</span>
+                  </label>
+                </div>
+              </div>
+            )}
 
             {/* Dates */}
             <div className="grid grid-cols-2 gap-4">
@@ -366,7 +495,8 @@ const Dashboard = () => {
                   type="date"
                   className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={handleStartDateChange}
+                  min={today}
                   required
                   disabled={isSubmitting}
                 />
@@ -378,8 +508,9 @@ const Dashboard = () => {
                   className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                  min={leaveType === "Half Day Leave" ? startDate : today}
                   required
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || leaveType === "Half Day Leave"}
                 />
               </div>
             </div>
@@ -433,7 +564,7 @@ const Dashboard = () => {
                 <Calendar className="w-6 h-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Leave Days</p>
+                <p className="text-sm font-medium text-gray-600">Credit Leave Days</p>
                 <p className="text-2xl font-semibold text-gray-900">22</p>
               </div>
             </div>
@@ -690,9 +821,9 @@ const Dashboard = () => {
                               </button>
                               {app.status === 'Pending' && canWithdrawApplication(app) && (
                                 <>
-                                  <button className="text-gray-600 hover:text-gray-900" title="Edit Application">
+                                  {/* <button className="text-gray-600 hover:text-gray-900" title="Edit Application">
                                     <Edit className="w-4 h-4" />
-                                  </button>
+                                  </button> */}
                                   <button
                                     onClick={() => withdrawApplication(app.id)}
                                     className="text-red-600 hover:text-red-900"
@@ -727,34 +858,6 @@ const Dashboard = () => {
                 </div>
               </div>
             )}
-
-            {/* {activeTab === 'team' && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Team Leave Status</h3>
-                <div className="space-y-4">
-                  {teamLeaves.map((leave, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-gray-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{leave.name}</p>
-                          <p className="text-sm text-gray-600">{leave.type}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-900">{leave.startDate} to {leave.endDate}</p>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(leave.status)}`}>
-                          {getStatusIcon(leave.status)}
-                          <span className="ml-1">{leave.status}</span>
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )} */}
           </div>
         </div>
       </div>

@@ -16,10 +16,13 @@ import {
   Edit,
   Download,
   Eye,
+  EyeOff,
   Plus,
   Filter,
+  Camera,
   Search
 } from 'lucide-react';
+import EmployeeProfile from './EmployeeProfile';
 
 
 const MainEmployeeDashboard = () => {
@@ -30,7 +33,7 @@ const MainEmployeeDashboard = () => {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/userDetails', {
+        const response = await fetch('https://bandymoot.com/api/v1/Dashboard/userDetails', {
           method: 'GET',
           headers: {
             "Content-Type": "application/json",
@@ -42,14 +45,11 @@ const MainEmployeeDashboard = () => {
        // const leavedata=result.leaveData.takenLeave
         const data = result.data;  // Get the data object
         console.log("data",data);
-        //console.log("leavedata",leavedata);
-        //const filterleave=leavedata.filter(item => item.status === "Approved")
-        //console.log("length of approved leave",filterleave.length)
-        //console.log("approved leave",filterleave)
-        // Correctly extract values from the response
+        
         const fullName = `${data.firstName} ${data.lastName}`;
         const emailId = data.email;        // Directly access email
-        const employeeIds = data.employeeId;  // Directly access employeeId
+        const employeeIds = data.employeeId;
+        const image = data.image  // Directly access employeeId
 
         setUserName(fullName);
         setEmail(emailId);
@@ -60,7 +60,13 @@ const MainEmployeeDashboard = () => {
           ...prev, 
           name: fullName,
           email: emailId,
-          id: employeeIds
+          id: employeeIds,
+          department: data.additionalDetails.department || "Data Analyst",
+          position: data.additionalDetails.position || "SAP Data Analyst",
+          phone: data.phoneNumber || "+1 (555) 123-4567",
+          joinDate: data.additionalDetails.dateOfJoining || "June 15, 2025",
+          manager: data.additionalDetails.managerOfemployee || "Samaksh Gupta",
+          avatar: image || prev.avatar // Use fetched image or keep existing
         }));
       } catch (error) {
         console.error('Error fetching user details:', error);
@@ -77,22 +83,44 @@ const MainEmployeeDashboard = () => {
   // State for editable fields
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: ""
   });
 
+  const changePassword = async () => {
+    try {
+      console.log("ChangePassword2");
+      const response = await fetch("https://bandymoot.com/api/v1/auth/changepassword", {
+        method: "POST", // or PUT if backend expects it
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token')}`, // 👈 send token in header
+        },
+        body: JSON.stringify({
+          newPassword: passwordData.newPassword,
+          oldPassword: passwordData.currentPassword,
+        }),
+      });
+
+      console.log("pass", passwordData.newPassword);
+
+      const data = await response.json();
+      console.log("Response:", data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   // State for selected month and year
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
    
-  // //Get userDetails from Token
-  // const token = localStorage.getItem('token');
-  // console.log("token", token);
-
-
-
   // Sample employee data
   const [employeeData, setEmployeeData] = useState({
     name: userName,
@@ -119,326 +147,1061 @@ const MainEmployeeDashboard = () => {
 
   const renderProfile = () => {
 
-  // Emergency contact data (replace with your actual data)
-  const emergencyContact = {
-    name: "Jane Doe",
-    relationship: "Spouse",
-    phone: "+1 (555) 987-6543",
-    email: "jane.doe@email.com"
-  };
+  //   // Emergency contact data (replace with your actual data)
+  //   const emergencyContact = {
+  //     name: "Jane Doe",
+  //     relationship: "Spouse",
+  //     phone: "+1 (555) 987-6543",
+  //     email: "jane.doe@email.com"
+  //   };
 
-  // Handle password field changes
-  const handlePasswordChange = (field, value) => {
-    setPasswordData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Handle password submit
-  const handlePasswordSubmit = async () => {
-    // Validation
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert("New passwords don't match!");
-      return;
-    }
-    if (passwordData.newPassword.length < 8) {
-      alert("Password must be at least 8 characters long!");
-      return;
-    }
-    
-    try {
-      // TODO: Replace with your actual API call
-      // const response = await fetch('/api/change-password', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${yourAuthToken}`
-      //   },
-      //   body: JSON.stringify({
-      //     currentPassword: passwordData.currentPassword,
-      //     newPassword: passwordData.newPassword
-      //   })
-      // });
+  //  const handleAvatarChange = (event) => {
+  //     const file = event.target.files[0];
+  //     if (file) {
+  //     setIsUploadingAvatar(true);
       
-      // For now, just show success message
-      alert("Password updated successfully!");
-      
-      // Reset form
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: ""
-      });
-      setIsEditingPassword(false);
-      
-    } catch (error) {
-      console.error('Password change error:', error);
-      alert("Failed to update password. Please try again.");
-    }
-  };
-
-  // Handle avatar change
-  const handleAvatarChange = async (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setIsUploadingAvatar(true);
-      
-      try {
-        // For now, just show the image locally
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setEmployeeData(prev => ({
-            ...prev,
-            avatar: e.target.result
-          }));
-          setIsUploadingAvatar(false);
-        };
-        reader.readAsDataURL(file);
+  //     try {
+  //       // For now, just show the image locally
+  //       const reader = new FileReader();
+  //       reader.onload = (e) => {
+  //         setProfileImage(e.target.result);
+  //       };
+  //       setIsUploadingAvatar(false);
+  //       reader.readAsDataURL(file);
         
-        // TODO: Replace with your actual API call when ready
-        // const formData = new FormData();
-        // formData.append('avatar', file);
-        // formData.append('employeeId', employeeData.id);
-        
-        // const response = await fetch('/api/upload-avatar', {
-        //   method: 'POST',
-        //   body: formData,
-        //   headers: {
-        //     'Authorization': `Bearer ${yourAuthToken}`
-        //   }
-        // });
-        
-        // if (response.ok) {
-        //   const result = await response.json();
-        //   setEmployeeData(prev => ({
-        //     ...prev,
-        //     avatar: result.avatarUrl
-        //   }));
-        //   alert('Profile photo updated successfully!');
-        // }
-        
-      } catch (error) {
-        console.error('Avatar upload error:', error);
-        alert('Failed to update profile photo. Please try again.');
-        setIsUploadingAvatar(false);
-      }
-    }
-  };
+  //     } catch (error) {
+  //       console.error('Avatar upload error:', error);
+  //       alert('Failed to update profile photo. Please try again.');
+  //       setIsUploadingAvatar(false);
+  //     }
+  //     }
+  //   };
 
-  return (
-    <div className="space-y-6">
-      {/* Main Profile Section */}
-      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-        <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-          <h2 className="text-xl font-bold">My Profile</h2>
-        </section>
+  //   const handlePasswordChange = (field, value) => {
+  //       setPasswordData(prev => ({
+  //         ...prev,
+  //         [field]: value
+  //       }));
+  //   };
+
+  //   const handlePasswordSubmit = () => {
+  //     if (passwordData.newPassword !== passwordData.confirmPassword) {
+  //       alert('New password and confirm password do not match!');
+  //       return;
+  //     }
+  //     if (passwordData.newPassword.length < 8) {
+  //       alert('Password must be at least 8 characters long!');
+  //       return;
+  //     }
+  //     // Handle password update logic here
+  //     alert('Password updated successfully!');
+  //     setPasswordData({
+  //       currentPassword: '',
+  //       newPassword: '',
+  //       confirmPassword: ''
+  //     });
+  //     console.log("ChangePassword1")
+  //     changePassword()
+  //   };
+  
+
+  // return (
+  //   <div className="space-y-6">
+  //     {/* Main Profile Section */}
+  //     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+  //       <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+  //         <h2 className="text-xl font-bold">My Profile</h2>
+  //       </section>
         
-        {/* Profile Header with Avatar */}
-        <div className="flex items-center space-x-6 mb-8 mt-6">
-          <div className="relative">
-            <img 
-              src={employeeData.avatar} 
-              alt="Profile" 
-              className={`w-24 h-24 rounded-full object-cover border-4 border-blue-100 ${isUploadingAvatar ? 'opacity-50' : ''}`}
-            />
-            {isUploadingAvatar && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
-                <div className="text-white text-xs">Uploading...</div>
-              </div>
-            )}
-            <div className="absolute bottom-0 right-0">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                id="avatar-upload"
-                disabled={isUploadingAvatar}
-              />
-              <label 
-                htmlFor="avatar-upload"
-                className={`bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors cursor-pointer flex items-center justify-center w-8 h-8 ${isUploadingAvatar ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <i className="fas fa-camera text-sm"></i>
-              </label>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-2xl font-semibold text-gray-800">{employeeData.name}</h3>
-            <p className="text-gray-600">{employeeData.position}</p>
-          </div>
-        </div>
+  //       {/* Profile Header with Avatar */}
+  //       <div className="flex items-center space-x-6 mb-8 mt-6">
+  //         <div className="relative">
+  //           <div className={`w-24 h-24 rounded-full object-cover border-4 border-blue-100 ${isUploadingAvatar ? 'opacity-50' : ''} overflow-hidden`}>
+  //               {profileImage ? (
+  //                 <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+  //               ) : (
+  //                 <img src={employeeData.avatar} alt="Profile" className="w-full h-full object-cover" />
+  //               )}
+  //             </div>
+  //           {/* <img 
+  //             src={employeeData.avatar} 
+  //             alt="Profile" 
+  //             className={`w-24 h-24 rounded-full object-cover border-4 border-blue-100 ${isUploadingAvatar ? 'opacity-50' : ''}`}
+  //           /> */}
+  //           {isUploadingAvatar && (
+  //             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+  //               <div className="text-white text-xs">Uploading...</div>
+  //             </div>
+  //           )}
+  //           <div className="absolute bottom-0 right-0">
+  //             <input
+  //               type="file"
+  //               accept="image/*"
+  //               onChange={handleAvatarChange}
+  //               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+  //               id="avatar-upload"
+  //               disabled={isUploadingAvatar}
+  //             />
+  //             <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition-colors">
+  //               <Camera size={16} />
+  //               <input
+  //                type="file"
+  //                accept="image/*"
+  //                onChange={handleAvatarChange}
+  //                className="hidden"
+  //              />
+  //            </label>
+  //           </div>
+  //         </div>
+  //         <div>
+  //           <h3 className="text-2xl font-semibold text-gray-800">{employeeData.name}</h3>
+  //           <p className="text-gray-600">{employeeData.position}</p>
+  //         </div>
+  //       </div>
 
-        {/* Employee Information Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.id}</p>
-          </div>
+  //       {/* Employee Information Grid */}
+  //       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+  //           <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.id}</p>
+  //         </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.email}</p>
-          </div>
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+  //           <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.email}</p>
+  //         </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.phone}</p>
-          </div>
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+  //           <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.phone}</p>
+  //         </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.department}</p>
-          </div>
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+  //           <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.department}</p>
+  //         </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Manager</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.manager}</p>
-          </div>
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Manager</label>
+  //           <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.manager}</p>
+  //         </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Join Date</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.joinDate}</p>
-          </div>
-        </div>
-      </div>
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Join Date</label>
+  //           <p className="text-gray-900 bg-gray-50 p-2 rounded border">{employeeData.joinDate}</p>
+  //         </div>
+  //       </div>
+  //     </div>
 
-      {/* Emergency Contact Section */}
-      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-        <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mb-6">
-          <h2 className="text-xl font-bold">Emergency Contact</h2>
-        </section>
+  //     {/* // Emergency Contact Section (Updated with input fields) */}
+  //     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+  //       <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mb-6">
+  //         <h2 className="text-xl font-bold">Emergency Contact</h2>
+  //       </section>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{emergencyContact.name}</p>
-          </div>
+  //       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter emergency contact name"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="Jane Doe"
+  //           />
+  //         </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{emergencyContact.relationship}</p>
-          </div>
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Relationship *</label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+  //             <option value="">Select Relationship</option>
+  //             <option value="spouse" selected>Spouse</option>
+  //             <option value="parent">Parent</option>
+  //             <option value="sibling">Sibling</option>
+  //             <option value="child">Child</option>
+  //             <option value="friend">Friend</option>
+  //             <option value="other">Other</option>
+  //           </select>
+  //         </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{emergencyContact.phone}</p>
-          </div>
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+  //           <input
+  //             type="tel"
+  //             placeholder="Enter phone number"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="+1 (555) 987-6543"
+  //           />
+  //         </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{emergencyContact.email}</p>
-          </div>
-        </div>
-      </div>
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+  //           <input
+  //             type="email"
+  //             placeholder="Enter email address"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="jane.doe@email.com"
+  //           />
+  //         </div>
+  //       </div>
+  //     </div>
 
-      {/* Change Password Section */}
-      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-        <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">Change Password</h2>
-          {!isEditingPassword ? (
-            <button
-              onClick={() => setIsEditingPassword(true)}
-              className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium"
-            >
-              <i className="fas fa-edit mr-2"></i>
-              Change Password
-            </button>
-          ) : (
-            <div className="flex space-x-2">
-              <button
-                onClick={handlePasswordSubmit}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
-              >
-                <i className="fas fa-save mr-2"></i>
-                Save Changes
-              </button>
-              <button
-                onClick={() => {
-                  setIsEditingPassword(false);
-                  setPasswordData({
-                    currentPassword: "",
-                    newPassword: "",
-                    confirmPassword: ""
-                  });
-                }}
-                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-              >
-                <i className="fas fa-times mr-2"></i>
-                Cancel
-              </button>
-            </div>
-          )}
-        </section>
+  //     {/* Banking Details Section (Updated with input fields) */}
+  //     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+  //       <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mb-6">
+  //         <h2 className="text-xl font-bold">Banking Details</h2>
+  //       </section>
+        
+  //       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name *</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter bank name"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="book"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Account Number *</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter account number"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="12345434567"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">PAN Number *</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter PAN number"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="LSAPK7847C"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">IFSC Code *</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter IFSC code"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="BARBOALLALL"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Branch Name *</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter branch name"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="allow"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Aadhar Number *</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter Aadhar number"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="125412548963"
+  //           />
+  //         </div>
+  //       </div>
+  //     </div>
 
-        {isEditingPassword ? (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-              <input
-                type="password"
-                value={passwordData.currentPassword}
-                onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your current password"
-              />
-            </div>
+  //     {/* Personal Details Section (Updated with appropriate inputs) */}
+  //     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+  //       <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mb-6">
+  //         <h2 className="text-xl font-bold">Personal Details</h2>
+  //       </section>
+        
+  //       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Marital Status *</label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+  //             <option value="">Select Marital Status</option>
+  //             <option value="single" selected>Single</option>
+  //             <option value="married">Married</option>
+  //             <option value="divorced">Divorced</option>
+  //             <option value="widowed">Widowed</option>
+  //           </select>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Blood Group *</label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+  //             <option value="">Select Blood Group</option>
+  //             <option value="A+">A+</option>
+  //             <option value="A-" selected>A-</option>
+  //             <option value="B+">B+</option>
+  //             <option value="B-">B-</option>
+  //             <option value="AB+">AB+</option>
+  //             <option value="AB-">AB-</option>
+  //             <option value="O+">O+</option>
+  //             <option value="O-">O-</option>
+  //           </select>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Nationality *</label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+  //             <option value="">Select Nationality</option>
+  //             <option value="indian">Indian</option>
+  //             <option value="american">American</option>
+  //             <option value="canadian" selected>Canadian</option>
+  //             <option value="british">British</option>
+  //             <option value="australian">Australian</option>
+  //             <option value="other">Other</option>
+  //           </select>
+  //         </div>
+  //       </div>
+        
+  //       <div className="grid grid-cols-2 gap-6">
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Permanent Address *</label>
+  //           <textarea
+  //             placeholder="Enter permanent address"
+  //             rows="3"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="gvhvinoj09i-"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Current Address *</label>
+  //           <textarea
+  //             placeholder="Enter current address"
+  //             rows="3"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="vbijdvmvhevjiwoe"
+  //           />
+  //         </div>
+  //       </div>
+  //     </div>
+
+  //     {/* Education Information Section (Updated with proper options) */}
+  //     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+  //       <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mb-6">
+  //         <h2 className="text-xl font-bold">Education Information</h2>
+  //       </section>
+        
+  //       <h2 className="text-md font-semibold text-gray-800 mb-4">10th Class Information</h2>
+  //       <p className="text-sm text-red-600 mb-4">School name, board, and year are mandatory. Either grade OR percentage is required.</p>
+        
+  //       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+  //         <div className="md:col-span-2">
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">10th School Name <span className='text-red-600'>*</span></label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter your 10th school name"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">10th Board <span className='text-red-600'>*</span></label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+  //             <option value="">Select Board</option>
+  //             <option value="cbse">CBSE</option>
+  //             <option value="icse">ICSE</option>
+  //             <option value="state_board">State Board</option>
+  //             <option value="up_board">UP Board</option>
+  //             <option value="mp_board">MP Board</option>
+  //             <option value="bihar_board">Bihar Board</option>
+  //             <option value="other">Other</option>
+  //           </select>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">10th Year of Passing <span className='text-red-600'>*</span></label>
+  //           <input
+  //             type="number"
+  //             placeholder="Enter year"
+  //             min="1980"
+  //             max="2024"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">10th Grade</label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+  //             <option value="">Select Grade</option>
+  //             <option value="A+">A+</option>
+  //             <option value="A">A</option>
+  //             <option value="B+">B+</option>
+  //             <option value="B">B</option>
+  //             <option value="C+">C+</option>
+  //             <option value="C">C</option>
+  //           </select>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">10th Percentage</label>
+  //           <input
+  //             type="number"
+  //             placeholder="Enter percentage"
+  //             min="0"
+  //             max="100"
+  //             step="0.01"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+  //       </div>
+
+  //       {/* 12th Class Information */}
+  //       <h2 className="text-md font-semibold text-gray-800 mb-4">12th Class Information</h2>
+  //       <p className="text-sm text-gray-600 mb-4">All fields in this section are optional</p>
+        
+  //       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+  //         <div className="md:col-span-2">
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">12th College/School Name</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter college/school name"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">12th Board</label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+  //             <option value="">Select Board</option>
+  //             <option value="cbse">CBSE</option>
+  //             <option value="icse">ICSE</option>
+  //             <option value="state_board">State Board</option>
+  //             <option value="up_board">UP Board</option>
+  //             <option value="mp_board">MP Board</option>
+  //             <option value="bihar_board">Bihar Board</option>
+  //             <option value="other">Other</option>
+  //           </select>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">12th Year of Passing</label>
+  //           <input
+  //             type="number"
+  //             placeholder="Enter year"
+  //             min="1980"
+  //             max="2024"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">12th Grade</label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+  //             <option value="">Select Grade</option>
+  //             <option value="A+">A+</option>
+  //             <option value="A">A</option>
+  //             <option value="B+">B+</option>
+  //             <option value="B">B</option>
+  //             <option value="C+">C+</option>
+  //             <option value="C">C</option>
+  //           </select>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">12th Percentage</label>
+  //           <input
+  //             type="number"
+  //             placeholder="Enter percentage"
+  //             min="0"
+  //             max="100"
+  //             step="0.01"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+  //       </div>
+
+  //       {/* Diploma Information */}
+  //       <h2 className="text-md font-semibold text-gray-800 mb-4">Diploma Information</h2>
+  //       <p className="text-sm text-gray-600 mb-4">All fields in this section are optional</p>
+        
+  //       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+  //         <div className="md:col-span-2">
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Diploma College/Institute Name</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter diploma college/institute name"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Diploma Course/Branch</label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+  //             <option value="">Select Diploma Course</option>
+  //             <option value="mechanical">Mechanical Engineering</option>
+  //             <option value="civil">Civil Engineering</option>
+  //             <option value="electrical">Electrical Engineering</option>
+  //             <option value="electronics">Electronics & Communication</option>
+  //             <option value="computer_science">Computer Science Engineering</option>
+  //             <option value="automobile">Automobile Engineering</option>
+  //             <option value="chemical">Chemical Engineering</option>
+  //             <option value="textile">Textile Engineering</option>
+  //             <option value="pharmacy">Pharmacy</option>
+  //             <option value="other">Other</option>
+  //           </select>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Diploma Duration</label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+  //             <option value="">Select Duration</option>
+  //             <option value="2">2 Years</option>
+  //             <option value="3">3 Years</option>
+  //             <option value="4">4 Years</option>
+  //           </select>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Diploma Year of Passing</label>
+  //           <input
+  //             type="number"
+  //             placeholder="Enter year"
+  //             min="1980"
+  //             max="2024"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Diploma Percentage/CGPA</label>
+  //           <input
+  //             type="text"
+  //             placeholder="e.g., 85% or 8.5 CGPA"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+  //       </div>
+
+  //       {/* Graduation Information */}
+  //       <h2 className="text-md font-semibold text-gray-800 mb-4">Graduation Information</h2>
+  //       <p className="text-sm text-red-600 mb-4">All fields in this section are mandatory</p>
+        
+  //       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+  //         <div className="md:col-span-2">
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">
+  //             Graduation College/University Name <span className="text-red-500">*</span>
+  //           </label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter graduation college/university name"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             required
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">
+  //             Graduation Course/Degree <span className="text-red-600">*</span>
+  //           </label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+  //             <option value="">Select Course</option>
+  //             <option value="btech">B.Tech</option>
+  //             <option value="be">B.E</option>
+  //             <option value="bsc">B.Sc</option>
+  //             <option value="bcom">B.Com</option>
+  //             <option value="ba">B.A</option>
+  //             <option value="bba">BBA</option>
+  //             <option value="bca">BCA</option>
+  //             <option value="other">Other</option>
+  //           </select>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">
+  //             Specialization/Branch <span className="text-red-600">*</span>
+  //           </label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter specialization/branch"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             required
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">
+  //             Graduation Duration <span className="text-red-600">*</span>
+  //           </label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+  //             <option value="">Select Duration</option>
+  //             <option value="3">3 Years</option>
+  //             <option value="4">4 Years</option>
+  //             <option value="5">5 Years</option>
+  //           </select>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">
+  //             Graduation Year of Passing <span className="text-red-600">*</span>
+  //           </label>
+  //           <input
+  //             type="number"
+  //             placeholder="Enter year"
+  //             min="1980"
+  //             max="2024"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             required
+  //           />
+  //         </div>
+          
+  //         <div className="md:col-span-2">
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">
+  //             Graduation Percentage/CGPA <span className="text-red-600">*</span>
+  //           </label>
+  //           <input
+  //             type="text"
+  //             placeholder="e.g., 75% or 7.5 CGPA"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             required
+  //           />
+  //         </div>
+  //       </div>
+
+  //       {/* Academic Backlogs Information */}
+  //       <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+  //         <h4 className="text-lg font-medium text-blue-900 mb-4">Academic Backlogs Information</h4>
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-3">
+  //             Do you have any backlogs during graduation? <span className="text-red-600">*</span>
+  //           </label>
+  //           <div className="flex items-center space-x-6">
+  //             <label className="flex items-center">
+  //               <input type="radio" name="backlogs" value="yes" className="text-blue-600 focus:ring-blue-500" />
+  //               <span className="ml-2 text-sm text-gray-700">Yes</span>
+  //             </label>
+  //             <label className="flex items-center">
+  //               <input type="radio" name="backlogs" value="no" className="text-blue-600 focus:ring-blue-500" />
+  //               <span className="ml-2 text-sm text-gray-700">No</span>
+  //             </label>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>  
+
+  //     {/* Previous Employment Information Section (Updated with input fields) */}
+  //     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+  //       <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mb-6">
+  //         <h2 className="text-xl font-bold">Previous Employment Information</h2>
+  //       </section>
+        
+  //       <div className="border-b border-gray-300 mb-6">
+  //         <h3 className="text-lg font-semibold text-gray-800 mb-4">Company & Position Details</h3>
+  //       </div>
+        
+  //       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter company name"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Starting Date</label>
+  //           <input
+  //             type="date"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Ending Date</label>
+  //           <input
+  //             type="date"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Position/Job Title</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter your position"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Work Experience (in months)</label>
+  //           <input
+  //             type="number"
+  //             placeholder="Total experience in months"
+  //             min="0"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Leaving</label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+  //             <option value="">Select Reason</option>
+  //             <option value="career_growth">Career Growth</option>
+  //             <option value="better_opportunity">Better Opportunity</option>
+  //             <option value="salary_hike">Salary Hike</option>
+  //             <option value="relocation">Relocation</option>
+  //             <option value="work_life_balance">Work Life Balance</option>
+  //             <option value="company_closure">Company Closure</option>
+  //             <option value="other">Other</option>
+  //           </select>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Team Lead/Manager Name</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter team lead/manager name"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+          
+  //         <div className="md:col-span-2">
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Annual Salary</label>
+  //           <input
+  //             type="number"
+  //             placeholder="Enter annual salary"
+  //             min="0"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //           />
+  //         </div>
+  //       </div>
+  //     </div>
+
+  //     {/* Skills & Projects Information Section (Updated with input fields) */}
+  //     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+  //       <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mb-6">
+  //         <h2 className="text-xl font-bold">Skills & Projects Information</h2>
+  //       </section>
+        
+  //       <div className="space-y-6">
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-2">
+  //             Key Skills <span className="text-red-600">*</span>
+  //           </label>
+  //           <textarea
+  //             placeholder="e.g., JavaScript, Python, React, Leadership, Communication, Problem Solving..."
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
+  //             maxLength="1000"
+  //           />
+  //           <p className="text-xs text-gray-500 mt-2">List your key technical and soft skills separated by commas (minimum 3 characters)</p>
+  //           <p className="text-xs text-gray-400 text-right mt-1">0/1000 characters</p>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-2">Projects</label>
+  //           <textarea
+  //             placeholder="Describe your major projects, technologies used, and your role..."
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
+  //             maxLength="1000"
+  //           />
+  //           <p className="text-xs text-gray-500 mt-2">Describe your significant projects and contributions</p>
+  //           <p className="text-xs text-gray-400 text-right mt-1">0/1000 characters</p>
+  //         </div>
+
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-2">Key Achievements</label>
+  //           <textarea
+  //             placeholder="e.g., Increased system performance by 40%, Led a team of 5 developers, Implemented CI/CD pipeline..."
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
+  //             maxLength="1000"
+  //           />
+  //           <p className="text-xs text-gray-500 mt-2">List your professional achievements and accomplishments</p>
+  //           <p className="text-xs text-gray-400 text-right mt-1">0/1000 characters</p>
+  //         </div>
+  //       </div>
+  //     </div>
+
+  //     {/* Documents & Signature Section (Updated with file inputs) */}
+  //     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+  //       {/* <div className="flex items-center justify-between mb-6"> */}
+  //         <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mb-6">
+  //           <h2 className="text-xl font-bold">Documents & Signature</h2>
+  //         </section>
+  //         {/* <button className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm">
+  //           Clear Data
+  //         </button> 
+  //        </div> */}
+        
+  //       <div className="space-y-6">
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-3">
+  //             Digital Signature Upload <span className="text-red-600">*</span>
+  //           </label>
+  //           <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer">
+  //             <input
+  //               type="file"
+  //               accept="image/png,image/jpg,image/jpeg"
+  //               className="hidden"
+  //               id="signature-upload"
+  //             />
+  //             <label htmlFor="signature-upload" className="cursor-pointer">
+  //               <div className="text-4xl mb-4">📝</div>
+  //               <p className="text-gray-600 font-medium">Click to upload your signature</p>
+  //               <p className="text-sm text-gray-500 mt-1">Accepted formats: PNG, JPG, JPEG (Max 5MB)</p>
+  //             </label>
+  //           </div>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-3">
+  //             Resume Upload <span className="text-red-600">*</span>
+  //           </label>
+  //           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer">
+  //             <input
+  //               type="file"
+  //               accept=".pdf,.doc,.docx"
+  //               className="hidden"
+  //               id="resume-upload"
+  //             />
+  //             <label htmlFor="resume-upload" className="cursor-pointer">
+  //               <div className="text-4xl mb-4">📄</div>
+  //               <p className="text-gray-600 font-medium">Click to upload your resume</p>
+  //               <p className="text-sm text-gray-500 mt-1">Accepted formats: PDF, DOC, DOCX (Max 10MB)</p>
+  //             </label>
+  //           </div>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-3">Additional Documents (Optional)</label>
+  //           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer">
+  //             <input
+  //               type="file"
+  //               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+  //               multiple
+  //               className="hidden"
+  //               id="additional-docs-upload"
+  //             />
+  //             <label htmlFor="additional-docs-upload" className="cursor-pointer">
+  //               <div className="text-4xl mb-4">📎</div>
+  //               <p className="text-gray-600 font-medium">Click to upload additional documents</p>
+  //               <p className="text-sm text-gray-500 mt-1">Certificates, Portfolio, etc. (Max 15MB each)</p>
+  //             </label>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+
+  //     {/* Professional Reference Section (Updated with input fields) */}
+  //     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+  //       <div className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mb-6">
+  //         <h2 className="text-xl font-bold">Professional Reference</h2>
+  //       </div>
+        
+  //       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Reference Name</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter reference name"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="Dr. Smith"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+  //           <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+  //             <option value="">Select Relationship</option>
+  //             <option value="supervisor" selected>Supervisor</option>
+  //             <option value="manager">Manager</option>
+  //             <option value="colleague">Colleague</option>
+  //             <option value="mentor">Mentor</option>
+  //             <option value="client">Client</option>
+  //             <option value="other">Other</option>
+  //           </select>
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+  //           <input
+  //             type="tel"
+  //             placeholder="Enter phone number"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="555-123-4567"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+  //           <input
+  //             type="email"
+  //             placeholder="Enter email address"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="dr.smith@example.com"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Company/Organization</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter company/organization name"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="Example Medical Center"
+  //           />
+  //         </div>
+          
+  //         <div>
+  //           <label className="block text-sm font-medium text-gray-700 mb-1">Position Title</label>
+  //           <input
+  //             type="text"
+  //             placeholder="Enter position title"
+  //             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //             defaultValue="Chief Medical Officer"
+  //           />
+  //         </div>
+  //       </div>
+  //     </div>
+
+
+  //     {/* Change Password Section */}
+  //     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+  //       <section className="bg-blue-600 text-white p-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-between mb-6">
+  //         <h2 className="text-xl font-bold">Change Password</h2>
+  //         {!isEditingPassword ? (
+  //           <button
+  //             onClick={() => setIsEditingPassword(true)}
+  //             className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium"
+  //           >
+  //             <i className="fas fa-edit mr-2"></i>
+  //             Change Password
+  //           </button>
+  //         ) : (
+  //           <div className="flex space-x-2">
+  //             <button
+  //               onClick={handlePasswordSubmit}
+  //               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
+  //             >
+  //               <i className="fas fa-save mr-2"></i>
+  //               Save Changes
+  //             </button>
+  //             <button
+  //               onClick={() => {
+  //                 setIsEditingPassword(false);
+  //                 setPasswordData({
+  //                   currentPassword: "",
+  //                   newPassword: "",
+  //                   confirmPassword: ""
+  //                 });
+  //               }}
+  //               className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+  //             >
+  //               <i className="fas fa-times mr-2"></i>
+  //               Cancel
+  //             </button>
+  //           </div>
+  //         )}
+  //       </section>
+
+  //       {isEditingPassword ? (
+  //         <div className="space-y-6">
+  //           <div>
+  //             <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+  //             <div className="relative">
+  //               <input
+  //                 type={showCurrentPassword ? "text" : "password"}
+  //                 value={passwordData.currentPassword}
+  //                 onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+  //                 className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //                 placeholder="Enter current password"
+  //                 required
+  //               />
+  //               <button
+  //                 type="button"
+  //                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+  //                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+  //               >
+  //                 {showCurrentPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+  //               </button>
+  //             </div>
+  //           </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-              <input
-                type="password"
-                value={passwordData.newPassword}
-                onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter new password (min. 8 characters)"
-              />
-            </div>
+  //           <div>
+  //             <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+  //             <div className="relative">
+  //               <input
+  //                 type={showNewPassword ? "text" : "password"}
+  //                 value={passwordData.newPassword}
+  //                 onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+  //                 className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //                 placeholder="Enter new password"
+  //                 minLength="8"
+  //                 required
+  //               />
+  //               <button
+  //                 type="button"
+  //                 onClick={() => setShowNewPassword(!showNewPassword)}
+  //                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+  //               >
+  //                 {showNewPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+  //               </button>
+  //             </div>
+  //           </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-              <input
-                type="password"
-                value={passwordData.confirmPassword}
-                onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Re-enter new password"
-              />
-            </div>
+  //          <div>
+  //            <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+  //            <div className="relative">
+  //              <input
+  //                type={showConfirmPassword ? "text" : "password"}
+  //                value={passwordData.confirmPassword}
+  //                onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+  //                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //                placeholder="Confirm new password"
+  //                required
+  //              />
+  //              <button
+  //                type="button"
+  //                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+  //                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+  //              >
+  //                {showConfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+  //              </button>
+  //            </div>
+  //          </div>
             
-            {passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-600 text-sm font-medium">
-                  <i className="fas fa-exclamation-triangle mr-2"></i>
-                  Passwords don't match. Please try again.
-                </p>
-              </div>
-            )}
+  //           {passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+  //             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+  //               <p className="text-red-600 text-sm font-medium">
+  //                 <i className="fas fa-exclamation-triangle mr-2"></i>
+  //                 Passwords don't match. Please try again.
+  //               </p>
+  //             </div>
+  //           )}
             
-            {passwordData.newPassword && passwordData.newPassword.length < 8 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <p className="text-yellow-600 text-sm font-medium">
-                  <i className="fas fa-info-circle mr-2"></i>
-                  Password must be at least 8 characters long.
-                </p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <div className="bg-gray-50 rounded-lg p-6">
-              <i className="fas fa-lock text-gray-400 text-3xl mb-4"></i>
-              <p className="text-gray-600 font-medium">Password Security</p>
-              <p className="text-gray-500 text-sm mt-2">
-                Click "Change Password" to update your account password
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  //           {passwordData.newPassword && passwordData.newPassword.length < 8 && (
+  //             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+  //               <p className="text-yellow-600 text-sm font-medium">
+  //                 <i className="fas fa-info-circle mr-2"></i>
+  //                 Password must be at least 8 characters long.
+  //               </p>
+  //             </div>
+  //           )}
+  //         </div>
+  //       ) : (
+  //         <div className="text-center py-8">
+  //           <div className="bg-gray-50 rounded-lg p-6">
+  //             <i className="fas fa-lock text-gray-400 text-3xl mb-4"></i>
+  //             <p className="text-gray-600 font-medium">Password Security</p>
+  //             <p className="text-gray-500 text-sm mt-2">
+  //               Click "Change Password" to update your account password
+  //             </p>
+  //           </div>
+  //         </div>
+  //       )}
+  //     </div>
+  //   </div>
+  // );
+  return <EmployeeProfile/>
  };
 
   const renderAttendance = () => {

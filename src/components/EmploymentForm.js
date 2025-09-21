@@ -164,8 +164,7 @@ const EmploymentForm = () => {
     return isValid;
   }
 
-  function handleSave() {
-    if (validateAllFields()) {
+  function handleNext() {
       const saveData = {
         ...formData,
         savedAt: new Date().toLocaleString()
@@ -175,31 +174,6 @@ const EmploymentForm = () => {
           localStorage.setItem("employmentFormData", JSON.stringify(saveData));
         }
       } catch (e) {}
-      setSuccessMessage(
-        `Employment Details Saved Successfully! ✅ - Saved at: ${saveData.savedAt} - Company: ${saveData.companyName} | Position: ${saveData.position}`
-      );
-      setSaveButtonText("Saved ✓");
-      setSaveButtonColor("bg-green-600");
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => {
-        setSuccessMessage("");
-        setSaveButtonText("Save");
-        setSaveButtonColor("bg-gradient-to-r from-green-500 to-green-400");
-      }, 4000);
-    }
-  }
-
-  function handleNext() {
-    // Always save before navigation
-    const saveData = {
-      ...formData,
-      savedAt: new Date().toLocaleString()
-    };
-    try {
-      if (typeof Storage !== "undefined" && localStorage) {
-        localStorage.setItem("employmentFormData", JSON.stringify(saveData));
-      }
-    } catch (e) {}
     // Navigate to skills page - would be handled by parent component
     console.log('Navigate to skills page');
     navigate('/skills');
@@ -405,29 +379,23 @@ const EmploymentForm = () => {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-6 mt-10">
+          {/* Navigation Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 pt-6">
             <button
               type="button"
               onClick={handleBack}
-              className="flex-1 px-8 py-5 bg-gray-500 text-white rounded-2xl font-bold uppercase tracking-wide transition-all duration-300 hover:bg-gray-600 hover:-translate-y-1 hover:shadow-lg text-lg"
+              className="flex-1 py-4 px-6 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
             >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className={`flex-1 px-8 py-5 ${saveButtonColor} text-white rounded-2xl font-bold uppercase tracking-wide transition-all duration-300 hover:-translate-y-1 hover:shadow-lg text-lg`}
-            >
-              {saveButtonText}
+              ← Back
             </button>
             <button
               type="button"
               onClick={handleNext}
-              className="flex-1 px-8 py-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl font-bold uppercase tracking-wide transition-all duration-300 hover:-translate-y-1 hover:shadow-lg text-lg"
+              className={"flex-1 py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"}
             >
-              Next
+              Next →
             </button>
-          </div>
+          </div> 
         </div>
       </div>
     </div>

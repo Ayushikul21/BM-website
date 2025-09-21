@@ -16,6 +16,7 @@ import SkillsProjectsForm from './components/SkillsProjectsForm';
 import ProfessionalReferencesForm from './components/ProfessionalReferencesForm';
 import DocumentUploadForm from './components/DocumentUploadForm';
 import ForgotPassword from './components/ForgotPassword';
+import SalaryDetails from './components/SalaryPortalPayslip';
 
 
 
@@ -51,6 +52,7 @@ function AppWrapper() {
     <Routes>
       <Route path="/" element={<RegistrationForm />} />
       <Route path="/banking" element={<BankingInformationForm />} />
+      <Route path="/salary" element={<SalaryDetails />} />
       <Route path="/personal" element={<PersonalDetailsForm/>}/>
       <Route path="/education" element={<EducationForm/>}/>
       <Route path="/education45" element={<EducationForm45/>}/>

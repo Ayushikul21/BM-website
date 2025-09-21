@@ -208,7 +208,8 @@ const EducationForm45 = () => {
     return isValid;
   }
 
-  function handleSave() {
+  function handleNext() {
+    if (!isFormValid) return;
     if (validateAllFields()) {
       const saveData = {
         ...formData,
@@ -230,26 +231,6 @@ const EducationForm45 = () => {
         setSaveButtonText("Save Data");
         setSaveButtonColor("bg-gradient-to-r from-blue-500 to-purple-600");
       }, 4000);
-    }
-  }
-
-  function handleNext() {
-    if (!isFormValid) return;
-    if (validateAllFields()) {
-      const saveData = {
-        ...formData,
-        savedAt: new Date().toLocaleString()
-      };
-      // Save before navigation
-      try {
-        if (typeof Storage !== "undefined" && localStorage) {
-          localStorage.setItem("educationFormData", JSON.stringify(saveData));
-        }
-      } catch (e) {}
-      setSuccessMessage("Education Details Saved Successfully! ✅ - Proceeding to next step...");
-      setTimeout(() => {
-        console.log('Navigate to employment page');
-      }, 1500);
       navigate('/employment');
     }
   }
@@ -617,37 +598,28 @@ const EducationForm45 = () => {
             </div>
           </div>
 
-          {/* Button Group */}
-          <div className="flex flex-col sm:flex-row gap-4 mt-8">
+          {/* Navigation Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 pt-6">
             <button
               type="button"
               onClick={handleBack}
-              className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white py-4 rounded-2xl font-bold text-lg uppercase tracking-wide hover:from-gray-600 hover:to-gray-700 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+              className="flex-1 py-4 px-6 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
             >
-              Back
+              ← Back
             </button>
-            
             <button
               type="button"
-              onClick={handleSave}
-              className={`flex-1 text-white py-4 rounded-2xl font-bold text-lg uppercase tracking-wide hover:transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ${saveButtonColor}`}
-            >
-              {saveButtonText}
-            </button>
-            
-            <button
-              type="button"
-              onClick={handleNext}
               disabled={!isFormValid}
-              className={`flex-1 py-4 rounded-2xl font-bold text-lg uppercase tracking-wide transition-all duration-300 ${
+              onClick={handleNext}
+              className={`flex-1 py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
                 isFormValid
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 hover:transform hover:-translate-y-1 hover:shadow-lg'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
-              Next
+              Next →
             </button>
-          </div>
+          </div> 
         </form>
       </div>
     </div>

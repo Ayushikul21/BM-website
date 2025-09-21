@@ -12,7 +12,7 @@ const LoginForm = ({ onLogin }) => {
   const navigate = useNavigate();
 
   // Updated login URL to match your backend
-  const loginUrl = 'http://137.97.126.110:5500/api/v1/auth/login';
+  const loginUrl = 'https://bandymoot.com/api/v1/auth/login';
 
   // Focus on employee ID input when component mounts
   useEffect(() => {
@@ -191,10 +191,7 @@ const LoginForm = ({ onLogin }) => {
             </h1>
           </div>
 
-          <h2 className="text-center text-gray-800 mb-8 font-semibold text-xl">
-            Employee Login
-          </h2>
-
+          {/* Login Form */}
           <form onSubmit={handleSubmit}>
             {/* Employee ID Input */}
             <div className="mb-5 relative">

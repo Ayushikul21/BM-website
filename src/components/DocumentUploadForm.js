@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 const initialState = {
@@ -140,103 +140,6 @@ function DocumentUploadForm() {
       setCurrentDateTime(formatDateTime(new Date()));
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
-
-  // Geolocation with improved error handling
-  function fetchLocation() {
-    if (!navigator.geolocation) {
-      setLocationDisplay("📍 Geolocation not supported");
-      setLocationStatus("Your browser does not support geolocation");
-      setLocation(null);
-      setIsLocationLoading(false);
-      return;
-    }
-    
-    setIsLocationLoading(true);
-    setLocationDisplay("📍 Detecting location...");
-    setLocationStatus("Getting your current location...");
-    
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const response = await fetch(
-            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-          );
-          
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          const locObj = {
-            latitude,
-            longitude,
-            city: data.city || "Unknown City",
-            locality: data.locality || "",
-            countryName: data.countryName || "Unknown Country",
-            principalSubdivision: data.principalSubdivision || "",
-            fullAddress: data.display_name || `${data.city || "Unknown"}, ${data.countryName || "Unknown"}`,
-            timestamp: new Date().toISOString()
-          };
-          setLocation(locObj);
-          setLocationDisplay(
-            `📍 ${locObj.city}${locObj.principalSubdivision ? ", " + locObj.principalSubdivision : ""}, ${locObj.countryName}`
-          );
-          setLocationStatus(`Located at ${new Date().toLocaleTimeString()}`);
-        } catch (error) {
-          console.warn("Geocoding failed:", error);
-          const fallbackLocation = {
-            latitude,
-            longitude,
-            city: "Unknown",
-            countryName: "Unknown",
-            fullAddress: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
-            timestamp: new Date().toISOString()
-          };
-          setLocation(fallbackLocation);
-          setLocationDisplay(`📍 ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-          setLocationStatus("Location detected (coordinates only)");
-        } finally {
-          setIsLocationLoading(false);
-        }
-      },
-      (error) => {
-        let errorMessage = "Unable to detect location";
-        let statusMessage = "Location access denied or unavailable";
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "Location access denied";
-            statusMessage = "Please enable location access in your browser";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location unavailable";
-            statusMessage = "Location information is not available";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "Location request timeout";
-            statusMessage = "Location request timed out. Try again";
-            break;
-          default:
-            statusMessage = "An unknown error occurred";
-        }
-        
-        setLocationDisplay(`📍 ${errorMessage}`);
-        setLocationStatus(statusMessage);
-        setLocation(null);
-        setIsLocationLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 300000
-      }
-    );
-  }
-
-  useEffect(() => {
-    fetchLocation();
   }, []);
 
   // File validation helpers
@@ -539,7 +442,6 @@ function DocumentUploadForm() {
       setTimeout(() => setSuccessMessage(""), 2000);
       
       // Refresh location
-      fetchLocation();
     } catch (error) {
       console.error('Error clearing saved data:', error);
     }
@@ -574,24 +476,6 @@ function DocumentUploadForm() {
               <label className="block font-semibold mb-2 text-gray-800">Current Date & Time</label>
               <div className="bg-black/10 p-3 rounded-lg text-center font-semibold">
                 {currentDateTime}
-              </div>
-            </div>
-            
-            <div className="mb-5">
-              <label className="block font-semibold mb-2 text-gray-800">Current Place</label>
-              <div className="bg-blue-50 p-4 rounded-lg text-center font-semibold border-2 border-blue-200">
-                <div className="text-blue-800">{locationDisplay}</div>
-                <div className="text-sm mt-2 opacity-80 text-blue-700">
-                  {locationStatus}
-                </div>
-                <button
-                  type="button"
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm mt-3 transition-all duration-300 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={fetchLocation}
-                  disabled={isLocationLoading}
-                >
-                  {isLocationLoading ? '🔄 Locating...' : '🔄 Refresh Location'}
-                </button>
               </div>
             </div>
           </div>
@@ -732,42 +616,28 @@ function DocumentUploadForm() {
             </div>
           </div>
 
-          {/* Button Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            <button
-              type="button"
-              className="bg-gradient-to-r from-gray-500 to-gray-600 text-white py-4 px-6 rounded-2xl font-bold uppercase tracking-wider transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-              onClick={handleBack}
-            >
-              Back
-            </button>
-            
-            <button
-              type="button"
-              className={`py-4 px-6 rounded-2xl font-bold uppercase tracking-wider transition-all duration-300 ${
-                isSaving
-                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:-translate-y-1 hover:shadow-lg'
-              }`}
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              {saveBtnText}
-            </button>
-            
-            <button
-              type="button"
-              className={`py-4 px-6 rounded-2xl font-bold uppercase tracking-wider transition-all duration-300 ${
-                canProceed
-                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:-translate-y-1 hover:shadow-lg'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-              disabled={!canProceed}
-              onClick={handleNext}
-            >
-              Next
-            </button>
-          </div>
+          {/* Navigation Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="flex-1 py-4 px-6 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                >
+                  ← Back
+                </button>
+                <button
+                  type="button"
+                  disabled={!canProceed}
+                  onClick={handleNext}
+                  className={`flex-1 py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+                    canProceed
+                      ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  Next →
+                </button>
+              </div> 
         </div>
       </div>
     </div>

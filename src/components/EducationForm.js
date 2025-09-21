@@ -325,7 +325,8 @@ function getErrorMessage(fieldId, value, formData) {
     return isValid;
   }
 
-  function handleSave() {
+  function handleNext() {
+    if (!isFormValid) return;
     if (validateAllFields()) {
       const saveData = {
         ...formData,
@@ -369,12 +370,6 @@ function getErrorMessage(fieldId, value, formData) {
           setSaveButtonColor("bg-gradient-to-r from-blue-500 to-purple-600");
         }, 4000);
       }
-    }
-  }
-
-  function handleNext() {
-    if (!isFormValid) return;
-    if (validateAllFields()) {
       navigate('/education45');
     }
   }
@@ -661,30 +656,28 @@ function getErrorMessage(fieldId, value, formData) {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4">
+          {/* Navigation Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 pt-6">
             <button
               type="button"
               onClick={handleBack}
-              className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg uppercase tracking-wide"
+              className="flex-1 py-4 px-6 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
             >
-              Back
+              ← Back
             </button>
             <button
               type="button"
-              onClick={handleSave}
-              className={`flex-1 ${saveButtonColor} hover:opacity-90 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg uppercase tracking-wide`}
-            >
-              {saveButtonText}
-            </button>
-            <button
-              type="button"
-              onClick={handleNext}
               disabled={!isFormValid}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg uppercase tracking-wide disabled:opacity-60"
+              onClick={handleNext}
+              className={`flex-1 py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+                isFormValid
+                  ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
-              Next
+              Next →
             </button>
-          </div>
+          </div> 
         </form>
       </div>
     </div>

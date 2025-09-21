@@ -4,10 +4,6 @@ import { Mail, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-r
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -17,7 +13,7 @@ export default function ForgotPassword() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -31,35 +27,38 @@ export default function ForgotPassword() {
       return;
     }
 
-    if (!newPassword) {
-      setError('New password is required');
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters long');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError('Confirm password does not match new password');
-      return;
-    }
-
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      const response = await fetch("http://137.97.126.110:5500/api/v1/auth/resetpassword", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          // newPassword: newPassword,   // include if API requires password
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsSubmitted(true);
+      } else {
+        setError(data.message || "Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      setError("Network error. Please try again later.");
+    } finally {
       setIsLoading(false);
-      setIsSubmitted(true);
-    }, 2000);
+    }
   };
+
 
   const handleBackToLogin = () => {
     setIsSubmitted(false);
     setEmail('');
-    setNewPassword('');
-    setConfirmPassword('');
     setError('');
     navigate('/login');
   };
@@ -129,7 +128,7 @@ export default function ForgotPassword() {
             />
           </div>
 
-          <div>
+          {/* <div>
             <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
               New Password
             </label>
@@ -175,7 +174,7 @@ export default function ForgotPassword() {
                 {showConfirmPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
               </button>
             </div>
-          </div>
+          </div> */}
 
           {error && (
             <div className="flex items-center text-red-600 text-sm">

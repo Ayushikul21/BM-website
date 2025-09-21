@@ -23,7 +23,7 @@ const SkillsProjectsForm = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [saveButtonText, setSaveButtonText] = useState("Save");
   const [saveButtonColor, setSaveButtonColor] = useState("bg-gradient-to-r from-green-500 to-teal-500");
-  const [canProceed, setCanProceed] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
   const [charCounts, setCharCounts] = useState({
     keySkills: 0,
     projects: 0,
@@ -72,7 +72,7 @@ const SkillsProjectsForm = () => {
   }, []);
 
   useEffect(() => {
-    setCanProceed(validateMandatoryFields());
+    setIsFormValid(validateMandatoryFields());
   }, [formData]);
 
   function handleInputChange(e) {
@@ -117,10 +117,11 @@ const SkillsProjectsForm = () => {
         isValid = false;
       }
     });
+    setIsFormValid(isValid);
     return isValid;
   }
 
-  function handleSave() {
+  function handleNext() {
     let isValid = true;
     let newErrors = {};
     ["keySkills"].forEach((fieldId) => {
@@ -133,7 +134,7 @@ const SkillsProjectsForm = () => {
     });
     setErrors(newErrors);
     
-    if (isValid) {
+    if (validateMandatoryFields()) {
       const saveData = {
         ...formData,
         savedAt: new Date().toLocaleString()
@@ -153,15 +154,8 @@ const SkillsProjectsForm = () => {
         setSaveButtonText("Save");
         setSaveButtonColor("bg-gradient-to-r from-green-500 to-teal-500");
       }, 4000);
-    }
-  }
-
-  function handleNext() {
-    if (!validateMandatoryFields()) return;
-    
-    // Auto-save before navigating
-    formStorage.skillsProjectsData = formData;
     navigate('/document');
+    }
   }
 
   function handleBack() {
@@ -288,35 +282,28 @@ const SkillsProjectsForm = () => {
                 )}
               </div>
 
-              {/* Button Container */}
-              <div className="flex gap-6 pt-8">
+              {/* Navigation Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 <button
                   type="button"
-                  className="flex-1 px-8 py-4 bg-gray-500 text-white rounded-2xl text-lg font-bold uppercase tracking-wide transition-all duration-300 hover:bg-gray-600 hover:-translate-y-1 hover:shadow-lg"
                   onClick={handleBack}
+                  className="flex-1 py-4 px-6 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
                 >
-                  Back
+                  ← Back
                 </button>
                 <button
                   type="button"
-                  className={`flex-1 px-8 py-4 text-white rounded-2xl text-lg font-bold uppercase tracking-wide transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${saveButtonColor} hover:opacity-90`}
-                  onClick={handleSave}
-                >
-                  {saveButtonText}
-                </button>
-                <button
-                  type="button"
-                  className={`flex-1 px-8 py-4 text-white rounded-2xl text-lg font-bold uppercase tracking-wide transition-all duration-300 ${
-                    canProceed
-                      ? "bg-gradient-to-r from-indigo-500 to-purple-600 hover:-translate-y-1 hover:shadow-lg"
-                      : "bg-gray-400 cursor-not-allowed opacity-60"
-                  }`}
-                  disabled={!canProceed}
+                  disabled={!isFormValid}
                   onClick={handleNext}
+                  className={`flex-1 py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+                    isFormValid
+                      ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
                 >
-                  Next
+                  Next →
                 </button>
-              </div>
+              </div> 
             </div>
           </div>
         </div>

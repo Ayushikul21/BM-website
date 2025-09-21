@@ -246,12 +246,6 @@ const PersonalDetailsForm = () => {
   function handleNext() {
     if (!isFormValid) return;
     if (validateAllFields()) {
-      navigate('/education');
-    }
-  }
-
-  function handleSave() {
-    if (validateAllFields()) {
       const saveData = {
         ...collectFormData(),
         savedAt: new Date().toLocaleString()
@@ -274,6 +268,7 @@ const PersonalDetailsForm = () => {
         setSaveButtonText("Save");
         setSaveButtonColor("bg-green-500");
       }, 4000);
+      navigate('/education');
     }
   }
 
@@ -497,35 +492,27 @@ const PersonalDetailsForm = () => {
             )}
           </div>
 
-          <div className="flex gap-4 mt-5">
+          <div className="flex flex-col sm:flex-row gap-4 pt-6">
             <button
               type="button"
               onClick={handleBack}
-              className="flex-1 px-4 py-4 bg-gray-500 text-white rounded-xl text-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-gray-600 hover:-translate-y-1 hover:shadow-lg"
+              className="flex-1 py-4 px-6 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
             >
-              Back
+              ← Back
             </button>
             <button
               type="button"
               disabled={!isFormValid}
               onClick={handleNext}
-              className={`flex-1 px-4 py-4 rounded-xl text-lg font-semibold transition-all duration-300 text-white ${
+              className={`flex-1 py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
                 isFormValid
-                  ? "bg-blue-500 hover:bg-blue-600 hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-                  : "bg-gray-400 cursor-not-allowed opacity-60"
+                  ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
-              Next
+              Next →
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={handleSave}
-            className={`w-full px-4 py-4 ${saveButtonColor} text-white rounded-xl text-lg font-semibold cursor-pointer transition-all duration-300 hover:bg-green-600 hover:-translate-y-1 hover:shadow-lg mt-4`}
-          >
-            {saveButtonText}
-          </button>
         </div>
       </div>
     </div>

@@ -174,7 +174,7 @@ const [employeeAll, setEmployeeAll] = useState([]);
 
 const fetchAllLeaves = async () => {
   try {
-    const response = await fetch('http://137.97.126.110:5500/api/v1/leave/getAllLeaves', {
+    const response = await fetch('https://bandymoot.com/api/v1/leave/getAllLeaves', {
       method: 'GET',
       headers: {
         "Content-Type": "application/json",
@@ -208,7 +208,7 @@ const fetchAllLeaves = async () => {
 
 const fetchAllEmployees = async () => {
   try {
-    const response = await fetch('http://137.97.126.110:5500/api/v1/employees/allemployees', {
+    const response = await fetch('https://bandymoot.com/api/v1/employees/allemployees', {
       method: 'GET',
       headers: {
         "Content-Type": "application/json",
@@ -225,7 +225,7 @@ const fetchAllEmployees = async () => {
 
   const handleLeaveAction = async (leaveId, userid, action) => {
     try {
-      const response = await fetch('http://137.97.126.110:5500/api/v1/leave/approve', {
+      const response = await fetch('https://bandymoot.com/api/v1/leave/approve', {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
@@ -329,7 +329,7 @@ const fetchAllEmployees = async () => {
   const viewLeave = async(id) =>{
      try {
       console.log("leaveId123443564y6y",id)
-         const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/leaveDetails', {
+         const response = await fetch('https://bandymoot.com/api/v1/Dashboard/leaveDetails', {
             method: 'POST',
             headers: {
               "Content-Type": "application/json",
@@ -581,7 +581,7 @@ const fetchAllEmployees = async () => {
       // Load jsPDF dynamically
       if (!window.jspdf) {
         const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        script.src = 'https://cdnjs.cloud/apiflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
         document.head.appendChild(script);
         
         // Wait for script to load

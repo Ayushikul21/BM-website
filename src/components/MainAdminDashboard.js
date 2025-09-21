@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminDashboard from './AdminDashboard';
-import { 
-  Users, 
-  Calendar, 
-  Clock, 
-  IndianRupee, 
-  FileText, 
-  TrendingUp, 
-  Settings, 
+import {
+  Users,
+  Calendar,
+  Clock,
+  IndianRupee,
+  FileText,
+  TrendingUp,
+  Settings,
   User,
   Search,
   Filter,
@@ -27,7 +27,7 @@ import {
   Bell,
   LogOut,
   Camera,
-  EyeOff 
+  EyeOff
 } from 'lucide-react';
 import AdminAttendance from './AdminAttedance';
 
@@ -52,22 +52,58 @@ const MainAdminDashboard = () => {
 
   const [employeeData, setEmployeeData] = useState([]);
 
-  // Sample employee data
-    const [adminData] = useState({
-      name: "Om Prakash Dubey",
-      id: "10100",
-      department: "Administration",
-      position: "SAP Data Analyst",
-      email: "omdubey@bandymoot.com",
-      phone: "+91 7905226299",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-    });
-    
+  // Sample Admin data
+
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      console.log("hello1")
+      try {
+        const response = await fetch('https://bandymoot.com/api/v1/Dashboard/userDetails', {
+          method: 'GET',
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('token')}` // or hardcoded token
+          }
+        });
+        console.log("hello2")
+        const result = await response.json();
+        // const leavedata=result.leaveData.takenLeave
+        const data = result.data
+        setAdmindata({
+          name: data.firstName + data.lastName,
+          id: data.employeeId,
+          department: data.additionalDetails.department,
+          position: data.additionalDetails.position || "SAP Data Analyst",
+          email: data.email,
+          phone: data.phone || "+91 7905226299",
+          avatar: data.image
+        })
+        console.log("hello3") // Get the data object
+        console.log("data admin", data);
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
+
+  const [adminData, setAdmindata] = useState({
+    name: "Om Prakash Dubey",
+    id: "10100",
+    department: "Administration",
+    position: "SAP Data Analyst",
+    email: "omdubey@bandymoot.com",
+    phone: "+91 7905226299",
+    avatar: ""
+  });
+
 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await fetch('http://137.97.126.110:5500/api/v1/employees/allemployees', {
+        const response = await fetch('https://bandymoot.com/api/v1/employees/allemployees', {
           method: 'GET',
           headers: {
             "Content-Type": "application/json",
@@ -77,10 +113,10 @@ const MainAdminDashboard = () => {
 
         const result = await response.json();
         const employees = result.data;
-        console.log("employees",employees)
+        console.log("employees", employees)
 
         const enriched = employees.map(emp => ({
-          name: emp.firstName+" "+emp.lastName || "Unnamed",
+          name: emp.firstName + " " + emp.lastName || "Unnamed",
           email: emp.email || "unknown@example.com",
           id: emp.employeeId || emp.id || "N/A",
           department: emp.department || "Data Analyst",
@@ -103,22 +139,30 @@ const MainAdminDashboard = () => {
   }, []);
 
 
-  //   // Admin Details
-  // const [employeeData, setEmployeeData] = useState([
-  //   {
-  //     name: userName,
-  //     id: employeeId,
-  //     department: "Data Analyst",
-  //     position: "SAP Data Analyst",
-  //     email: email,
-  //     phone: "+1 (555) 123-4567",
-  //     joinDate: "June 15, 2025",
-  //     manager: "Samaksh Gupta",
-  //     avatar: "A", // Use initial or avatar text
-  //     status: "Active",
-  //     salary: 80000,
-  //   },
-  // ]);
+  const changePassword = async () => {
+    try {
+      console.log("ChangePassword2");
+      const response = await fetch("https://bandymoot.com/api/v1/auth/changepassword", {
+        method: "POST", // or PUT if backend expects it
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token')}`, // 👈 send token in header
+        },
+        body: JSON.stringify({
+          newPassword: passwordData.newPassword,
+          oldPassword: passwordData.currentPassword,
+        }),
+      });
+
+      console.log("pass", passwordData.newPassword);
+
+      const data = await response.json();
+      console.log("Response:", data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
 
   // Sample data - in real app, this would come from API
   const [employees] = useState([
@@ -235,7 +279,7 @@ const MainAdminDashboard = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Employee Management</h1>
-        <button 
+        <button
           onClick={() => openModal('add-employee')}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
         >
@@ -283,7 +327,7 @@ const MainAdminDashboard = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {employeeData.filter(emp => 
+              {employeeData.filter(emp =>
                 emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 emp.department.toLowerCase().includes(searchTerm.toLowerCase())
@@ -310,13 +354,13 @@ const MainAdminDashboard = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.salary.toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
-                      <button 
+                      <button
                         onClick={() => openModal('view-employee', employee)}
                         className="text-blue-600 hover:text-blue-900"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => openModal('edit-employee', employee)}
                         className="text-green-600 hover:text-green-900"
                       >
@@ -337,18 +381,18 @@ const MainAdminDashboard = () => {
   );
 
   const renderAttendance = () => {
-    return <AdminAttendance/>
+    return <AdminAttendance />
   };
 
   const renderLeaves = () => {
-    return <AdminDashboard/>
+    return <AdminDashboard />
   }
 
   const renderSalary = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Salary & Benefits</h1>
-        <button 
+        <button
           onClick={renderPayslip}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
           Generate Payroll
@@ -373,7 +417,7 @@ const MainAdminDashboard = () => {
                 const allowances = Math.round(employee.salary * 0.15);
                 const deductions = Math.round(employee.salary * 0.12);
                 const netSalary = employee.salary + allowances - deductions;
-                
+
                 return (
                   <tr key={employee.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -415,200 +459,201 @@ const MainAdminDashboard = () => {
     </div>
   );
 
-const renderProfile = () => {
-  
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileImage(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const renderProfile = () => {
 
-  const handlePasswordChange = (field, value) => {
-    setPasswordData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+    const handleImageUpload = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setProfileImage(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
 
-  const handlePasswordSubmit = () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('New password and confirm password do not match!');
-      return;
-    }
-    if (passwordData.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long!');
-      return;
-    }
-    // Handle password update logic here
-    alert('Password updated successfully!');
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
-  };
+    const handlePasswordChange = (field, value) => {
+      setPasswordData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    };
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-      
-      {/* Profile Information Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">        
-        <div className="flex items-center space-x-6 mb-6">
-          <div className="relative">
-            <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
-              {profileImage ? (
-                <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                'OD'
+    const handlePasswordSubmit = () => {
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        alert('New password and confirm password do not match!');
+        return;
+      }
+      if (passwordData.newPassword.length < 8) {
+        alert('Password must be at least 8 characters long!');
+        return;
+      }
+      // Handle password update logic here
+      alert('Password updated successfully!');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      console.log("ChangePassword1")
+      changePassword()
+    };
+
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+
+        {/* Profile Information Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center space-x-6 mb-6">
+            <div className="relative">
+              <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+                {profileImage ? (
+                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <img src={adminData.avatar} alt="Profile" className="w-full h-full object-cover" />
+                )}
+              </div>
+              <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition-colors">
+                <Camera size={16} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">{adminData.name}</h3>
+              <p className="text-gray-600">System Administrator</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.name}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.email}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.phone}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.department}</p>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              Update Profile
+            </button>
+          </div>
+        </div>
+
+        {/* Change Password Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Change Password</h2>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+              <div className="relative">
+                <input
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={passwordData.currentPassword}
+                  onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter current password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+              <div className="relative">
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  value={passwordData.newPassword}
+                  onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter new password"
+                  minLength="8"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">Password must be at least 8 characters long</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Confirm new password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+                <p className="text-sm text-red-500 mt-1">Passwords do not match</p>
               )}
             </div>
-            <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition-colors">
-              <Camera size={16} />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-            </label>
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900">{adminData.name}</h3>
-            <p className="text-gray-600">System Administrator</p>
-            <p className="text-gray-600">{adminData.email}</p>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.name}</p>          
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.email}</p>          
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.phone}</p>          
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-            <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.department}</p>          
-          </div>
-        </div>
-        
-        <div className="mt-6">
-          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-            Update Profile
-          </button>
-        </div>
-      </div>
 
-      {/* Change Password Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Change Password</h2>
-        
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-            <div className="relative">
-              <input
-                type={showCurrentPassword ? "text" : "password"}
-                value={passwordData.currentPassword}
-                onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter current password"
-                required
-              />
+            <div className="flex space-x-4">
               <button
                 type="button"
-                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                onClick={handlePasswordSubmit}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                Update Password
               </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-            <div className="relative">
-              <input
-                type={showNewPassword ? "text" : "password"}
-                value={passwordData.newPassword}
-                onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter new password"
-                minLength="8"
-                required
-              />
               <button
                 type="button"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                onClick={() => setPasswordData({
+                  currentPassword: '',
+                  newPassword: '',
+                  confirmPassword: ''
+                })}
+                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors"
               >
-                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                Cancel
               </button>
             </div>
-            <p className="text-sm text-gray-500 mt-1">Password must be at least 8 characters long</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                value={passwordData.confirmPassword}
-                onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Confirm new password"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
-                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            {passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
-              <p className="text-sm text-red-500 mt-1">Passwords do not match</p>
-            )}
-          </div>
-
-          <div className="flex space-x-4">
-            <button
-              type="button"
-              onClick={handlePasswordSubmit}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Update Password
-            </button>
-            <button
-              type="button"
-              onClick={() => setPasswordData({
-                currentPassword: '',
-                newPassword: '',
-                confirmPassword: ''
-              })}
-              className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Cancel
-            </button>
           </div>
         </div>
       </div>
-    </div>
-  );
- };
+    );
+  };
 
   const renderDocuments = () => (
     <div className="space-y-6">
@@ -627,14 +672,14 @@ const renderProfile = () => {
           <p className="text-gray-600 mb-4">Manage employment contracts and agreements</p>
           <button className="text-blue-600 hover:text-blue-800 font-medium">View All (12)</button>
         </div>
-        
+
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <FileText className="w-12 h-12 text-green-600 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Policy Documents</h3>
           <p className="text-gray-600 mb-4">Company policies and procedures</p>
           <button className="text-green-600 hover:text-green-800 font-medium">View All (8)</button>
         </div>
-        
+
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <FileText className="w-12 h-12 text-purple-600 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Training Materials</h3>
@@ -727,8 +772,8 @@ const renderProfile = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-green-600 h-2 rounded-full" 
+                      <div
+                        className="bg-green-600 h-2 rounded-full"
                         style={{ width: `${Math.random() * 100}%` }}
                       ></div>
                     </div>
@@ -754,7 +799,7 @@ const renderProfile = () => {
   const renderSettings = () => (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">General Settings</h3>
@@ -868,7 +913,7 @@ const renderProfile = () => {
                 {modalType === 'edit-employee' && 'Edit Employee'}
                 {modalType === 'view-employee' && 'Employee Details'}
               </h2>
-              <button 
+              <button
                 onClick={closeModal}
                 className="text-gray-400 hover:text-gray-600"
               >
@@ -883,40 +928,40 @@ const renderProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                    <input 
-                      type="text" 
-                      defaultValue={selectedEmployee?.name || ''} 
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                    <input
+                      type="text"
+                      defaultValue={selectedEmployee?.name || ''}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input 
-                      type="email" 
-                      defaultValue={selectedEmployee?.email || ''} 
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                    <input
+                      type="email"
+                      defaultValue={selectedEmployee?.email || ''}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                    <input 
-                      type="tel" 
-                      defaultValue={selectedEmployee?.phone || ''} 
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                    <input
+                      type="tel"
+                      defaultValue={selectedEmployee?.phone || ''}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
-                    <input 
-                      type="text" 
-                      defaultValue={selectedEmployee?.position || ''} 
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                    <input
+                      type="text"
+                      defaultValue={selectedEmployee?.position || ''}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                    <select 
-                      defaultValue={selectedEmployee?.department || ''} 
+                    <select
+                      defaultValue={selectedEmployee?.department || ''}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2"
                     >
                       <option value="">Select Department</option>
@@ -930,24 +975,24 @@ const renderProfile = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Salary</label>
-                    <input 
-                      type="number" 
-                      defaultValue={selectedEmployee?.salary || ''} 
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                    <input
+                      type="number"
+                      defaultValue={selectedEmployee?.salary || ''}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Joining Date</label>
-                    <input 
-                      type="date" 
-                      defaultValue={selectedEmployee?.joiningDate || ''} 
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                    <input
+                      type="date"
+                      defaultValue={selectedEmployee?.joiningDate || ''}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select 
-                      defaultValue={selectedEmployee?.status || 'Active'} 
+                    <select
+                      defaultValue={selectedEmployee?.status || 'Active'}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2"
                     >
                       <option value="Active">Active</option>
@@ -956,18 +1001,18 @@ const renderProfile = () => {
                     </select>
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                  <textarea 
-                    rows={3} 
-                    defaultValue={selectedEmployee?.address || ''} 
+                  <textarea
+                    rows={3}
+                    defaultValue={selectedEmployee?.address || ''}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2"
                   ></textarea>
                 </div>
 
                 <div className="flex justify-end space-x-3 pt-4">
-                  <button 
+                  <button
                     onClick={closeModal}
                     className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                   >
@@ -1039,13 +1084,13 @@ const renderProfile = () => {
                     <p className="text-sm text-blue-700">Present: {selectedEmployee.attendance.present} days</p>
                     <p className="text-sm text-blue-700">Absent: {selectedEmployee.attendance.absent} days</p>
                   </div>
-                  
+
                   <div className="bg-green-50 p-4 rounded-lg">
                     <h5 className="font-semibold text-green-900 mb-2">Leave Balance</h5>
                     <p className="text-sm text-green-700">Total: {selectedEmployee.leaves.total} days</p>
                     <p className="text-sm text-green-700">Used: {selectedEmployee.leaves.used} days</p>
                   </div>
-                  
+
                   <div className="bg-purple-50 p-4 rounded-lg">
                     <h5 className="font-semibold text-purple-900 mb-2">Performance</h5>
                     <div className="flex items-center">
@@ -1060,13 +1105,13 @@ const renderProfile = () => {
                 </div>
 
                 <div className="flex justify-end space-x-3 pt-4">
-                  <button 
+                  <button
                     onClick={closeModal}
                     className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                   >
                     Close
                   </button>
-                  <button 
+                  <button
                     onClick={() => setModalType('edit-employee')}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                   >
@@ -1107,7 +1152,7 @@ const renderProfile = () => {
             <p className="text-sm text-gray-500">Welcome back to your admin panel</p>
           </div>
         </div>
-        
+
         {/* Right side - Actions */}
         <div className="flex items-center space-x-4">
           {/* Notifications */}
@@ -1119,23 +1164,25 @@ const renderProfile = () => {
               </span>
             )}
           </button>
-          
+
           {/* User Profile */}
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">OD</span>
+              <span className="text-white text-sm font-medium">
+              </span>
+              <img src={adminData.avatar} alt="Admin Avatar" className='rounded-full' />
             </div>
             <div>
               <p className="text-sm font-medium text-gray-900">{adminData.name}</p>
-              <p className="text-xs text-gray-600">Administrator</p>
+              <p className="text-xs text-gray-600">{adminData.position}</p>
             </div>
           </div>
         </div>
       </header>
-      
+
       <div className="flex h-screen pt-20"> {/* Container for sidebar and content */}
         {/* Fixed Sidebar */}
-        <div className="fixed left-0 top-20 bottom-0 w-64 bg-white border-r border-gray-200 flex flex-col z-40">          
+        <div className="fixed left-0 top-20 bottom-0 w-64 bg-white border-r border-gray-200 flex flex-col z-40">
           <nav className="mt-6 flex-1 overflow-y-auto">
             {sidebarItems.map(item => {
               const Icon = item.icon;
@@ -1143,9 +1190,8 @@ const renderProfile = () => {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center space-x-3 px-6 py-3 text-left hover:bg-blue-50 transition-colors ${
-                    activeTab === item.id ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600' : 'text-gray-700'
-                  }`}
+                  className={`w-full flex items-center space-x-3 px-6 py-3 text-left hover:bg-blue-50 transition-colors ${activeTab === item.id ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600' : 'text-gray-700'
+                    }`}
                 >
                   <Icon className="w-5 h-5" />
                   <span className="font-medium">{item.label}</span>
@@ -1156,7 +1202,7 @@ const renderProfile = () => {
 
           <div className="p-6 border-t">
             <button
-              onClick={() => navigate('/login')} 
+              onClick={() => navigate('/login')}
               className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
               <LogOut className="w-5 h-5" />
               <span>Logout</span>

@@ -165,11 +165,36 @@ const UserAttendance = () => {
     return statusCode; // Return as-is for other cases
   };
 
+  const[empId, setEmpId] = useState();
+
+  useEffect(() => {
+      const fetchUserDetails = async () => {
+        try {
+          const response = await fetch('https://bandymoot.com/api/v1/Dashboard/userDetails', {
+            method: 'GET',
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem('token')}` // or hardcoded token
+            }
+          });
+          console.log("hello2")
+          const result = await response.json();
+          const data = result.data;
+          console.log("data",data);
+          setEmpId(data.employeeId);
+        } catch (error) {
+          console.error('Error fetching user details:', error);
+        }
+      };
+      fetchUserDetails();
+    }, []);
+  
+
   const fetchAttendanceData = async () => {
     setLoading(true);
     const { fromDate, toDate } = getDateRange();
-    
-    const url = `https://api.etimeoffice.com/api/DownloadInOutPunchData?Empcode=10118&FromDate=${fromDate}&ToDate=${toDate}`;
+    console.log('Employee ID:', empId);
+    const url = `https://api.etimeoffice.com/api/DownloadInOutPunchData?Empcode=${empId}&FromDate=${fromDate}&ToDate=${toDate}`;
     
     console.log('API URL:', url);
     console.log('Date Range:', { fromDate, toDate });
@@ -184,7 +209,7 @@ const UserAttendance = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`HTTPS ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -416,7 +441,7 @@ const UserAttendance = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Present Days</p>
-                <p className="text-2xl font-bold text-green-600">{attendanceStats.totalPresent}</p>
+                <p className="text-2xl font-bold text-green-600">{attendanceStats.totalPresent + attendanceStats.totalLate}</p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
                 <CheckCircle className="w-6 h-6 text-green-600" />
