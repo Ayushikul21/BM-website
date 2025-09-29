@@ -30,6 +30,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import AdminAttendance from './AdminAttedance';
+import EmployeeProfile from './EmployeeProfile';
 
 const MainAdminDashboard = () => {
 
@@ -460,199 +461,7 @@ const MainAdminDashboard = () => {
   );
 
   const renderProfile = () => {
-
-    const handleImageUpload = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setProfileImage(e.target.result);
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-
-    const handlePasswordChange = (field, value) => {
-      setPasswordData(prev => ({
-        ...prev,
-        [field]: value
-      }));
-    };
-
-    const handlePasswordSubmit = () => {
-      if (passwordData.newPassword !== passwordData.confirmPassword) {
-        alert('New password and confirm password do not match!');
-        return;
-      }
-      if (passwordData.newPassword.length < 8) {
-        alert('Password must be at least 8 characters long!');
-        return;
-      }
-      // Handle password update logic here
-      alert('Password updated successfully!');
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-      console.log("ChangePassword1")
-      changePassword()
-    };
-
-    return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-
-        {/* Profile Information Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center space-x-6 mb-6">
-            <div className="relative">
-              <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
-                {profileImage ? (
-                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <img src={adminData.avatar} alt="Profile" className="w-full h-full object-cover" />
-                )}
-              </div>
-              <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition-colors">
-                <Camera size={16} />
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </label>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900">{adminData.name}</h3>
-              <p className="text-gray-600">System Administrator</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.name}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.email}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.phone}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded border">{adminData.department}</p>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-              Update Profile
-            </button>
-          </div>
-        </div>
-
-        {/* Change Password Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Change Password</h2>
-
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-              <div className="relative">
-                <input
-                  type={showCurrentPassword ? "text" : "password"}
-                  value={passwordData.currentPassword}
-                  onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter current password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-              <div className="relative">
-                <input
-                  type={showNewPassword ? "text" : "password"}
-                  value={passwordData.newPassword}
-                  onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter new password"
-                  minLength="8"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-              <p className="text-sm text-gray-500 mt-1">Password must be at least 8 characters long</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={passwordData.confirmPassword}
-                  onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Confirm new password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-              {passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
-                <p className="text-sm text-red-500 mt-1">Passwords do not match</p>
-              )}
-            </div>
-
-            <div className="flex space-x-4">
-              <button
-                type="button"
-                onClick={handlePasswordSubmit}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Update Password
-              </button>
-              <button
-                type="button"
-                onClick={() => setPasswordData({
-                  currentPassword: '',
-                  newPassword: '',
-                  confirmPassword: ''
-                })}
-                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <EmployeeProfile/>
   };
 
   const renderDocuments = () => (
@@ -1202,7 +1011,7 @@ const MainAdminDashboard = () => {
 
           <div className="p-6 border-t">
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/')}
               className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
               <LogOut className="w-5 h-5" />
               <span>Logout</span>

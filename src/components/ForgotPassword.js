@@ -60,7 +60,7 @@ export default function ForgotPassword() {
     setIsSubmitted(false);
     setEmail('');
     setError('');
-    navigate('/login');
+    navigate('/');
   };
 
   if (isSubmitted) {

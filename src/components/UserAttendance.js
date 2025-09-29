@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, TrendingUp, Users, AlertCircle, CheckCircle, XCircle, Coffee, MapPin, RefreshCw } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, Users, AlertCircle, CheckCircle, XCircle, Coffee, PlusCircle, FileText, Briefcase, RefreshCw } from 'lucide-react';
 
 const UserAttendance = () => {
-  const [currentDate] = useState(new Date());
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -24,11 +23,6 @@ const UserAttendance = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
-
-  // Fetch data when month/year changes
-  useEffect(() => {
-    fetchAttendanceData();
-  }, [selectedMonth, selectedYear]);
 
   // Helper function to parse date strings
   const parseDateString = (dateStr) => {
@@ -85,7 +79,7 @@ const UserAttendance = () => {
 
   // Function to calculate attendance statistics
   const calculateStats = (data) => {
-    const { firstDay, lastDay } = getDateRange();
+    const { lastDay } = getDateRange();
     const daysInMonth = lastDay.getDate();
     const today = new Date();
     
@@ -165,7 +159,7 @@ const UserAttendance = () => {
     return statusCode; // Return as-is for other cases
   };
 
-  const[empId, setEmpId] = useState();
+  const [empId, setEmpId] = useState();
 
   useEffect(() => {
       const fetchUserDetails = async () => {
@@ -174,13 +168,17 @@ const UserAttendance = () => {
             method: 'GET',
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem('token')}` // or hardcoded token
+              Authorization: `Bearer ${localStorage.getItem('token')}`
             }
           });
-          console.log("hello2")
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
           const result = await response.json();
           const data = result.data;
-          console.log("data",data);
+          console.log("User data:", data);
           setEmpId(data.employeeId);
         } catch (error) {
           console.error('Error fetching user details:', error);
@@ -191,6 +189,11 @@ const UserAttendance = () => {
   
 
   const fetchAttendanceData = async () => {
+    if (!empId) {
+      console.log('Employee ID not available yet');
+      return;
+    }
+    
     setLoading(true);
     const { fromDate, toDate } = getDateRange();
     console.log('Employee ID:', empId);
@@ -246,6 +249,13 @@ const UserAttendance = () => {
     }
   };
 
+  // Fetch attendance data when empId or month/year changes
+  useEffect(() => {
+    if (empId) {
+      fetchAttendanceData();
+    }
+  }, [selectedMonth, selectedYear, empId]);
+
   // Generate complete attendance history including missing dates
   const generateAttendanceHistory = () => {
     const { lastDay } = getDateRange();
@@ -295,6 +305,9 @@ const UserAttendance = () => {
     return history;
   };
 
+  // Add this state for selected calendar date
+  const [selectedDate, setSelectedDate] = useState(null);
+
   // Generate calendar data with attendance status
   const generateCalendarData = () => {
     const firstDay = new Date(selectedYear, selectedMonth, 1);
@@ -324,7 +337,8 @@ const UserAttendance = () => {
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(selectedYear, selectedMonth, day);
       const dateKey = date.toISOString().split('T')[0];
-      const dateStr = date.toISOString().split('T')[0];
+      // FIX: Use local date string instead of ISO string to avoid timezone issues
+      const localDateStr = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       
       let status = 'Future'; // Default for future dates
       
@@ -353,7 +367,7 @@ const UserAttendance = () => {
       
       calendarDays.push({
         day,
-        date: dateStr,
+        date: localDateStr, // Use local date string instead of ISO
         status,
         fullDate: date
       });
@@ -404,14 +418,431 @@ const UserAttendance = () => {
 
   const attendancePercentage = calculateAttendancePercentage();
 
+  // Helper: format date to yyyy-mm-dd (for all date keys) - FIXED timezone issue
+  const toISODate = (date) => {
+    if (!date) return '';
+    if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) return date;
+    
+    // Accepts Date object or string in dd/mm/yyyy
+    let d;
+    if (typeof date === 'string' && date.includes('/')) {
+      const [day, month, year] = date.split('/');
+      d = new Date(year, month - 1, day);
+    } else if (typeof date === 'string') {
+      // If it's already in yyyy-mm-dd format, parse as local date
+      const [year, month, day] = date.split('-');
+      d = new Date(year, month - 1, day);
+    } else {
+      d = new Date(date);
+    }
+    
+    // Use local date components to avoid timezone issues
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Add Note state
+  const [notes, setNotes] = useState(() => {
+    const saved = localStorage.getItem('attendanceNotes');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const [noteText, setNoteText] = useState('');
+  const [noteError, setNoteError] = useState('');
+
+  // Add this state for loading extra work API
+  const [extraWorkLoading, setExtraWorkLoading] = useState(false);
+  const [extraWorkSuccess, setExtraWorkSuccess] = useState('');
+  const [extraWorkApiError, setExtraWorkApiError] = useState('');
+
+  // Helper: convert yyyy-mm-dd to dd/mm/yyyy
+  const toDDMMYYYY = (dateStr) => {
+    if (!dateStr) return '';
+    // Parse as local date to avoid timezone issues
+    const [year, month, day] = dateStr.split('-');
+    const d = new Date(year, month - 1, day);
+    const dayFormatted = String(d.getDate()).padStart(2, '0');
+    const monthFormatted = String(d.getMonth() + 1).padStart(2, '0');
+    const yearFormatted = d.getFullYear();
+    return `${dayFormatted}/${monthFormatted}/${yearFormatted}`;
+  };
+
+  // Extra Work state
+  const [extraWorks, setExtraWorks] = useState(() => {
+    const saved = localStorage.getItem('attendanceExtraWorks');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const [extraHours, setExtraHours] = useState('0.5');
+  const [extraText, setExtraText] = useState('');
+  const [extraError, setExtraError] = useState('');
+
+  // Persist notes and extraWorks
+  useEffect(() => {
+    localStorage.setItem('attendanceNotes', JSON.stringify(notes));
+  }, [notes]);
+  useEffect(() => {
+    localStorage.setItem('attendanceExtraWorks', JSON.stringify(extraWorks));
+  }, [extraWorks]);
+
+  // Helper: format date to readable string - FIXED timezone issue
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    // Parse as local date to avoid timezone issues
+    let d;
+    if (typeof dateStr === 'string' && dateStr.includes('/')) {
+      const [day, month, year] = dateStr.split('/');
+      d = new Date(year, month - 1, day);
+    } else if (typeof dateStr === 'string') {
+      const [year, month, day] = dateStr.split('-');
+      d = new Date(year, month - 1, day);
+    } else {
+      d = new Date(dateStr);
+    }
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  // Add this state for loading and success/error for notes API
+  const [noteLoading, setNoteLoading] = useState(false);
+  const [noteSuccess, setNoteSuccess] = useState('');
+  const [noteApiError, setNoteApiError] = useState('');
+
+  // Add state for fetched notes from API
+  const [fetchedNotes, setFetchedNotes] = useState({});
+
+  // Fetch notes from API when empId or month/year changes
+  useEffect(() => {
+    const fetchNotes = async () => {
+      if (!empId) return;
+      const { fromDate, toDate } = getDateRange();
+      try {
+        const response = await fetch('https://bandymoot.com/api/v1/attendance/GetEmployeeAttendanceByDate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            empcode: empId,
+            fromDate, // format: dd/mm/yyyy
+            toDate    // format: dd/mm/yyyy
+          })
+        });
+        
+        console.log('Fetching notes for:', { empId, fromDate, toDate });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Notes API error:', errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        console.log('Notes API response:', result);
+        
+        // Assuming result.data is an array of attendance objects with Notes and date
+        const mapped = {};
+        (result.data || []).forEach(item => {
+          // item.date is expected as dd/mm/yyyy
+          const dateStr = item.date || item.DateString || '';
+          if (dateStr && item.Notes) {
+            const [day, month, year] = dateStr.split('/');
+            if (day && month && year) {
+              const key = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+              mapped[key] = item.Notes;
+            }
+          }
+        });
+        setFetchedNotes(mapped);
+      } catch (err) {
+        console.error('Error fetching notes:', err);
+        setFetchedNotes({});
+      }
+    };
+    fetchNotes();
+  }, [empId, selectedMonth, selectedYear]);
+
+  // Merge local notes (just added) and fetchedNotes (from API)
+  const getNoteForDate = (date) => {
+    const key = toISODate(date);
+    return notes[key] || fetchedNotes[key] || '';
+  };
+
+  // Update handleAddNote to call the API
+  const handleAddNote = async (e) => {
+    e.preventDefault();
+    setNoteError('');
+    setNoteApiError('');
+    setNoteSuccess('');
+    
+    if (!selectedDate || !noteText.trim()) {
+      setNoteError('Please select a date and enter a note.');
+      return;
+    }
+    
+    if (!empId) {
+      setNoteApiError('Employee ID not available. Please try again.');
+      return;
+    }
+    
+    const key = toISODate(selectedDate);
+    if (notes[key] || fetchedNotes[key]) {
+      setNoteError('Note already exists for this date.');
+      return;
+    }
+    
+    setNoteLoading(true);
+    try {
+      const payload = {
+        date: toDDMMYYYY(selectedDate),
+        Notes: noteText.trim(),
+        empcode: empId
+      };
+      
+      console.log('Adding note with payload:', payload);
+      
+      const response = await fetch('https://bandymoot.com/api/v1/attendance/updateAttendanceNotes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      console.log('Note API response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Note API error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('Note API success:', result);
+      
+      // Update both local state and refetch notes
+      setNotes({ ...notes, [key]: noteText.trim() });
+      setNoteSuccess('Note added successfully!');
+      setNoteText('');
+      
+      // Refetch notes to ensure we have the latest data
+      const { fromDate, toDate } = getDateRange();
+      const notesResponse = await fetch('https://bandymoot.com/api/v1/attendance/GetEmployeeAttendanceByDate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          empcode: empId,
+          fromDate,
+          toDate
+        })
+      });
+      
+      if (notesResponse.ok) {
+        const notesResult = await notesResponse.json();
+        const mapped = {};
+        (notesResult.data || []).forEach(item => {
+          const dateStr = item.date || item.DateString || '';
+          if (dateStr && item.Notes) {
+            const [day, month, year] = dateStr.split('/');
+            if (day && month && year) {
+              const notesKey = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+              mapped[notesKey] = item.Notes;
+            }
+          }
+        });
+        setFetchedNotes(mapped);
+      }
+      
+    } catch (err) {
+      console.error('Error adding note:', err);
+      setNoteApiError('Failed to add note. Please try again.');
+    } finally {
+      setNoteLoading(false);
+    }
+  };
+
+  // Add Extra Work Handler (with API call)
+  const handleAddExtraWork = async (e) => {
+    e.preventDefault();
+    setExtraError('');
+    setExtraWorkApiError('');
+    setExtraWorkSuccess('');
+    
+    if (!selectedDate || !extraText.trim()) {
+      setExtraError('Please select a date and describe your work.');
+      return;
+    }
+    
+    if (!empId) {
+      setExtraWorkApiError('Employee ID not available. Please try again.');
+      return;
+    }
+    
+    const key = toISODate(selectedDate);
+    if (extraWorks[key] || fetchedExtraWorks[key]) {
+      setExtraError('Extra work already logged for this date.');
+      return;
+    }
+    
+    setExtraWorkLoading(true);
+    try {
+      const payload = {
+        date: toDDMMYYYY(selectedDate),
+        extraWork: parseFloat(extraHours),
+        description: extraText.trim(),
+        employeeId: empId
+      };
+      
+      console.log('Adding extra work with payload:', payload);
+      
+      const response = await fetch('https://bandymoot.com/api/v1/Dashboard/extraWorkInhours', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      console.log('Extra work API response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Extra work API error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('Extra work API success:', result);
+      
+      // Save with status 'pending'
+      setExtraWorks({
+        ...extraWorks,
+        [key]: { hours: extraHours, text: extraText.trim(), status: 'pending' }
+      });
+      setExtraWorkSuccess('Extra work added successfully!');
+      setExtraHours('0.5');
+      setExtraText('');
+      
+      // Refetch extra works to ensure we have the latest data
+      const extraWorksResponse = await fetch('https://bandymoot.com/api/v1/Dashboard/getAllExtraWorkByUser', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ employeeId: empId })
+      });
+      
+      if (extraWorksResponse.ok) {
+        const extraWorksResult = await extraWorksResponse.json();
+        const mapped = {};
+        (extraWorksResult.data || []).forEach(item => {
+          const [day, month, year] = item.date.split('/');
+          const extraKey = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+          mapped[extraKey] = {
+            hours: String(item.extraWork),
+            text: item.description,
+            status: item.status ? item.status.toLowerCase() : 'pending'
+          };
+        });
+        setFetchedExtraWorks(mapped);
+      }
+      
+    } catch (err) {
+      console.error('Error adding extra work:', err);
+      setExtraWorkApiError('Failed to add extra work. Please try again.');
+    } finally {
+      setExtraWorkLoading(false);
+    }
+  };
+
+  // Add state for fetched extra work data
+  const [fetchedExtraWorks, setFetchedExtraWorks] = useState({});
+
+  // Fetch extra work data from API on mount or when empId changes
+  useEffect(() => {
+    const fetchExtraWorks = async () => {
+      if (!empId) return;
+      try {
+        const response = await fetch('https://bandymoot.com/api/v1/Dashboard/getAllExtraWorkByUser', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ employeeId: empId })
+        });
+        
+        console.log('Fetching extra works for employee:', empId);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Extra works API error:', errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        console.log('Extra works API response:', result);
+        
+        const mapped = {};
+        (result.data || []).forEach(item => {
+          if (item.date) {
+            const [day, month, year] = item.date.split('/');
+            const key = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            mapped[key] = {
+              hours: String(item.extraWork),
+              text: item.description,
+              status: item.status ? item.status.toLowerCase() : 'pending'
+            };
+          }
+        });
+        setFetchedExtraWorks(mapped);
+      } catch (err) {
+        console.error('Error fetching extra works:', err);
+        setFetchedExtraWorks({});
+      }
+    };
+    fetchExtraWorks();
+  }, [empId]);
+
+  // Merge local extraWorks (for just-added) and fetchedExtraWorks (from API)
+  const getExtraWorkForDate = (date) => {
+    const key = toISODate(date);
+    // Prefer local (just added), else fetched from API
+    return extraWorks[key] || fetchedExtraWorks[key];
+  };
+
+  // Calendar click handler - FIXED timezone issue
+  const handleCalendarDayClick = (day) => {
+    console.log("Clicked day:", day);
+    if (!day || day.status === 'Future') return;
+    
+    // Use the local date string directly (yyyy-mm-dd format)
+    setSelectedDate(day.date);
+    
+    setNoteError('');
+    setExtraError('');
+    setNoteText('');
+    setExtraText('');
+    setExtraHours('0.5');
+    setNoteSuccess('');
+    setExtraWorkSuccess('');
+    setNoteApiError('');
+    setExtraWorkApiError('');
+  };
+
   // Today's schedule
   const todaySchedule = {
-    shiftTime: '09:05 AM - 06:00 PM',
-    breakTime: '01:00 PM - 02:00 PM',
+    shiftTime: '09:00 AM - 06:00 PM',
     lunchBreak: '12:00 PM - 01:00 PM',
-    department: 'Software Development',
-    location: 'Floor 3, Building A',
-    supervisor: 'John Smith'
+    department: 'SAP DATA ANALYST'
   };
 
   return (
@@ -584,16 +1015,22 @@ const UserAttendance = () => {
                 {generateCalendarData().map((day, index) => (
                   <div key={index} className="aspect-square">
                     {day ? (
-                      <div className={`w-full h-full flex items-center justify-center text-xs border rounded ${getStatusColor(day.status)} cursor-pointer hover:shadow-sm transition-shadow`}>
+                      <button
+                        type="button"
+                        className={`w-full h-full flex items-center justify-center text-xs border rounded ${getStatusColor(day.status)} cursor-pointer hover:shadow-sm transition-shadow ${selectedDate === day.date ? 'ring-2 ring-blue-400' : ''}`}
+                        onClick={() => handleCalendarDayClick(day)}
+                        disabled={day.status === 'Future'}
+                        tabIndex={day.status === 'Future' ? -1 : 0}
+                      >
                         {day.day}
-                      </div>
+                      </button>
                     ) : (
                       <div className="w-full h-full"></div>
                     )}
                   </div>
                 ))}
               </div>
-              
+             
               {/* Legend */}
               <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                 <div className="flex items-center">
@@ -621,13 +1058,144 @@ const UserAttendance = () => {
                   <span>Future</span>
                 </div>
               </div>
+
+              {/* Show note/extra work for selected date */}
+              {selectedDate && (
+                <div className="mt-6">
+                  <div className="mb-2 text-sm font-semibold text-blue-700 flex items-center">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    {formatDate(selectedDate)}
+                  </div>
+                  {/* Note Section */}
+                  <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-100">
+                    <h4 className="text-base font-semibold text-gray-900 flex items-center mb-2">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Note
+                    </h4>
+                    {getNoteForDate(selectedDate) ? (
+                      <div className="text-gray-800 text-sm">{getNoteForDate(selectedDate)}</div>
+                    ) : (
+                      <form onSubmit={handleAddNote} className="space-y-2">
+                        <textarea
+                          className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
+                          rows={2}
+                          maxLength={200}
+                          value={noteText}
+                          onChange={e => setNoteText(e.target.value)}
+                          placeholder="Write your note here..."
+                        />
+                        {noteError && <div className="text-xs text-red-600">{noteError}</div>}
+                        {noteApiError && <div className="text-xs text-red-600">{noteApiError}</div>}
+                        {noteSuccess && <div className="text-xs text-green-600">{noteSuccess}</div>}
+                        <button
+                          type="submit"
+                          className="flex items-center px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50"
+                          disabled={!noteText.trim() || getNoteForDate(selectedDate) || noteLoading}
+                        >
+                          {noteLoading ? (
+                            <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                          ) : (
+                            <PlusCircle className="w-4 h-4 mr-1" />
+                          )}
+                          Add Note
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                  {/* Extra Work Section */}
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <h4 className="text-base font-semibold text-gray-900 flex items-center mb-2">
+                      <Briefcase className="w-4 h-4 mr-2" />
+                      Extra Work
+                    </h4>
+                    {getExtraWorkForDate(selectedDate) ? (
+                      <div className="relative">
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">
+                            {getExtraWorkForDate(selectedDate).hours === '1' ? 'Full Day' : 'Half Day'}
+                          </div>
+                          <div className="text-gray-800 text-sm">{getExtraWorkForDate(selectedDate).text}</div>
+                        </div>
+                        {/* Status badge at the end corner */}
+                        <div className="absolute top-2 right-2">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold
+                              ${
+                                getExtraWorkForDate(selectedDate).status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : getExtraWorkForDate(selectedDate).status === 'approved'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }
+                            `}
+                          >
+                            {getExtraWorkForDate(selectedDate).status === 'pending' && 'Pending'}
+                            {getExtraWorkForDate(selectedDate).status === 'approved' && 'Approved'}
+                            {getExtraWorkForDate(selectedDate).status === 'rejected' && 'Rejected'}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleAddExtraWork} className="space-y-2">
+                        <div className="flex space-x-2 mb-1">
+                          <label className={`flex items-center px-2 py-1 border rounded cursor-pointer text-sm ${extraHours === '0.5' ? 'bg-blue-100 border-blue-400' : 'bg-white border-gray-300'}`}>
+                            <input
+                              type="radio"
+                              name="hours"
+                              value="0.5"
+                              checked={extraHours === '0.5'}
+                              onChange={() => setExtraHours('0.5')}
+                              className="mr-1"
+                            />
+                            Half Day (0.5)
+                          </label>
+                          <label className={`flex items-center px-2 py-1 border rounded cursor-pointer text-sm ${extraHours === '1' ? 'bg-blue-100 border-blue-400' : 'bg-white border-gray-300'}`}>
+                            <input
+                              type="radio"
+                              name="hours"
+                              value="1"
+                              checked={extraHours === '1'}
+                              onChange={() => setExtraHours('1')}
+                              className="mr-1"
+                            />
+                            Full Day (1)
+                          </label>
+                        </div>
+                        <textarea
+                          className="border border-gray-300 rounded px-2 py-1 w-full text-sm"
+                          rows={2}
+                          maxLength={200}
+                          value={extraText}
+                          onChange={e => setExtraText(e.target.value)}
+                          placeholder="Describe your extra work..."
+                        />
+                        {extraError && <div className="text-xs text-red-600">{extraError}</div>}
+                        {extraWorkApiError && <div className="text-xs text-red-600">{extraWorkApiError}</div>}
+                        {extraWorkSuccess && <div className="text-xs text-green-600">{extraWorkSuccess}</div>}
+                        <button
+                          type="submit"
+                          className="flex items-center px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50"
+                          disabled={!extraText.trim() || getExtraWorkForDate(selectedDate) || extraWorkLoading}
+                        >
+                          {extraWorkLoading ? (
+                            <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                          ) : (
+                            <PlusCircle className="w-4 h-4 mr-1" />
+                          )}
+                          Add Extra Work
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Today's Schedule */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Clock className="w-5 h-5 mr-2" />
-                Today's Schedule
+                 Schedule
               </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -639,23 +1207,8 @@ const UserAttendance = () => {
                   <span className="text-sm text-gray-900">{todaySchedule.lunchBreak}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-600">Tea Break</span>
-                  <span className="text-sm text-gray-900">{todaySchedule.breakTime}</span>
-                </div>
-                <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-600">Department</span>
                   <span className="text-sm text-gray-900">{todaySchedule.department}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-600">Location</span>
-                  <span className="text-sm text-gray-900 flex items-center">
-                    <MapPin className="w-3 h-3 mr-1" />
-                    {todaySchedule.location}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-600">Supervisor</span>
-                  <span className="text-sm text-gray-900">{todaySchedule.supervisor}</span>
                 </div>
                 <div className="pt-2 border-t">
                   <div className="flex items-center justify-between">

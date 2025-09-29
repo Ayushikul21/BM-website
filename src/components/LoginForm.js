@@ -125,7 +125,7 @@ const LoginForm = ({ onLogin }) => {
   };
 
   const handleRegistration = () => {
-    navigate('/');
+    navigate('/register');
   }
 
   const logout = () => {
@@ -182,7 +182,7 @@ const LoginForm = ({ onLogin }) => {
           {/* Logo Section */}
           <div className="text-center mb-8 flex flex-col items-center">
             <img 
-              src="/salary website/logob&m.jpg" 
+              src="/logob&m.jpg" 
               alt="Bandy & Moot Logo" 
               className="w-20 h-20 object-contain mb-4 rounded-full border-2 border-blue-500 bg-white shadow-lg"
             />

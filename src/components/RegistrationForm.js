@@ -338,7 +338,7 @@ const RegistrationForm = () => {
     };
 
     const handleLogin = () => {
-        navigate('/login');
+        navigate('/');
     };
 
     useEffect(() => {
@@ -401,16 +401,16 @@ const RegistrationForm = () => {
             <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-4xl">
                 <div className="text-center mb-8 flex flex-col items-center">
                     <img 
-                        src="/salary website/logob&m.jpg" 
+                        src="/logob&m.jpg" 
                         alt="Bandy & Moot Logo" 
                         className="w-20 h-20 object-contain mb-4 rounded-full border-2 border-blue-500 bg-white shadow-lg"
                     />
                     <h1 className="text-4xl font-bold text-blue-600 mb-2">
                         Bandy & Moot Pvt. Ltd.
                     </h1>
-                    <p className="text-gray-600 text-lg">
+                    {/* <p className="text-gray-600 text-lg">
                         Employee Registration Portal
-                    </p>
+                    </p> */}
                 </div>
 
                 {successMessage && (

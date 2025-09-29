@@ -50,7 +50,7 @@ function AppWrapper() {
 
   return (
     <Routes>
-      <Route path="/" element={<RegistrationForm />} />
+      <Route path="/" element={<LoginForm />} />
       <Route path="/banking" element={<BankingInformationForm />} />
       <Route path="/salary" element={<SalaryDetails />} />
       <Route path="/personal" element={<PersonalDetailsForm/>}/>
@@ -60,7 +60,7 @@ function AppWrapper() {
       <Route path="/skills" element={<SkillsProjectsForm/>}/>
       <Route path="/document" element={<DocumentUploadForm/>}/>
       <Route path="/professional" element={<ProfessionalReferencesForm/>}/>
-      <Route path="/login" element={<LoginForm/>} />
+      <Route path="/register" element={<RegistrationForm/>} />
       <Route path="/forgotPassword" element={<ForgotPassword/>}/>
       <Route path="/leave" element={<LeaveForm userName={userName} onSubmit={handleLeaveSubmit} />} />
       <Route path="/dashboard" element={<MainEmployeeDashboard onSubmit={handleLeaveSubmit}/>} />
