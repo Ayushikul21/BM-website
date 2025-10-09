@@ -60,7 +60,7 @@ const EmployeeManagement = () => {
 
       console.log("Fetching data for:", requestBody);
 
-      const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/getReportsAllEMP', {
+      const response = await fetch('https://bandymoot.com/api/v1/Dashboard/getReportsAllEMP', {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
