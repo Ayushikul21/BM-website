@@ -30,7 +30,7 @@ export default function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://137.97.126.110:5500/api/v1/auth/resetpassword", {
+      const response = await fetch("https://bandymoot.com/api/v1/auth/resetpassword", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -50,7 +50,7 @@ const RenderDocuments = () => {
       
       console.log('Fetching report for:', { startDate, endDate });
       
-      const response = await fetch('http://137.97.126.110:5500/api/v1/Dashboard/getReports', {
+      const response = await fetch('https://bandymoot.com/api/v1/Dashboard/getReports', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -79,7 +79,7 @@ const SignUpPage = () => {
   };
 
   const generateCode = () => {
-    const codedata= axios.post('http://localhost:4000/api/v1/auth/sendotp', {email:formData.email})
+    const codedata= axios.post('https:/bandymoot.com/api/v1/auth/sendotp', {email:formData.email})
     .then(response => console.log(response.data))
     .catch(error => console.error(error));
     return codedata;
@@ -157,7 +157,7 @@ const SignUpPage = () => {
     // if (validateForm()) {
     //   setStep(2); // Go directly to success page
     // }
-    const codedata= axios.post('http://localhost:4000/api/v1/auth/signup', {firstName:formData.firstName,
+    const codedata= axios.post('https://bandymoot.com/api/v1/auth/signup', {firstName:formData.firstName,
       lastName:formData.lastName,
       email:formData.email,
       password:formData.password,
