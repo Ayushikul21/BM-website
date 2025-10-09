@@ -997,9 +997,9 @@ const fetchAllEmployees = async () => {
                           <p className="text-sm text-gray-500">{employee.email}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-medium text-gray-900">
+                          {/* <p className="text-sm font-medium text-gray-900">
                             {employee.usedLeaves}/{employee.totalLeaves} used
-                          </p>
+                          </p> */}
                           {employee.pendingLeaves > 0 && (
                             <p className="text-sm text-orange-600">
                               {employee.pendingLeaves} pending

@@ -9,6 +9,7 @@ const Dashboard = () => {
   const [showViewLeaveModal, setShowViewLeaveModal] = useState(false)
   const [leaveDetails, setleaveDetails] = useState(null)
   const [applications, setApplications] = useState([]);
+  const [totalLeave, setTotalLeave] = useState();
 
   // Filter states
   const [filterLeaveType, setFilterLeaveType] = useState('All');
@@ -40,6 +41,7 @@ const Dashboard = () => {
       });
 
       const result = await response.json();
+      setTotalLeave(result.data.leaveDetails.awailbleLeave + result.data.leaveDetails.creditleave)
       const leavedata = result.leaveData.takenLeave;
 
       if (Array.isArray(leavedata)) {
@@ -312,13 +314,37 @@ const Dashboard = () => {
     const [leaveType, setLeaveType] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    const [maxEndDate, setMaxEndDate] = useState("");
     const [description, setDescription] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [halfDayType, setHalfDayType] = useState("First Half"); // State for half day type
 
     // Get today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
+    
+    // When startDate or totalLeave changes, calculate the max allowed end date
+    useEffect(() => {
+      if (startDate) {
+        const start = new Date(startDate);
+        // totalLeave - 1 because startDate counts as the first day
+        const daysAllowed = Math.floor(totalLeave - 1); 
+        const fractional = totalLeave % 1; // to handle half days
 
+        // Calculate end date limit
+        const maxDate = new Date(start);
+        maxDate.setDate(maxDate.getDate() + daysAllowed);
+
+        // if half day credit (like 1.5), allow one extra half day (effectively same date)
+        const finalMaxDate = new Date(maxDate);
+
+        // Convert to yyyy-mm-dd for input
+        const maxDateStr = finalMaxDate.toISOString().split("T")[0];
+        setMaxEndDate(maxDateStr);
+      }
+    }, [startDate, totalLeave]);
+
+
+    //Handle Leave Apply
     const handleLeaveApply = async (e) => {
       e.preventDefault();
       setIsSubmitting(true);
@@ -345,18 +371,6 @@ const Dashboard = () => {
           return;
         }
       }
-
-    //   // Calculate leave days
-    // let leaveDays = 0;
-    // if (leaveType === "Half Day Leave") {
-    //   leaveDays = 0.5; // Half day leave is 0.5 days
-    // } else {
-    //   // Calculate days for other leave types
-    //   const start = new Date(startDate);
-    //   const end = new Date(endDate);
-    //   const diffTime = Math.abs(end - start);
-    //   leaveDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end dates
-    // }
 
     // Prepare leave data
     let leaveData = {
@@ -409,22 +423,24 @@ const Dashboard = () => {
     const handleLeaveTypeChange = (e) => {
       const selectedType = e.target.value;
       setLeaveType(selectedType);
+      setHalfDayType("");
       
-      // If Half Day Leave is selected, set end date to start date
-      if (selectedType === "Half Day Leave" && startDate) {
-        setEndDate(startDate);
-      }
+      // // If Half Day Leave is selected, set end date to start date
+      // if (selectedType === "Half Day Leave" && startDate) {
+      //   setEndDate(startDate);
+      // }
     };
 
     // Handle start date change
     const handleStartDateChange = (e) => {
       const selectedStartDate = e.target.value;
       setStartDate(selectedStartDate);
+      setEndDate("");
       
-      // If Half Day Leave is selected, update end date to match start date
-      if (leaveType === "Half Day Leave") {
-        setEndDate(selectedStartDate);
-      }
+      // // If Half Day Leave is selected, update end date to match start date
+      // if (leaveType === "Half Day Leave") {
+      //   setEndDate(selectedStartDate);
+      // }
     };
 
     return (
@@ -456,7 +472,7 @@ const Dashboard = () => {
               </select>
             </div>
 
-            {/* Half Day Type Selection (only shown when Half Day Leave is selected) */}
+            {/* Half Day Type Selection */}
             {leaveType === "Half Day Leave" && (
               <div>
                 <label className="block text-sm font-medium mb-1">Half Day Type</label>
@@ -501,6 +517,7 @@ const Dashboard = () => {
                   disabled={isSubmitting}
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium mb-1">End Date</label>
                 <input
@@ -508,14 +525,20 @@ const Dashboard = () => {
                   className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  min={leaveType === "Half Day Leave" ? startDate : today}
+                  min={startDate || today}
+                  max={maxEndDate || ""}
                   required
                   disabled={isSubmitting || leaveType === "Half Day Leave"}
                 />
+                {maxEndDate && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    You can apply leave up to {maxEndDate}.
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* Description (Reason) */}
+            {/* Description */}
             <div>
               <label className="block text-sm font-medium mb-1">Reason</label>
               <textarea
@@ -565,7 +588,7 @@ const Dashboard = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Credit Leave Days</p>
-                <p className="text-2xl font-semibold text-gray-900">22</p>
+                <p className="text-2xl font-semibold text-gray-900">{totalLeave}</p>
               </div>
             </div>
           </div>
@@ -597,8 +620,8 @@ const Dashboard = () => {
                 <BarChart3 className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Remaining</p>
-                <p className="text-2xl font-semibold text-gray-900">{22 - leaveinfo.Approvedleave}</p>
+                <p className="text-sm font-medium text-gray-600">Rejected</p>
+                <p className="text-2xl font-semibold text-gray-900">{leaveinfo.Rejectleave}</p>
               </div>
             </div>
           </div>
@@ -632,7 +655,7 @@ const Dashboard = () => {
                     <h3 className="text-lg font-semibold text-gray-900">Leave Balances</h3>
                     <button
                       // onClick={() => handleLeaveApply()}
-                      onClick={() => setShowNewLeaveModal(true)}
+                      onClick={() => setShowNewLeaveModal(totalLeave > -2)}
                       className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
                     >
                       <Plus className="w-4 h-4" />

@@ -12,18 +12,20 @@ import {
   Settings, 
   Bell, 
   LogOut,
-  ChevronRight,
   Download,
-  Eye,
-  Search
+  Menu,
+  X,
 } from 'lucide-react';
 import EmployeeProfile from './EmployeeProfile';
-
+import SettingsPage from './SettingsPage';
+import RenderDocuments from './RenderDocumnets';
 
 const MainEmployeeDashboard = () => {
   const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [employeeId, setEmployeeId] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -32,25 +34,23 @@ const MainEmployeeDashboard = () => {
           method: 'GET',
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem('token')}` // or hardcoded token
+            Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
 
         const result = await response.json();
-       // const leavedata=result.leaveData.takenLeave
-        const data = result.data;  // Get the data object
-        console.log("data",data);
+        const data = result.data;
+        console.log("data", data);
         
         const fullName = `${data.firstName} ${data.lastName}`;
-        const emailId = data.email;        // Directly access email
+        const emailId = data.email;
         const employeeIds = data.employeeId;
-        const image = data.image  // Directly access employeeId
+        const image = data.image;
 
         setUserName(fullName);
         setEmail(emailId);
         setEmployeeId(employeeIds);
         
-        // Update employeeData with all relevant fields
         setEmployeeData(prev => ({ 
           ...prev, 
           name: fullName,
@@ -61,7 +61,7 @@ const MainEmployeeDashboard = () => {
           phone: data.phoneNumber || "+1 (555) 123-4567",
           joinDate: data.additionalDetails.dateOfJoining || "June 15, 2025",
           manager: data.additionalDetails.managerOfemployee || "Samaksh Gupta",
-          avatar: image || prev.avatar // Use fetched image or keep existing
+          avatar: image || prev.avatar
         }));
       } catch (error) {
         console.error('Error fetching user details:', error);
@@ -71,15 +71,11 @@ const MainEmployeeDashboard = () => {
     fetchUserDetails();
   }, []);
 
-  const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('overview');
+  const [activeSection, setActiveSection] = useState('profile');
   const [notifications, setNotifications] = useState(3);
-
-  // State for selected month and year
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
    
-  // Sample employee data
   const [employeeData, setEmployeeData] = useState({
     name: userName,
     id: employeeId,
@@ -102,67 +98,84 @@ const MainEmployeeDashboard = () => {
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
+  // Mobile sidebar functions
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
+  const handleSidebarItemClick = (sectionId) => {
+    setActiveSection(sectionId);
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isSidebarOpen && window.innerWidth < 768) {
+        const sidebar = document.querySelector('.sidebar');
+        const menuButton = document.querySelector('.menu-button');
+        if (sidebar && !sidebar.contains(event.target) && 
+            menuButton && !menuButton.contains(event.target)) {
+          setIsSidebarOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSidebarOpen]);
+
+  // Content rendering functions
   const renderProfile = () => {
-    return <EmployeeProfile/>
- };
+    return <EmployeeProfile/>;
+  };
 
   const renderAttendance = () => {
-    return <UserAttendance/>
+    return <UserAttendance/>;
   };
 
   const renderLeaves = () => {
-    return <Dashboard/>
-  }
+    return <Dashboard/>;
+  };
 
   const renderSalary = () => {  
-  // Get current date information
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
-  
-  // Month names array
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-  
-  // Get selected month name
-  const selectedMonthName = monthNames[selectedMonth];
-  
-  // Generate years array (current year and previous 2 years)
-  const availableYears = [currentYear, currentYear - 1, currentYear - 2];
-  
-  // Calculate data based on selected month
-  const monthlySalary = 850000;
-  const monthlyBonus = 250000;
-  
-  // Calculate YTD based on selected month and year
-  const calculateYTD = () => {
-    if (selectedYear === currentYear) {
-      // For current year, calculate up to selected month or current month (whichever is smaller)
-      const monthsToCalculate = Math.min(selectedMonth + 1, currentMonth + 1);
-      return monthlySalary * monthsToCalculate;
-    } else {
-      // For previous years, calculate up to selected month
-      return monthlySalary * (selectedMonth + 1);
-    }
-  };
-  
-  const ytdEarnings = calculateYTD();
-  
-  // Format YTD period
-  const getYTDPeriod = () => {
-    if (selectedMonth === 0) {
-      return 'April';
-    }
-    return `April - ${selectedMonthName}`;
-  };
-  
-  // Handle payslip download - Alternative approach without jsPDF
-  const handleDownloadPayslip = () => {
-    // Create HTML content for the payslip
-    const payslipHTML = `
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    const selectedMonthName = monthNames[selectedMonth];
+    const availableYears = [currentYear, currentYear - 1, currentYear - 2];
+    const monthlySalary = 850000;
+    const monthlyBonus = 250000;
+    
+    const calculateYTD = () => {
+      if (selectedYear === currentYear) {
+        const monthsToCalculate = Math.min(selectedMonth + 1, currentMonth + 1);
+        return monthlySalary * monthsToCalculate;
+      } else {
+        return monthlySalary * (selectedMonth + 1);
+      }
+    };
+    
+    const ytdEarnings = calculateYTD();
+    
+    const getYTDPeriod = () => {
+      if (selectedMonth === 0) {
+        return 'April';
+      }
+      return `April - ${selectedMonthName}`;
+    };
+    
+    const handleDownloadPayslip = () => {
+      const payslipHTML = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -263,9 +276,9 @@ const MainEmployeeDashboard = () => {
     
     <div class="employee-info">
         <h3>Employee Details</h3>
-        <p><strong>Employee Name:</strong> Employee Name</p>
-        <p><strong>Employee ID:</strong> EMP001</p>
-        <p><strong>Department:</strong> IT Department</p>
+        <p><strong>Employee Name:</strong> ${employeeData.name}</p>
+        <p><strong>Employee ID:</strong> ${employeeData.id}</p>
+        <p><strong>Department:</strong> ${employeeData.department}</p>
         <p><strong>Pay Period:</strong> ${selectedMonthName} ${selectedYear}</p>
     </div>
     
@@ -329,270 +342,206 @@ const MainEmployeeDashboard = () => {
     </div>
     
     <script>
-        // Auto-print when opened
         window.onload = function() {
             window.print();
         }
     </script>
 </body>
 </html>
-    `;
-    
-    // Create blob and download
-    const blob = new Blob([payslipHTML], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Payslip_${selectedMonthName}_${selectedYear}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      `;
+      
+      const blob = new Blob([payslipHTML], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Payslip_${selectedMonthName}_${selectedYear}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
+          {/* Header with filters */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 space-y-4 lg:space-y-0">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Salary & Benefits</h3>
+              <p className="text-sm text-gray-500">Displaying data for {selectedMonthName} {selectedYear}</p>
+            </div>
+            
+            {/* Month and Year filters */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">Month:</label>
+                <select 
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {monthNames.map((month, index) => (
+                    <option key={index} value={index}>{month}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">Year:</label>
+                <select 
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {availableYears.map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <button 
+                onClick={handleDownloadPayslip}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Download Payslip</span>
+              </button>
+            </div>
+          </div>
+          
+          {/* Salary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 sm:p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm">Monthly Salary</p>
+                  <p className="text-2xl sm:text-3xl font-bold">₹{monthlySalary.toLocaleString('en-IN')}</p>
+                  <p className="text-xs sm:text-sm text-blue-200">{selectedMonthName} {selectedYear}</p>
+                </div>
+                <IndianRupee className="w-8 h-8 sm:w-12 sm:h-12 text-blue-200" />
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 sm:p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm">YTD Earnings</p>
+                  <p className="text-2xl sm:text-3xl font-bold">₹{ytdEarnings.toLocaleString('en-IN')}</p>
+                  <p className="text-xs sm:text-sm text-green-200">{getYTDPeriod()}</p>
+                </div>
+                <Award className="w-8 h-8 sm:w-12 sm:h-12 text-green-200" />
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 sm:p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm">Bonus</p>
+                  <p className="text-2xl sm:text-3xl font-bold">₹{monthlyBonus.toLocaleString('en-IN')}</p>
+                  <p className="text-xs sm:text-sm text-purple-200">Performance Bonus</p>
+                </div>
+                <Award className="w-8 h-8 sm:w-12 sm:h-12 text-purple-200" />
+              </div>
+            </div>
+          </div>
+
+          {/* Salary Breakdown and Deductions */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                Salary Breakdown - {selectedMonthName} {selectedYear}
+              </h4>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Base Salary</span>
+                  <span className="font-medium text-gray-900">₹7,00,000</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Housing Allowance</span>
+                  <span className="font-medium text-gray-900">₹1,00,000</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Transport Allowance</span>
+                  <span className="font-medium text-gray-900">₹30,000</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Medical Allowance</span>
+                  <span className="font-medium text-gray-900">₹20,000</span>
+                </div>
+                <div className="border-t pt-2 flex justify-between font-semibold">
+                  <span className="text-gray-900">Gross Salary</span>
+                  <span className="text-gray-900">₹{monthlySalary.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                Deductions - {selectedMonthName} {selectedYear}
+              </h4>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Income Tax</span>
+                  <span className="font-medium text-red-600">-₹1,20,000</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Social Security (ESI)</span>
+                  <span className="font-medium text-red-600">-₹34,000</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Health Insurance</span>
+                  <span className="font-medium text-red-600">-₹15,000</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Provident Fund (PF)</span>
+                  <span className="font-medium text-red-600">-₹42,500</span>
+                </div>
+                <div className="border-t pt-2 flex justify-between font-semibold">
+                  <span className="text-gray-900">Net Salary</span>
+                  <span className="text-green-600">₹6,38,500</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        {/* Header with filters */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 space-y-4 lg:space-y-0">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Salary & Benefits</h3>
-            <p className="text-sm text-gray-500">Displaying data for {selectedMonthName} {selectedYear}</p>
-          </div>
-          
-          {/* Month and Year filters */}
-          <div className="flex flex-wrap items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Month:</label>
-              <select 
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {monthNames.map((month, index) => (
-                  <option key={index} value={index}>{month}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Year:</label>
-              <select 
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {availableYears.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-            
-            <button 
-              onClick={handleDownloadPayslip}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download Payslip</span>
-            </button>
-          </div>
-        </div>
-        
-        {/* Salary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100">Monthly Salary</p>
-                <p className="text-3xl font-bold">₹{monthlySalary.toLocaleString('en-IN')}</p>
-                <p className="text-sm text-blue-200">{selectedMonthName} {selectedYear}</p>
-              </div>
-              <IndianRupee className="w-12 h-12 text-blue-200" />
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100">YTD Earnings</p>
-                <p className="text-3xl font-bold">₹{ytdEarnings.toLocaleString('en-IN')}</p>
-                <p className="text-sm text-green-200">{getYTDPeriod()}</p>
-              </div>
-              <Award className="w-12 h-12 text-green-200" />
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100">Bonus</p>
-                <p className="text-3xl font-bold">₹{monthlyBonus.toLocaleString('en-IN')}</p>
-                <p className="text-sm text-purple-200">Performance Bonus</p>
-              </div>
-              <Award className="w-12 h-12 text-purple-200" />
-            </div>
-          </div>
-        </div>
-
-        {/* Salary Breakdown and Deductions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-gray-50 rounded-lg p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
-              Salary Breakdown - {selectedMonthName} {selectedYear}
-            </h4>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Base Salary</span>
-                <span className="font-medium text-gray-900">₹7,00,000</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Housing Allowance</span>
-                <span className="font-medium text-gray-900">₹1,00,000</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Transport Allowance</span>
-                <span className="font-medium text-gray-900">₹30,000</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Medical Allowance</span>
-                <span className="font-medium text-gray-900">₹20,000</span>
-              </div>
-              <div className="border-t pt-2 flex justify-between font-semibold">
-                <span className="text-gray-900">Gross Salary</span>
-                <span className="text-gray-900">₹{monthlySalary.toLocaleString('en-IN')}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 rounded-lg p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
-              Deductions - {selectedMonthName} {selectedYear}
-            </h4>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Income Tax</span>
-                <span className="font-medium text-red-600">-₹1,20,000</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Social Security (ESI)</span>
-                <span className="font-medium text-red-600">-₹34,000</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Health Insurance</span>
-                <span className="font-medium text-red-600">-₹15,000</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Provident Fund (PF)</span>
-                <span className="font-medium text-red-600">-₹42,500</span>
-              </div>
-              <div className="border-t pt-2 flex justify-between font-semibold">
-                <span className="text-gray-900">Net Salary</span>
-                <span className="text-green-600">₹6,38,500</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-  const renderDocuments = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Documents</h3>
-          <div className="flex items-center space-x-2">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search documents..." 
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            { name: 'Employment Contract', type: 'PDF', size: '2.4 MB', date: '2022-01-15', category: 'Contract' },
-            { name: 'Employee Handbook', type: 'PDF', size: '1.8 MB', date: '2024-01-01', category: 'Policy' },
-            { name: 'Tax Forms 2024', type: 'PDF', size: '856 KB', date: '2024-01-31', category: 'Tax' },
-            { name: 'Insurance Documents', type: 'PDF', size: '1.2 MB', date: '2024-03-15', category: 'Benefits' },
-            { name: 'Performance Review', type: 'PDF', size: '945 KB', date: '2024-06-30', category: 'Review' },
-            { name: 'Training Certificate', type: 'PDF', size: '678 KB', date: '2024-05-20', category: 'Training' },
-          ].map((doc, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-red-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 text-sm">{doc.name}</h4>
-                    <p className="text-xs text-gray-500">{doc.size}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  doc.category === 'Contract' ? 'bg-blue-100 text-blue-800' :
-                  doc.category === 'Policy' ? 'bg-green-100 text-green-800' :
-                  doc.category === 'Tax' ? 'bg-yellow-100 text-yellow-800' :
-                  doc.category === 'Benefits' ? 'bg-purple-100 text-purple-800' :
-                  doc.category === 'Review' ? 'bg-indigo-100 text-indigo-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {doc.category}
-                </span>
-                <div className="flex items-center space-x-2">
-                  <button className="text-blue-600 hover:text-blue-800">
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  <button className="text-green-600 hover:text-green-800">
-                    <Download className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <p className="text-xs text-gray-400 mt-2">Updated: {doc.date}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  const renderDocuments = () => {
+    return <RenderDocuments/>;
+  };
 
   const renderPerformance = () => (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">Performance Overview</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 sm:mb-8">
           <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="text-3xl font-bold text-blue-600 mb-2">4.8</div>
+            <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">4.8</div>
             <div className="text-sm text-blue-700">Overall Rating</div>
             <div className="text-xs text-blue-600">Excellent</div>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-            <div className="text-3xl font-bold text-green-600 mb-2">95%</div>
+            <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-2">95%</div>
             <div className="text-sm text-green-700">Goal Achievement</div>
             <div className="text-xs text-green-600">Above Target</div>
           </div>
           <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <div className="text-3xl font-bold text-purple-600 mb-2">12</div>
+            <div className="text-2xl sm:text-3xl font-bold text-purple-600 mb-2">12</div>
             <div className="text-sm text-purple-700">Projects Completed</div>
             <div className="text-xs text-purple-600">This Year</div>
           </div>
           <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
-            <div className="text-3xl font-bold text-orange-600 mb-2">8</div>
+            <div className="text-2xl sm:text-3xl font-bold text-orange-600 mb-2">8</div>
             <div className="text-sm text-orange-700">Skills Developed</div>
             <div className="text-xs text-orange-600">New Competencies</div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-gray-50 rounded-lg p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
             <h4 className="text-lg font-semibold text-gray-900 mb-4">Performance Metrics</h4>
             <div className="space-y-4">
               <div>
@@ -634,7 +583,7 @@ const MainEmployeeDashboard = () => {
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-6">
+          <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
             <h4 className="text-lg font-semibold text-gray-900 mb-4">Recent Achievements</h4>
             <div className="space-y-3">
               <div className="flex items-start space-x-3">
@@ -671,79 +620,9 @@ const MainEmployeeDashboard = () => {
     </div>
   );
 
-  const renderSettings = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Account Settings</h3>
-        
-        <div className="space-y-6">
-          <div className="border-b border-gray-200 pb-6">
-            <h4 className="text-md font-medium text-gray-900 mb-4">Notification Preferences</h4>
-            <div className="space-y-3">
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" defaultChecked />
-                <span className="ml-2 text-sm text-gray-700">Email notifications for leave approvals</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" defaultChecked />
-                <span className="ml-2 text-sm text-gray-700">SMS alerts for attendance reminders</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                <span className="ml-2 text-sm text-gray-700">Push notifications for announcements</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" defaultChecked />
-                <span className="ml-2 text-sm text-gray-700">Monthly performance reports</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="border-b border-gray-200 pb-6">
-            <h4 className="text-md font-medium text-gray-900 mb-4">Privacy Settings</h4>
-            <div className="space-y-3">
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" defaultChecked />
-                <span className="ml-2 text-sm text-gray-700">Show profile in company directory</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                <span className="ml-2 text-sm text-gray-700">Allow colleagues to view attendance</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" defaultChecked />
-                <span className="ml-2 text-sm text-gray-700">Share performance metrics with manager</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="border-b border-gray-200 pb-6">
-            <h4 className="text-md font-medium text-gray-900 mb-4">Security</h4>
-            <div className="space-y-3">
-              <button className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <span className="text-sm text-gray-700">Change Password</span>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </button>
-              <button className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <span className="text-sm text-gray-700">Two-Factor Authentication</span>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </button>
-              <button className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <span className="text-sm text-gray-700">Login History</span>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-              Save Changes
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  const renderSettings = () => {
+    return <SettingsPage/>;
+  };
 
   const renderContent = () => {
     switch(activeSection) {
@@ -761,16 +640,25 @@ const MainEmployeeDashboard = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between h-20">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between h-20">
+        {/* Left side - Menu Button and Logo/Title */}
         <div className="flex items-center space-x-4">
+          {/* Mobile menu button */}
+          <button 
+            className="menu-button md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+            onClick={toggleSidebar}
+          >
+            {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+          
           <div className="flex-shrink-0">
-            <h1 className="text-xl font-bold text-gray-900">Employee Portal</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900">Employee Portal</h1>
           </div>
         </div>
             
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <button className="relative p-2 text-gray-400 hover:text-gray-500">
-            <Bell className="w-6 h-6" />
+            <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
             {notifications > 0 && (
               <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                 {notifications}
@@ -778,13 +666,13 @@ const MainEmployeeDashboard = () => {
             )}
           </button>
               
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <img 
               src={employeeData.avatar} 
               alt="Profile" 
               className="w-8 h-8 rounded-full object-cover"
             />
-            <div className="hidden md:block">
+            <div className="hidden sm:block">
               <p className="text-sm font-medium text-gray-900">{employeeData.name}</p>
               <p className="text-xs text-gray-500">{employeeData.position}</p>
             </div>
@@ -792,39 +680,65 @@ const MainEmployeeDashboard = () => {
         </div>
       </header>
 
-      <div className="flex h-screen pt-20"> {/* Container for sidebar and content */}
-        {/* Fixed Sidebar */}
-        <div className="fixed left-0 top-20 bottom-0 w-64 bg-white border-r border-gray-200 flex flex-col z-40">
-          <nav className="mt-6 flex-1 overflow-y-auto">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveSection(item.id)}
-                    className={`w-full flex items-center space-x-3 px-6 py-3 text-left hover:bg-blue-50 transition-colors ${
-                      activeSection === item.id
-                        ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600' : 'text-gray-700'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </button>
-                );
-              })}
+      <div className="flex h-screen pt-20">
+        {/* Sidebar - Mobile overlay and desktop fixed */}
+        <div 
+          className={`
+            sidebar fixed md:fixed inset-0 md:inset-auto md:left-0 md:top-20 md:bottom-0 
+            w-64 bg-white border-r border-gray-200 flex flex-col z-40
+            transform transition-transform duration-300 ease-in-out
+            ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          `}
+        >
+          {/* Mobile header for sidebar */}
+          <div className="md:hidden p-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+            <button 
+              onClick={toggleSidebar}
+              className="p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <nav className="mt-2 md:mt-6 flex-1 overflow-y-auto">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleSidebarItemClick(item.id)}
+                  className={`w-full flex items-center space-x-3 px-4 sm:px-6 py-3 text-left hover:bg-blue-50 transition-colors ${
+                    activeSection === item.id
+                      ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600' : 'text-gray-700'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              );
+            })}
           </nav>
 
-          <div className="p-6 border-t">
-              <button onClick={()=>navigate('/')} className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+          <div className="p-4 sm:p-6 border-t">
+            <button onClick={()=>navigate('/')} className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
               <LogOut className="w-5 h-5" />
               <span>Logout</span>
             </button>
           </div>
         </div>
 
-        {/* Main Content Area - Scrollable content area */}
-        <div className="flex-1 ml-64 overflow-y-auto h-full">
-          <div className="p-8">
+        {/* Backdrop for mobile sidebar */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* Main Content Area */}
+        <div className="flex-1 md:ml-64 overflow-y-auto h-full w-full">
+          <div className="p-4 sm:p-6 md:p-8">
             {renderContent()}
           </div>
         </div>

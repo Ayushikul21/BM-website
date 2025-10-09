@@ -16,6 +16,10 @@ const UserAttendance = () => {
     totalWeekends: 0
   });
 
+  // Add state for leave data and user details
+  const [leaveData, setLeaveData] = useState([]);
+  const [userDetails, setUserDetails] = useState(null);
+
   // Update current time every second
   useEffect(() => {
     const timer = setInterval(() => {
@@ -27,14 +31,23 @@ const UserAttendance = () => {
   // Helper function to parse date strings
   const parseDateString = (dateStr) => {
     if (!dateStr) return null;
-    const parts = dateStr.split('/');
-    if (parts.length !== 3) return null;
     
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const year = parseInt(parts[2], 10);
+    // Handle different date formats
+    if (dateStr.includes('/')) {
+      const parts = dateStr.split('/');
+      if (parts.length !== 3) return null;
+      
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      
+      return new Date(year, month, day);
+    } else if (dateStr.includes('T')) {
+      // ISO date format
+      return new Date(dateStr);
+    }
     
-    return new Date(year, month, day);
+    return null;
   };
 
   // Helper function to get date range for the selected month
@@ -67,7 +80,7 @@ const UserAttendance = () => {
 
   // Helper function to parse time string and check if late
   const isLateArrival = (timeString) => {
-    if (!timeString || timeString === '-') return false;
+    if (!timeString || timeString === '-' || timeString === '--:--') return false;
     
     // Parse time string (assuming format like "09:30" or "9:30 AM")
     const time = timeString.replace(/[^\d:]/g, '');
@@ -75,6 +88,44 @@ const UserAttendance = () => {
     
     // Consider late if after 9:00 AM
     return hours > 9 || (hours === 9 && minutes > 5);
+  };
+
+  // NEW: Improved function to check if a date is within any leave period
+  const isDateOnLeave = (date) => {
+    if (!leaveData || leaveData.length === 0) return false;
+    
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+    
+    console.log('Checking leave for date:', targetDate.toISOString().split('T')[0]);
+    
+    for (const leave of leaveData) {
+      // Only process leaves that are approved or pending
+      if (leave.status === 'Cancelled' || leave.status === 'Rejected') {
+        continue;
+      }
+      
+      console.log('Processing leave:', leave);
+      
+      if (leave.startdate && leave.enddate) {
+        const startDate = parseDateString(leave.startdate);
+        const endDate = parseDateString(leave.enddate);
+        
+        if (startDate && endDate) {
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999); // Include the entire end date
+          
+          console.log(`Leave period: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
+          
+          if (targetDate >= startDate && targetDate <= endDate) {
+            console.log(`Date ${targetDate.toISOString().split('T')[0]} is on leave: ${leave.leaveType}`);
+            return true;
+          }
+        }
+      }
+    }
+    
+    return false;
   };
 
   // Function to calculate attendance statistics
@@ -114,31 +165,41 @@ const UserAttendance = () => {
         // Only process attendance for past dates and today
         if (currentDate <= today) {
           const attendanceRecord = attendanceMap.get(dateKey);
-          
-          if (attendanceRecord) {
-            if (attendanceRecord.INTime && attendanceRecord.INTime !== '--:--') {
-              if (isLateArrival(attendanceRecord.INTime)) {
-                totalLate++;
-              } else {
-                totalPresent++;
-              }
+      
+          // FIRST check if employee actually worked
+          if (attendanceRecord && attendanceRecord.INTime && attendanceRecord.INTime !== '--:--') {
+            // Employee worked - count as present/late regardless of leave
+            if (isLateArrival(attendanceRecord.INTime)) {
+              totalLate++;
+              console.log(`Day ${day}: Late (worked despite leave)`);
             } else {
-              // Check if it's a planned leave
-              if (attendanceRecord.Status === 'Leave' || 
-                  (attendanceRecord.Remarks && attendanceRecord.Remarks.includes('Leave'))) {
-                totalLeave++;
-              } else {
-                totalAbsent++;
-              }
+              totalPresent++;
+              console.log(`Day ${day}: Present (worked despite leave)`);
             }
           } else {
-            // No record found for this working day - mark as absent
-            totalAbsent++;
+            // No punch in - check if this date is on leave
+            const onLeave = isDateOnLeave(currentDate);
+            if (onLeave) {
+              totalLeave++;
+              console.log(`Day ${day}: Leave (no punch in)`);
+            } else {
+              totalAbsent++;
+              console.log(`Day ${day}: Absent (no punch in, no leave)`);
+            }
           }
         }
         // Future dates are not counted in any category
       }
     }
+
+    console.log('Final Stats:', {
+      totalPresent,
+      totalAbsent,
+      totalLate,
+      totalLeave,
+      totalWorkingDays,
+      totalWeekends
+    });
 
     return {
       totalPresent,
@@ -161,32 +222,44 @@ const UserAttendance = () => {
 
   const [empId, setEmpId] = useState();
 
+  // UPDATED: Fetch user details including leave data
   useEffect(() => {
-      const fetchUserDetails = async () => {
-        try {
-          const response = await fetch('https://bandymoot.com/api/v1/Dashboard/userDetails', {
-            method: 'GET',
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-          
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+    const fetchUserDetails = async () => {
+      try {
+        const response = await fetch('https://bandymoot.com/api/v1/Dashboard/userDetails', {
+          method: 'GET',
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('token')}`
           }
-          
-          const result = await response.json();
-          const data = result.data;
-          console.log("User data:", data);
-          setEmpId(data.employeeId);
-        } catch (error) {
-          console.error('Error fetching user details:', error);
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      };
-      fetchUserDetails();
-    }, []);
-  
+        
+        const result = await response.json();
+        const data = result.leaveData;
+        console.log("User data:", data);
+        setEmpId(result.data.employeeId);
+        setUserDetails(data);
+        
+        // Set leave data from the API response - filter out cancelled leaves
+        if (data.takenLeave && Array.isArray(data.takenLeave)) {
+          const activeLeaves = data.takenLeave.filter(leave => 
+            leave.status !== 'Cancelled' && leave.status !== 'Rejected'
+          );
+          setLeaveData(activeLeaves);
+          console.log("Active leave data loaded:", activeLeaves);
+        } else {
+          console.log("No takenLeave data found or it's not an array");
+        }
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
+    fetchUserDetails();
+  }, []);
 
   const fetchAttendanceData = async () => {
     if (!empId) {
@@ -255,6 +328,13 @@ const UserAttendance = () => {
       fetchAttendanceData();
     }
   }, [selectedMonth, selectedYear, empId]);
+
+  // Recalculate stats when leave data changes
+  useEffect(() => {
+    if (empId && userdata.length > 0) {
+      setAttendanceStats(calculateStats(userdata));
+    }
+  }, [leaveData]);
 
   // Generate complete attendance history including missing dates
   const generateAttendanceHistory = () => {
@@ -347,21 +427,23 @@ const UserAttendance = () => {
         status = 'Weekend';
       } else if (date <= today) {
         // Only determine status for past dates and today
-        const attendanceRecord = attendanceMap.get(dateKey);
         
-        if (attendanceRecord) {
-          
-          if (attendanceRecord.INTime && attendanceRecord.INTime !== '--:--') {
-            status = isLateArrival(attendanceRecord.INTime) ? 'Late' : 'Present';
-          } else {
-            status = (attendanceRecord.Status === 'Leave' || 
-                     (attendanceRecord.Remarks && attendanceRecord.Remarks.includes('Leave'))) 
-                     ? 'Leave' : 'Absent';
-            
-          }
+        const attendanceRecord = attendanceMap.get(dateKey);
+  
+        // FIRST check if employee actually worked (punch in exists)
+        if (attendanceRecord && attendanceRecord.INTime && attendanceRecord.INTime !== '--:--') {
+          // Employee worked - show attendance status regardless of leave
+          status = isLateArrival(attendanceRecord.INTime) ? 'Late' : 'Present';
+          console.log(`Calendar: Day ${day} - Employee worked, marked as ${status}`);
         } else {
-          // No record found for this working day
-          status = 'Absent';
+          // No punch in - check if this date is on leave
+          if (isDateOnLeave(date)) {
+            status = 'Leave';
+            console.log(`Calendar: Day ${day} marked as Leave (no punch in)`);
+          } else {
+            // Not on leave and no punch in = Absent
+            status = 'Absent';
+          }
         }
       }
       
@@ -827,6 +909,7 @@ const UserAttendance = () => {
     // Use the local date string directly (yyyy-mm-dd format)
     setSelectedDate(day.date);
     
+    // Reset form states
     setNoteError('');
     setExtraError('');
     setNoteText('');
@@ -1004,8 +1087,8 @@ const UserAttendance = () => {
               </div>
               
               <div className="grid grid-cols-7 gap-1 mb-2">
-                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
-                  <div key={day} className="text-center text-xs font-medium text-gray-600 py-1">
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+                  <div key={index} className="text-center text-xs font-medium text-gray-600 py-1">
                     {day}
                   </div>
                 ))}
@@ -1033,30 +1116,19 @@ const UserAttendance = () => {
              
               {/* Legend */}
               <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-green-500 rounded mr-1"></div>
-                  <span>Present</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-red-500 rounded mr-1"></div>
-                  <span>Absent</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-yellow-500 rounded mr-1"></div>
-                  <span>Late</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-blue-500 rounded mr-1"></div>
-                  <span>Leave</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-purple-500 rounded mr-1"></div>
-                  <span>Weekend</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-gray-400 rounded mr-1"></div>
-                  <span>Future</span>
-                </div>
+                {[
+                  { color: 'bg-green-500', label: 'Present' },
+                  { color: 'bg-red-500', label: 'Absent' },
+                  { color: 'bg-yellow-500', label: 'Late' },
+                  { color: 'bg-blue-500', label: 'Leave' },
+                  { color: 'bg-purple-500', label: 'Weekend' },
+                  { color: 'bg-gray-400', label: 'Future' }
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center">
+                    <div className={`w-2 h-2 ${item.color} rounded mr-1`}></div>
+                    <span>{item.label}</span>
+                  </div>
+                ))}
               </div>
 
               {/* Show note/extra work for selected date */}
@@ -1256,12 +1328,17 @@ const UserAttendance = () => {
                             
                             // Modified status determination logic
                             let status;
+                            // FIRST check if employee actually worked (punch in exists)
                             if (item.INTime && item.INTime !== '--:--') {
-                              status = isLate ? 'Late' : 'Present';
-                            } else if (item.Status === 'Leave' || (item.Remarks && item.Remarks.includes('Leave'))) {
-                              status = 'Leave';
+                              // Employee worked - show attendance status regardless of leave
+                              status = isLateArrival(item.INTime) ? 'Late' : 'Present';
                             } else {
-                              status = getDisplayStatus(item.Status);
+                              // No punch in - check if this date is on leave
+                              if (isDateOnLeave(recordDate)) {
+                                status = 'Leave';
+                              } else {
+                                status = getDisplayStatus(item.Status);
+                              }
                             }
                             
                             return (

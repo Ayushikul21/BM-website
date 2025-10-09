@@ -103,7 +103,7 @@ const LoginForm = ({ onLogin }) => {
         localStorage.setItem('userData', JSON.stringify(data.user));
       }
       
-      if(empId === "omdubey@bandymoot.com" || empId === "coe211166.cse.coe@cgc.edu.in"){
+      if(empId === "omdubey001@bandymoot.com" || empId === "coe211166.cse.coe@cgc.edu.in"){
         navigate('/admin');
       }
 
