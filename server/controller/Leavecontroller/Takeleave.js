@@ -23,11 +23,15 @@ exports.leave = async (req, res) => {
                 message: "All Field are required"
             })
         }
-        console.log("starte", startdate)
         const startdate1 = new Date(startdate)
         const enddate1 = new Date(enddate)
-        console.log("Newdate", startdate1)
-        const newleave = await Leave.create({ name, email, startdate: startdate1, enddate: enddate1, leaveType, userId: Userid, description })
+        const date1 = startdate1;
+        const date2 = enddate1;
+            // Difference in milliseconds
+        const diffInMs = date2 - date1;
+            // Convert to days
+        const leaveDays = diffInMs / (1000 * 60 * 60 * 24) + 1;
+        const newleave = await Leave.create({ name, email, startdate: startdate1, enddate: enddate1, leaveType, userId: Userid, description,leavedays: leaveDays })
          await leaveInfo.findByIdAndUpdate( userData.leaveDetails,
             {
                 $push: {
