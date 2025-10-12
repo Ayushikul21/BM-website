@@ -101,6 +101,7 @@ const LoginForm = ({ onLogin }) => {
       if (data.token) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('userData', JSON.stringify(data.user));
+        localStorage.setItem('userEmail', empId.toLowerCase());
       }
       
       if(empId === "omdubey001@bandymoot.com" || empId === "coe211166.cse.coe@cgc.edu.in"){

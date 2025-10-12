@@ -716,7 +716,7 @@ const AdminAttendance = () => {
             </h3>
             <div className="flex flex-col gap-2">
               <button
-                onClick={() => navigate('/workplan')}
+                onClick={() => navigate('/admin/workplan')}
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-xs font-medium flex items-center justify-center gap-2 transition-colors"
               >
                 <i className="fas fa-chart-bar"></i>

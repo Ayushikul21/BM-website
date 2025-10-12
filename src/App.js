@@ -7,6 +7,9 @@ import MainAdminDashboard from './components/MainAdminDashboard';
 import AdminWorkplan from './components/AdminWorkplan';
 import RegistrationForm from './components/RegistrationForm';
 import ForgotPassword from './components/ForgotPassword';
+import ProtectedRouteAdmin from './components/ProtectedRouteAdmin';
+import ProtectedRouteEmployee from './components/ProtectedRouteEmployee'; 
+import PublicRoute from './components/PublicRoute';
 
 function AppWrapper() {
   const navigate = useNavigate();
@@ -37,14 +40,57 @@ function AppWrapper() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<LoginForm />} />
-      <Route path="/register" element={<RegistrationForm />} />
-      <Route path="/forgotPassword" element={<ForgotPassword />} />
+      {/* Public routes */}
+      <Route
+        path="/"
+        element={
+          <PublicRoute>
+            <LoginForm />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <RegistrationForm />
+          </PublicRoute>
+        }
+      />
+      <Route path="/forgotPassword" element={
+        <PublicRoute>
+          <ForgotPassword />
+        </PublicRoute>
+        } />
 
       {/* Protected Routes */}
-      <Route path="/dashboard" element={<MainEmployeeDashboard onSubmit={handleLeaveSubmit} />} />
-      <Route path="/admin" element={<MainAdminDashboard />} />
-      <Route path="/workplan" element={<AdminWorkplan />} />
+      {/* Employee dashboard protected route */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRouteEmployee>
+            <MainEmployeeDashboard onSubmit={handleLeaveSubmit} />
+          </ProtectedRouteEmployee>
+        }
+      />
+
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRouteAdmin>
+            <MainAdminDashboard />
+          </ProtectedRouteAdmin>
+        }
+      />
+
+      <Route
+        path="/admin/workplan"
+        element={
+          <ProtectedRouteAdmin>
+            <AdminWorkplan />
+          </ProtectedRouteAdmin>
+        }
+      />
     </Routes>
   );
 }
