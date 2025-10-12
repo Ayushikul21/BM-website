@@ -31,9 +31,23 @@ const MainAdminDashboard = () => {
 
   const [employeeData, setEmployeeData] = useState([]);
 
+  useEffect(() => {
+    // ✅ Check if user is logged in
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      // If not logged in, redirect to login
+      navigate("/", { replace: true });
+    }
+
+    // ✅ Prevent going back to this page using back/forward buttons
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = function () {
+      window.history.go(1);
+    };
+  }, [navigate]);
+
   // Sample Admin data
-
-
   useEffect(() => {
     const fetchUserDetails = async () => {
       console.log("hello1")
@@ -578,7 +592,11 @@ const MainAdminDashboard = () => {
 
           <div className="p-4 sm:p-6 border-t">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => {
+                localStorage.clear();
+                alert("Logged out successfully!");
+                setTimeout(() => navigate("/"), 500);
+              }}
               className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
               <LogOut className="w-5 h-5" />
               <span>Logout</span>
