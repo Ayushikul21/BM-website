@@ -22,6 +22,7 @@ import AdminAttendance from './AdminAttedance';
 import EmployeeProfile from './EmployeeProfile';
 import EmployeeManagement from './EmployeeManagement';
 import SettingsPage from './SettingsPage';
+import ChatbotToggle from './ChatbotToggle';
 
 const MainAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -622,6 +623,9 @@ const MainAdminDashboard = () => {
         {/* Modal */}
         {/* {renderModal()} */}
       </div>
+
+      {/* Chatbot */}
+      <ChatbotToggle/>
     </div>
   );
 };

@@ -19,6 +19,7 @@ import {
 import EmployeeProfile from './EmployeeProfile';
 import SettingsPage from './SettingsPage';
 import RenderDocuments from './RenderDocumnets';
+import ChatbotToggle from './ChatbotToggle';
 
 const MainEmployeeDashboard = () => {
   const [userName, setUserName] = useState('');
@@ -765,6 +766,9 @@ const MainEmployeeDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Chatbot */}
+      <ChatbotToggle/>
     </div>
   );
 };
